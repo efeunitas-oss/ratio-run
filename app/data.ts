@@ -1,6 +1,6 @@
 // RATIO.RUN - Ultimate Product Database
 // 2026 Piyasa Dominasyonu: 50+ Otomobil + 25+ Robot Süpürge
-// [Executive Summary Edition - Massive Expansion]
+// [Executive Summary Edition - All Data Complete]
 
 import { Vehicle, RobotVacuum } from './types';
 
@@ -700,11 +700,10 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
 ];
 
 // ============================================================================
-// 2. ROBOT SÜPÜRGE VERİ SETİ (PREMIUM, F/P, LIDAR, V-SLAM)
+// 2. ROBOT SÜPÜRGE VERİ SETİ (COMPLETE DATA)
 // ============================================================================
 
 export const SAMPLE_VACUUMS: RobotVacuum[] = [
-  // --- ROBO ROCK ---
   {
     id: 'roborock-s8-pro',
     name: 'Roborock S8 Pro Ultra',
@@ -712,12 +711,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     affiliateUrl: 'https://www.roborock.com/tr/products/roborock-s8-pro-ultra?ref=ratiorun',
     specs: {
-      suctionPower: 6000, batteryCapacity: 5200, noiseLevel: 68,
-      dustCapacity: 0.4, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 6000,
+      batteryCapacity: 5200,
+      noiseLevel: 68,
+      dustCapacity: 0.4,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 48000, marketAverage: 45000, liquidityScore: 10,
-      resaleValue: 9, serviceNetwork: 8
+      listPrice: 48000,
+      marketAverage: 45000,
+      liquidityScore: 10,
+      resaleValue: 9,
+      serviceNetwork: 8
     },
     risk: { chronicIssueRisk: 2 }
   },
@@ -727,12 +733,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Roborock',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 10000, batteryCapacity: 5200, noiseLevel: 67,
-      dustCapacity: 0.4, mappingTech: 'Lidar + AI Camera', mopFeature: true
+      suctionPower: 10000,
+      batteryCapacity: 5200,
+      noiseLevel: 67,
+      dustCapacity: 0.4,
+      mappingTech: 'Lidar + AI Camera',
+      mopFeature: true
     },
     market: {
-      listPrice: 65000, marketAverage: 62000, liquidityScore: 10,
-      resaleValue: 9, serviceNetwork: 8
+      listPrice: 65000,
+      marketAverage: 62000,
+      liquidityScore: 10,
+      resaleValue: 9,
+      serviceNetwork: 8
     },
     risk: { chronicIssueRisk: 2 }
   },
@@ -742,12 +755,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Roborock',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 7000, batteryCapacity: 5200, noiseLevel: 66,
-      dustCapacity: 0.33, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 7000,
+      batteryCapacity: 5200,
+      noiseLevel: 66,
+      dustCapacity: 0.33,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 38000, marketAverage: 36000, liquidityScore: 9,
-      resaleValue: 8, serviceNetwork: 8
+      listPrice: 38000,
+      marketAverage: 36000,
+      liquidityScore: 9,
+      resaleValue: 8,
+      serviceNetwork: 8
     },
     risk: { chronicIssueRisk: 2 }
   },
@@ -757,29 +777,41 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Roborock',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 5500, batteryCapacity: 5200, noiseLevel: 67,
-      dustCapacity: 0.47, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 5500,
+      batteryCapacity: 5200,
+      noiseLevel: 67,
+      dustCapacity: 0.47,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 22000, marketAverage: 21000, liquidityScore: 9,
-      resaleValue: 8, serviceNetwork: 8
+      listPrice: 22000,
+      marketAverage: 21000,
+      liquidityScore: 9,
+      resaleValue: 8,
+      serviceNetwork: 8
     },
     risk: { chronicIssueRisk: 2 }
   },
-  
-  // --- DREAME ---
   {
     id: 'dreame-l20-ultra',
     name: 'Dreame L20 Ultra',
     brand: 'Dreame',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 7000, batteryCapacity: 6400, noiseLevel: 63,
-      dustCapacity: 0.3, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 7000,
+      batteryCapacity: 6400,
+      noiseLevel: 63,
+      dustCapacity: 0.3,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 52000, marketAverage: 51000, liquidityScore: 7,
-      resaleValue: 6, serviceNetwork: 6
+      listPrice: 52000,
+      marketAverage: 51000,
+      liquidityScore: 7,
+      resaleValue: 6,
+      serviceNetwork: 6
     },
     risk: { chronicIssueRisk: 3 }
   },
@@ -790,12 +822,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     affiliateUrl: 'https://www.dreametech.com/products/dreame-x40-ultra?ref=ratiorun',
     specs: {
-      suctionPower: 12000, batteryCapacity: 6400, noiseLevel: 65,
-      dustCapacity: 0.35, mappingTech: 'Lidar + AI', mopFeature: true
+      suctionPower: 12000,
+      batteryCapacity: 6400,
+      noiseLevel: 65,
+      dustCapacity: 0.35,
+      mappingTech: 'Lidar + AI',
+      mopFeature: true
     },
     market: {
-      listPrice: 68000, marketAverage: 67000, liquidityScore: 8,
-      resaleValue: 7, serviceNetwork: 7
+      listPrice: 68000,
+      marketAverage: 67000,
+      liquidityScore: 8,
+      resaleValue: 7,
+      serviceNetwork: 7
     },
     risk: { chronicIssueRisk: 3 }
   },
@@ -805,12 +844,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Dreame',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 7000, batteryCapacity: 5200, noiseLevel: 65,
-      dustCapacity: 0.35, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 7000,
+      batteryCapacity: 5200,
+      noiseLevel: 65,
+      dustCapacity: 0.35,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 32000, marketAverage: 31000, liquidityScore: 8,
-      resaleValue: 7, serviceNetwork: 6
+      listPrice: 32000,
+      marketAverage: 31000,
+      liquidityScore: 8,
+      resaleValue: 7,
+      serviceNetwork: 6
     },
     risk: { chronicIssueRisk: 3 }
   },
@@ -820,17 +866,22 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Dreame',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 5000, batteryCapacity: 5200, noiseLevel: 65,
-      dustCapacity: 0.4, mappingTech: 'Lidar + AI', mopFeature: true
+      suctionPower: 5000,
+      batteryCapacity: 5200,
+      noiseLevel: 65,
+      dustCapacity: 0.4,
+      mappingTech: 'Lidar + AI',
+      mopFeature: true
     },
     market: {
-      listPrice: 16000, marketAverage: 15000, liquidityScore: 8,
-      resaleValue: 7, serviceNetwork: 6
+      listPrice: 16000,
+      marketAverage: 15000,
+      liquidityScore: 8,
+      resaleValue: 7,
+      serviceNetwork: 6
     },
     risk: { chronicIssueRisk: 3 }
   },
-
-  // --- XIAOMI ---
   {
     id: 'xiaomi-x20-plus',
     name: 'Xiaomi Robot Vacuum X20+',
@@ -838,12 +889,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     affiliateUrl: 'https://www.mi.com/tr/product/xiaomi-robot-vacuum-x20-plus?ref=ratiorun',
     specs: {
-      suctionPower: 6000, batteryCapacity: 5200, noiseLevel: 68,
-      dustCapacity: 0.4, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 6000,
+      batteryCapacity: 5200,
+      noiseLevel: 68,
+      dustCapacity: 0.4,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 24000, marketAverage: 23000, liquidityScore: 10,
-      resaleValue: 7, serviceNetwork: 10
+      listPrice: 24000,
+      marketAverage: 23000,
+      liquidityScore: 10,
+      resaleValue: 7,
+      serviceNetwork: 10
     },
     risk: { chronicIssueRisk: 4 }
   },
@@ -853,12 +911,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Xiaomi',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 4000, batteryCapacity: 5200, noiseLevel: 70,
-      dustCapacity: 0.45, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 4000,
+      batteryCapacity: 5200,
+      noiseLevel: 70,
+      dustCapacity: 0.45,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 14000, marketAverage: 13500, liquidityScore: 10,
-      resaleValue: 6, serviceNetwork: 10
+      listPrice: 14000,
+      marketAverage: 13500,
+      liquidityScore: 10,
+      resaleValue: 6,
+      serviceNetwork: 10
     },
     risk: { chronicIssueRisk: 4 }
   },
@@ -868,12 +933,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Xiaomi',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 3500, batteryCapacity: 2600, noiseLevel: 74,
-      dustCapacity: 0.4, mappingTech: 'Gyroscope', mopFeature: true
+      suctionPower: 3500,
+      batteryCapacity: 2600,
+      noiseLevel: 74,
+      dustCapacity: 0.4,
+      mappingTech: 'Gyroscope',
+      mopFeature: true
     },
     market: {
-      listPrice: 8500, marketAverage: 8200, liquidityScore: 10,
-      resaleValue: 5, serviceNetwork: 10
+      listPrice: 8500,
+      marketAverage: 8200,
+      liquidityScore: 10,
+      resaleValue: 5,
+      serviceNetwork: 10
     },
     risk: { chronicIssueRisk: 5 }
   },
@@ -883,29 +955,41 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Xiaomi',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 8000, batteryCapacity: 5200, noiseLevel: 72,
-      dustCapacity: 0.45, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 8000,
+      batteryCapacity: 5200,
+      noiseLevel: 72,
+      dustCapacity: 0.45,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 18000, marketAverage: 17000, liquidityScore: 9,
-      resaleValue: 7, serviceNetwork: 10
+      listPrice: 18000,
+      marketAverage: 17000,
+      liquidityScore: 9,
+      resaleValue: 7,
+      serviceNetwork: 10
     },
     risk: { chronicIssueRisk: 3 }
   },
-
-  // --- ECOVACS & IROBOT & DYSON ---
   {
     id: 'ecovacs-deebot-t30',
     name: 'Ecovacs Deebot T30 Omni',
     brand: 'Ecovacs',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 11000, batteryCapacity: 5200, noiseLevel: 69,
-      dustCapacity: 0.3, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 11000,
+      batteryCapacity: 5200,
+      noiseLevel: 69,
+      dustCapacity: 0.3,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 42000, marketAverage: 40000, liquidityScore: 6,
-      resaleValue: 6, serviceNetwork: 5
+      listPrice: 42000,
+      marketAverage: 40000,
+      liquidityScore: 6,
+      resaleValue: 6,
+      serviceNetwork: 5
     },
     risk: { chronicIssueRisk: 3 }
   },
@@ -915,12 +999,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Ecovacs',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 5000, batteryCapacity: 5200, noiseLevel: 66,
-      dustCapacity: 0.4, mappingTech: 'Lidar + AI', mopFeature: true
+      suctionPower: 5000,
+      batteryCapacity: 5200,
+      noiseLevel: 66,
+      dustCapacity: 0.4,
+      mappingTech: 'Lidar + AI',
+      mopFeature: true
     },
     market: {
-      listPrice: 35000, marketAverage: 33000, liquidityScore: 6,
-      resaleValue: 6, serviceNetwork: 5
+      listPrice: 35000,
+      marketAverage: 33000,
+      liquidityScore: 6,
+      resaleValue: 6,
+      serviceNetwork: 5
     },
     risk: { chronicIssueRisk: 3 }
   },
@@ -930,12 +1021,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'iRobot',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 4500, batteryCapacity: 4400, noiseLevel: 64,
-      dustCapacity: 0.4, mappingTech: 'V-SLAM', mopFeature: true
+      suctionPower: 4500,
+      batteryCapacity: 4400,
+      noiseLevel: 64,
+      dustCapacity: 0.4,
+      mappingTech: 'V-SLAM',
+      mopFeature: true
     },
     market: {
-      listPrice: 45000, marketAverage: 43000, liquidityScore: 8,
-      resaleValue: 8, serviceNetwork: 9
+      listPrice: 45000,
+      marketAverage: 43000,
+      liquidityScore: 8,
+      resaleValue: 8,
+      serviceNetwork: 9
     },
     risk: { chronicIssueRisk: 2 }
   },
@@ -945,12 +1043,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'iRobot',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 2200, batteryCapacity: 4400, noiseLevel: 65,
-      dustCapacity: 0.4, mappingTech: 'V-SLAM', mopFeature: false
+      suctionPower: 2200,
+      batteryCapacity: 4400,
+      noiseLevel: 65,
+      dustCapacity: 0.4,
+      mappingTech: 'V-SLAM',
+      mopFeature: false
     },
     market: {
-      listPrice: 28000, marketAverage: 26000, liquidityScore: 8,
-      resaleValue: 8, serviceNetwork: 9
+      listPrice: 28000,
+      marketAverage: 26000,
+      liquidityScore: 8,
+      resaleValue: 8,
+      serviceNetwork: 9
     },
     risk: { chronicIssueRisk: 2 }
   },
@@ -960,29 +1065,41 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Dyson',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 65, batteryCapacity: 4000, noiseLevel: 75, // Dyson Air Watts
-      dustCapacity: 0.5, mappingTech: '360 Camera', mopFeature: false
+      suctionPower: 3500,
+      batteryCapacity: 4000,
+      noiseLevel: 75,
+      dustCapacity: 0.5,
+      mappingTech: '360 Camera',
+      mopFeature: false
     },
     market: {
-      listPrice: 45000, marketAverage: 45000, liquidityScore: 9,
-      resaleValue: 9, serviceNetwork: 10
+      listPrice: 45000,
+      marketAverage: 45000,
+      liquidityScore: 9,
+      resaleValue: 9,
+      serviceNetwork: 10
     },
     risk: { chronicIssueRisk: 2 }
   },
-  
-  // --- F/P ALTERNATİFLERİ (PHILIPS, TEFAL, ANKER) ---
   {
     id: 'philips-homerun-7000',
     name: 'Philips HomeRun 7000 Series',
     brand: 'Philips',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 5000, batteryCapacity: 5200, noiseLevel: 66,
-      dustCapacity: 0.4, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 5000,
+      batteryCapacity: 5200,
+      noiseLevel: 66,
+      dustCapacity: 0.4,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 24000, marketAverage: 23000, liquidityScore: 10,
-      resaleValue: 8, serviceNetwork: 10
+      listPrice: 24000,
+      marketAverage: 23000,
+      liquidityScore: 10,
+      resaleValue: 8,
+      serviceNetwork: 10
     },
     risk: { chronicIssueRisk: 3 }
   },
@@ -992,12 +1109,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Tefal',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 12000, batteryCapacity: 5200, noiseLevel: 70,
-      dustCapacity: 0.5, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 12000,
+      batteryCapacity: 5200,
+      noiseLevel: 70,
+      dustCapacity: 0.5,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 19000, marketAverage: 18000, liquidityScore: 9,
-      resaleValue: 7, serviceNetwork: 9
+      listPrice: 19000,
+      marketAverage: 18000,
+      liquidityScore: 9,
+      resaleValue: 7,
+      serviceNetwork: 9
     },
     risk: { chronicIssueRisk: 4 }
   },
@@ -1007,12 +1131,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Anker',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 4000, batteryCapacity: 5200, noiseLevel: 68,
-      dustCapacity: 0.4, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 4000,
+      batteryCapacity: 5200,
+      noiseLevel: 68,
+      dustCapacity: 0.4,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 15000, marketAverage: 14000, liquidityScore: 8,
-      resaleValue: 6, serviceNetwork: 7
+      listPrice: 15000,
+      marketAverage: 14000,
+      liquidityScore: 8,
+      resaleValue: 6,
+      serviceNetwork: 7
     },
     risk: { chronicIssueRisk: 3 }
   },
@@ -1022,12 +1153,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Viomi',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 4000, batteryCapacity: 5200, noiseLevel: 70,
-      dustCapacity: 0.35, mappingTech: 'Lidar + 3D', mopFeature: true
+      suctionPower: 4000,
+      batteryCapacity: 5200,
+      noiseLevel: 70,
+      dustCapacity: 0.35,
+      mappingTech: 'Lidar + 3D',
+      mopFeature: true
     },
     market: {
-      listPrice: 13000, marketAverage: 12000, liquidityScore: 7,
-      resaleValue: 5, serviceNetwork: 6
+      listPrice: 13000,
+      marketAverage: 12000,
+      liquidityScore: 7,
+      resaleValue: 5,
+      serviceNetwork: 6
     },
     risk: { chronicIssueRisk: 5 }
   },
@@ -1037,18 +1175,24 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     brand: 'Lydsto',
     category: 'ROBOT_VACUUM',
     specs: {
-      suctionPower: 2700, batteryCapacity: 5200, noiseLevel: 69,
-      dustCapacity: 0.25, mappingTech: 'Lidar', mopFeature: true
+      suctionPower: 2700,
+      batteryCapacity: 5200,
+      noiseLevel: 69,
+      dustCapacity: 0.25,
+      mappingTech: 'Lidar',
+      mopFeature: true
     },
     market: {
-      listPrice: 11000, marketAverage: 10000, liquidityScore: 6,
-      resaleValue: 5, serviceNetwork: 4
+      listPrice: 11000,
+      marketAverage: 10000,
+      liquidityScore: 6,
+      resaleValue: 5,
+      serviceNetwork: 4
     },
     risk: { chronicIssueRisk: 4 }
   }
 ];
 
-// YARDIMCI FONKSİYONLAR
 export function getProductById(id: string): any {
   return [...SAMPLE_VEHICLES, ...SAMPLE_VACUUMS].find(p => p.id === id);
 }

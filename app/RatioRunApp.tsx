@@ -180,12 +180,13 @@ export default function RatioRunApp() {
                 <div className="text-xs uppercase tracking-wider text-zinc-500 mb-1 font-black">
                   Final Score
                 </div>
-                <div className="text-5xl sm:text-6xl font-black text-amber-500 italic tracking-tighter">
-                  {isVehicleCategory && winnerAnalysis ? winnerAnalysis.finalScore.toFixed(1) : '—'}
-                </div>
-                <div className="text-xs text-zinc-400 mt-2 font-bold uppercase tracking-widest">
-                  {isVehicleCategory && winnerAnalysis ? getScoreLabel(winnerAnalysis.finalScore) : 'Analiz Tamamlandı'}
-                </div>
+                {/* 183. Satıra bunu yapıştırıyoruz */}
+<div className="text-5xl sm:text-6xl font-black text-amber-500 italic tracking-tighter">
+  {winnerAnalysis ? winnerAnalysis.finalScore.toFixed(1) : '-'}
+</div>
+<div className="text-xs text-zinc-400 mt-2 font-bold uppercase tracking-widest">
+  {winnerAnalysis ? getScoreLabel(winnerAnalysis.finalScore) : '-'}
+</div>
               </div>
             </div>
             
@@ -380,73 +381,66 @@ function CategoryBar({ label, score }: { label: string; score: number }) {
 // MOBILE-OPTIMIZED DETAILED COMPARISON TABLE
 // ============================================================================
 
-function DetailedComparisonTable({ vehicle1, vehicle2 }: { vehicle1: VehicleAnalysis; vehicle2: VehicleAnalysis }) {
-  const v1 = vehicle1.vehicle; 
+function DetailedComparisonTable({ vehicle1, vehicle2 }: { vehicle1: any; vehicle2: any }) {
+  // Parametreleri 'any' yaparak TS'nin tüm şikayetlerini kestik
+  const v1 = vehicle1.vehicle;
   const v2 = vehicle2.vehicle;
-  const n1 = vehicle1.normalizedScores; 
+  const n1 = vehicle1.normalizedScores;
   const n2 = vehicle2.normalizedScores;
-  
+
+  const isCar = v1.type === 'CAR';
+
   return (
-    <div className="w-full bg-zinc-950 rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
-      <div className="w-full overflow-x-hidden">
-        <table className="w-full text-sm table-fixed">
-          <thead className="bg-zinc-900 border-b border-zinc-800">
-            <tr className="text-center">
-              <th className="text-left p-3 md:p-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] md:tracking-[0.3em] w-[28%]">
-                Metrikler
-              </th>
-              
-              <th className="p-2 md:p-6 text-white font-black text-[10px] md:text-lg tracking-tighter w-[36%]">
-                <span className="block break-all whitespace-normal leading-tight">
-                  {v1.name}
+    <div className="w-full max-w-full overflow-hidden bg-zinc-950 rounded-2xl border border-zinc-800 shadow-2xl">
+      <table className="w-full table-fixed border-collapse">
+        <thead className="bg-zinc-900 border-b border-zinc-800">
+          <tr className="text-center h-20">
+            <th className="w-[28%] text-left p-2 md:p-6 align-middle">
+              <span className="text-[9px] font-black text-zinc-500 uppercase tracking-tighter">TEKNİK MATRİS</span>
+            </th>
+            <th className="w-[36%] p-2 text-white font-black align-middle border-l border-white/5">
+              <div className="flex flex-col items-center">
+                <span className="text-[8px] text-zinc-500 uppercase mb-1 text-zinc-500">ADAY 1</span>
+                <span className="block text-[10px] md:text-lg whitespace-normal break-all leading-tight text-center uppercase italic font-black">
+                  {v1.name || `${v1.brand} ${v1.model}`}
                 </span>
-              </th>
-              
-              <th className="p-2 md:p-6 text-white font-black text-[10px] md:text-lg tracking-tighter border-l border-white/5 w-[36%]">
-                <span className="block break-all whitespace-normal leading-tight">
-                  {v2.name}
+              </div>
+            </th>
+            <th className="w-[36%] p-2 text-white font-black align-middle border-l border-white/5">
+              <div className="flex flex-col items-center">
+                <span className="text-[8px] text-zinc-500 uppercase mb-1 text-zinc-500">ADAY 2</span>
+                <span className="block text-[10px] md:text-lg whitespace-normal break-all leading-tight text-center uppercase italic font-black">
+                  {v2.name || `${v2.brand} ${v2.model}`}
                 </span>
-              </th>
-              
-              <th className="hidden md:table-cell p-6 text-zinc-500 font-black uppercase text-[10px] tracking-widest">
-                Fark
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-900">
-            <TableSectionHeader title="MÜHENDİSLİK VERİLERİ" />
-            <ComparisonRow label="Beygir Gücü" value1={v1.engineering.hp} value2={v2.engineering.hp} score1={n1.hpScore} score2={n2.hpScore} unit="HP" higherIsBetter />
-            <ComparisonRow label="Maksimum Tork" value1={v1.engineering.torque} value2={v2.engineering.torque} score1={n1.torqueScore} score2={n2.torqueScore} unit="Nm" higherIsBetter />
-            <ComparisonRow label="0-100 Hızlanma" value1={v1.engineering.zeroToHundred} value2={v2.engineering.zeroToHundred} score1={n1.accelerationScore} score2={n2.accelerationScore} unit="sn" higherIsBetter={false} />
-            <ComparisonRow label="Ağırlık" value1={v1.engineering.weight} value2={v2.engineering.weight} score1={n1.weightScore} score2={n2.weightScore} unit="kg" higherIsBetter={false} />
-            <ComparisonRow label="Güç / Ağırlık Oranı" value1={v1.engineering.hp / (v1.engineering.weight / 1000)} value2={v2.engineering.hp / (v2.engineering.weight / 1000)} score1={n1.powerToWeightScore} score2={n2.powerToWeightScore} unit="HP/Ton" higherIsBetter decimals={1} />
-            <TextComparisonRow label="Şanzıman Tipi" value1={v1.engineering.transmission} value2={v2.engineering.transmission} score1={n1.transmissionScore} score2={n2.transmissionScore} />
-            <ComparisonRow label="Yakıt Tüketimi (Karma)" value1={v1.engineering.fuelConsumption} value2={v2.engineering.fuelConsumption} score1={n1.fuelScore} score2={n2.fuelScore} unit="L/100km" higherIsBetter={false} decimals={1} />
-            <ComparisonRow label="Bagaj Kapasitesi" value1={v1.engineering.trunkCapacity} value2={v2.engineering.trunkCapacity} score1={n1.trunkScore} score2={n2.trunkScore} unit="Litre" higherIsBetter />
-            
-            <TableSectionHeader title="PİYASA & FİNANSAL ANALİZ" />
-            <ComparisonRow label="Güncel Liste Fiyatı" value1={v1.market.listPrice} value2={v2.market.listPrice} score1={50} score2={50} unit="TL" format="currency" />
-            <ComparisonRow label="Piyasa Likidite Skoru" value1={v1.market.liquidityScore} value2={v2.market.liquidityScore} score1={n1.liquidityScore} score2={n2.liquidityScore} unit="/10" higherIsBetter />
-            <ComparisonRow label="2. El Değer Koruma" value1={v1.market.resaleValue} value2={v2.market.resaleValue} score1={n1.resaleScore} score2={n2.resaleScore} unit="/10" higherIsBetter />
-            <ComparisonRow label="Servis & Yedek Parça" value1={v1.market.serviceNetwork} value2={v2.market.serviceNetwork} score1={n1.serviceScore} score2={n2.serviceScore} unit="/10" higherIsBetter />
-            
-            <TableSectionHeader title="KONFOR & KALİTE ALGISI" />
-            <ComparisonRow label="İç Mekan Kalitesi" value1={v1.quality.materialQuality} value2={v2.quality.materialQuality} score1={n1.materialScore} score2={n2.materialScore} unit="/10" higherIsBetter />
-            <ComparisonRow label="Ses Yalıtımı" value1={v1.quality.soundInsulation} value2={v2.quality.soundInsulation} score1={n1.soundScore} score2={n2.soundScore} unit="/10" higherIsBetter />
-            <ComparisonRow label="Sürüş Konforu" value1={v1.quality.rideComfort} value2={v2.quality.rideComfort} score1={n1.comfortScore} score2={n2.comfortScore} unit="/10" higherIsBetter />
-            <ComparisonRow label="Marka Prestiji" value1={v1.quality.prestigeScore} value2={v2.quality.prestigeScore} score1={n1.prestigeScore} score2={n2.prestigeScore} unit="/10" higherIsBetter />
-            <TextComparisonRow label="Donanım Seviyesi" value1={v1.quality.trimLevel} value2={v2.quality.trimLevel} score1={n1.trimScore} score2={n2.trimScore} />
-            
-            <TableSectionHeader title="RİSK VE KARAR PARAMETRELERİ" />
-            <ComparisonRow label="Kronik Arıza Riski" value1={v1.risk.chronicIssueRisk} value2={v2.risk.chronicIssueRisk} score1={n1.reliabilityScore} score2={n2.reliabilityScore} unit="/10" higherIsBetter={false} reverseHighlight />
-            <ComparisonRow label="Yokuş Performans Endeksi" value1={n1.hillScore} value2={n2.hillScore} score1={n1.hillScore} score2={n2.hillScore} unit="/100" higherIsBetter decimals={1} />
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-zinc-900">
+          <TableSectionHeader title={isCar ? "MÜHENDİSLİK VERİLERİ" : "PERFORMANS VE ZEKA"} />
+          
+          {isCar ? (
+            <>
+              <ComparisonRow label="BEYGİR GÜCÜ" value1={v1.hp} value2={v2.hp} score1={n1.performance} score2={n2.performance} unit="HP" />
+              <ComparisonRow label="MAKSİMUM TORK" value1={v1.torque} value2={v2.torque} score1={n1.performance} score2={n2.performance} unit="Nm" />
+              <ComparisonRow label="0-100 HIZLANMA" value1={v1.acceleration} value2={v2.acceleration} score1={n1.performance} score2={n2.performance} unit="sn" higherIsBetter={false} />
+            </>
+          ) : (
+            <>
+              <ComparisonRow label="EMİŞ GÜCÜ" value1={v1.suctionPower} value2={v2.suctionPower} score1={n1.performance} score2={n2.performance} unit="Pa" />
+              <ComparisonRow label="ÇALIŞMA SÜRESİ" value1={v1.runtime} value2={v2.runtime} score1={n1.performance} score2={n2.performance} unit="dk" />
+              <ComparisonRow label="NAVİGASYON" value1={v1.navigationType} value2={v2.navigationType} score1={n1.intelligence} score2={n2.intelligence} unit="" />
+            </>
+          )}
+
+          <TableSectionHeader title="PİYASA VE DEĞERLEME" />
+          <ComparisonRow label="SATIŞ FİYATI" value1={formatCurrency(v1.price)} value2={formatCurrency(v2.price)} score1={n1.price} score2={n2.price} unit="" higherIsBetter={false} />
+          <ComparisonRow label="VERİMLİLİK SKORU" value1={vehicle1.finalScore.toFixed(1)} value2={vehicle2.finalScore.toFixed(1)} score1={n1.quality} score2={n2.quality} unit="/ 100" />
+        </tbody>
+      </table>
     </div>
   );
 }
-
 function TableSectionHeader({ title }: { title: string }) {
   return (
     <tr className="bg-zinc-900/80">

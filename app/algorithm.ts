@@ -1,6 +1,6 @@
 // RATIO.RUN - Algorithm & Calculation Engine
 // The Brain: Ağırlıklı matris sistemi ve tüm hesaplamalar
-// [Executive Summary Edition - No Omissions]
+// [Executive Summary Edition - Vacuum Enhanced]
 
 import {
   Vehicle,
@@ -12,8 +12,50 @@ import {
   NormalizationBounds,
   TransmissionType,
   TrimLevel,
-  RobotVacuum, // Yeni kategori entegrasyonu
+  RobotVacuum,
 } from './types';
+
+// ============================================================================
+// VACUUM ANALYSIS TYPES
+// ============================================================================
+
+export interface VacuumAnalysis {
+  vacuum: RobotVacuum;
+  normalizedScores: VacuumNormalizedScores;
+  categoryScores: VacuumCategoryScores;
+  finalScore: number;
+  warnings: string[];
+  strengths: string[];
+  weaknesses: string[];
+}
+
+interface VacuumNormalizedScores {
+  suctionScore: number;
+  batteryScore: number;
+  noiseScore: number;
+  dustCapacityScore: number;
+  mappingScore: number;
+  mopScore: number;
+  liquidityScore: number;
+  resaleScore: number;
+  serviceScore: number;
+  reliabilityScore: number;
+}
+
+interface VacuumCategoryScores {
+  performance: number;  // Performans (emiş, batarya)
+  intelligence: number; // Zeka (haritalama, AI)
+  market: number;       // Piyasa (likidite, resale)
+  reliability: number;  // Dayanıklılık
+}
+
+interface VacuumNormalizationBounds {
+  suctionPower: { min: number; max: number };
+  batteryCapacity: { min: number; max: number };
+  noiseLevel: { min: number; max: number };
+  dustCapacity: { min: number; max: number };
+  listPrice: { min: number; max: number };
+}
 
 // ============================================================================
 // ADIM 1: NORMALİZASYON FONKSİYONLARI (Hard Specs to 0-100)
@@ -33,12 +75,12 @@ function normalizeLowerIsBetter(value: number, min: number, max: number): number
 
 function scoreTransmission(type: TransmissionType): number {
   const scores: Record<TransmissionType, number> = {
-    'ZF': 95,           // BMW/Mercedes standardı
-    'DSG': 85,          // Hızlı ama riskli
-    'Manuel': 80,       // Güvenilir
-    'Otomatik': 75,     // Klasik
-    'Şanzıman': 70,     // Belirsiz
-    'CVT': 40,          // Hissiz ve riskli
+    'ZF': 95,
+    'DSG': 85,
+    'Manuel': 80,
+    'Otomatik': 75,
+    'Şanzıman': 70,
+    'CVT': 40,
   };
   return scores[type] || 50;
 }
@@ -53,13 +95,25 @@ function scoreTrimLevel(trim: TrimLevel): number {
   return scores[trim];
 }
 
+function scoreMappingTech(tech: string): number {
+  const scores: Record<string, number> = {
+    'Lidar + AI Camera': 100,
+    'Lidar + AI': 95,
+    'Lidar + 3D': 90,
+    'Lidar': 85,
+    '360 Camera': 75,
+    'V-SLAM': 80,
+    'Gyroscope': 40,
+  };
+  return scores[tech] || 50;
+}
+
 function calculatePowerToWeight(hp: number, weight: number): number {
-  return hp / (weight / 1000); // HP per Ton
+  return hp / (weight / 1000);
 }
 
 function calculateHillPerformance(torque: number, weight: number): number {
   const torqueToWeight = torque / weight;
-  // 0.25+ = Mükemmel, 0.10- = Kötü
   const score = ((torqueToWeight - 0.10) / (0.25 - 0.10)) * 100;
   return Math.max(0, Math.min(100, score));
 }
@@ -76,13 +130,13 @@ function calculatePriceValue(listPrice: number, marketAverage: number): number {
 // ============================================================================
 
 export const DEFAULT_WEIGHTS: ScoringWeights = {
-  liquidityAndResale: 0.25,      // %25 - Piyasa hızı
-  torqueAndPerformance: 0.20,    // %20 - Mühendislik
-  prestigeAndQuality: 0.20,      // %20 - Prestij
-  priceAdvantage: 0.15,          // %15 - Fiyat
-  reliability: 0.10,             // %10 - Sorunsuzluk
-  fuelEconomy: 0.05,             // %05 - Ekonomi
-  features: 0.05,                // %05 - Donanım
+  liquidityAndResale: 0.25,
+  torqueAndPerformance: 0.20,
+  prestigeAndQuality: 0.20,
+  priceAdvantage: 0.15,
+  reliability: 0.10,
+  fuelEconomy: 0.05,
+  features: 0.05,
 };
 
 // ============================================================================
@@ -131,7 +185,6 @@ export function analyzeVehicle(
   const strengths: string[] = [];
   const weaknesses: string[] = [];
   
-  // Yargıç Hükümleri
   if (normalizedScores.hillScore < 30) warnings.push('⚠️ Yokuşta bayılma yapar, klima açıkken üzer.');
   if (market.liquidityScore < 4) warnings.push('🔴 Bu araç "evlat" olur; alırsın ama zor satarsın.');
   if (engineering.transmission === 'CVT') warnings.push('⚙️ CVT şanzıman riskli; hissiz sürüş ve masraf riski.');
@@ -142,7 +195,79 @@ export function analyzeVehicle(
 }
 
 // ============================================================================
-// ADIM 4: YARGIÇ KARŞILAŞTIRMA (NO TIES ALLOWED)
+// ADIM 4: VACUUM ANALİZ MOTORU
+// ============================================================================
+
+export function analyzeVacuum(
+  vacuum: RobotVacuum,
+  bounds: VacuumNormalizationBounds
+): VacuumAnalysis {
+  const { specs, market, risk } = vacuum;
+  
+  const normalizedScores: VacuumNormalizedScores = {
+    suctionScore: normalizeHigherIsBetter(specs.suctionPower, bounds.suctionPower.min, bounds.suctionPower.max),
+    batteryScore: normalizeHigherIsBetter(specs.batteryCapacity, bounds.batteryCapacity.min, bounds.batteryCapacity.max),
+    noiseScore: normalizeLowerIsBetter(specs.noiseLevel, bounds.noiseLevel.min, bounds.noiseLevel.max),
+    dustCapacityScore: normalizeHigherIsBetter(specs.dustCapacity, bounds.dustCapacity.min, bounds.dustCapacity.max),
+    mappingScore: scoreMappingTech(specs.mappingTech),
+    mopScore: specs.mopFeature ? 100 : 0,
+    liquidityScore: market.liquidityScore * 10,
+    resaleScore: market.resaleValue * 10,
+    serviceScore: market.serviceNetwork * 10,
+    reliabilityScore: (10 - risk.chronicIssueRisk) * 10,
+  };
+  
+  const categoryScores: VacuumCategoryScores = {
+    performance: (
+      normalizedScores.suctionScore * 0.50 +
+      normalizedScores.batteryScore * 0.30 +
+      normalizedScores.dustCapacityScore * 0.20
+    ),
+    intelligence: (
+      normalizedScores.mappingScore * 0.70 +
+      normalizedScores.mopScore * 0.30
+    ),
+    market: (
+      normalizedScores.liquidityScore * 0.40 +
+      normalizedScores.resaleScore * 0.40 +
+      normalizedScores.serviceScore * 0.20
+    ),
+    reliability: (
+      normalizedScores.reliabilityScore * 0.70 +
+      normalizedScores.noiseScore * 0.30
+    ),
+  };
+  
+  const finalScore = (
+    categoryScores.performance * 0.35 +
+    categoryScores.intelligence * 0.25 +
+    categoryScores.market * 0.25 +
+    categoryScores.reliability * 0.15
+  );
+  
+  const warnings: string[] = [];
+  const strengths: string[] = [];
+  const weaknesses: string[] = [];
+  
+  if (normalizedScores.suctionScore < 30) warnings.push('⚠️ Düşük emiş gücü; halılarda yetersiz kalabilir.');
+  if (specs.mappingTech === 'Gyroscope') warnings.push('🗺️ Navigasyon primitif; evi ezberlemiyor, her seferinde keşfediyor.');
+  if (market.liquidityScore < 5) warnings.push('🔴 Az bilinen marka; satış zorluğu yaşarsınız.');
+  if (risk.chronicIssueRisk > 6) warnings.push('🔧 Yazılım güncellemesi beklentili; haritalama hataları biliniyor.');
+  
+  if (normalizedScores.suctionScore >= 80) strengths.push('Halı ve kilimde derin temizlik gücü');
+  if (normalizedScores.mappingScore >= 90) strengths.push('Yapay zeka destekli akıllı navigasyon');
+  if (market.resaleValue >= 8) strengths.push('İkinci el değer koruması yüksek');
+  if (specs.mopFeature) strengths.push('Paspas özelliği ile ıslak temizlik');
+  
+  if (normalizedScores.batteryScore < 40) weaknesses.push('Düşük batarya kapasitesi');
+  if (normalizedScores.noiseScore < 40) weaknesses.push('Yüksek gürültü seviyesi');
+  if (!specs.mopFeature) weaknesses.push('Paspas özelliği yok');
+  
+  return { vacuum, normalizedScores, categoryScores, finalScore, warnings, strengths, weaknesses };
+}
+
+// ============================================================================
+// ADIM 5: YARGIÇ KARŞILAŞTIRMA (Vehicles)
 // ============================================================================
 
 export function compareVehicles(
@@ -167,7 +292,6 @@ export function compareVehicles(
   
   const scoreDifference = Math.abs(analysis1.finalScore - analysis2.finalScore);
   
-  // Tie-breaker: "Tercih size kalmış" YASAK.
   let winner: 'vehicle1' | 'vehicle2';
   if (scoreDifference < 3) {
     winner = analysis1.vehicle.market.liquidityScore >= analysis2.vehicle.market.liquidityScore ? 'vehicle1' : 'vehicle2';
@@ -189,52 +313,67 @@ export function compareVehicles(
   verdict += `\n\nANALİZ: ${reasons.join(' ')}. Bu bütçede macera aramanın anlamı yok.`;
 
   return {
-    vehicle1: analysis1, vehicle2: analysis2, winner, verdict,
+    vehicle1: analysis1, 
+    vehicle2: analysis2, 
+    winner, 
+    verdict,
     detailedReasons: [...reasons, ...winnerAnal.strengths.slice(0, 2)],
     scoreDifference,
   };
 }
 
 // ============================================================================
-// ROBOT SÜPÜRGE YARGICI (Judge for Vacuums)
+// ADIM 6: YARGIÇ KARŞILAŞTIRMA (Vacuums)
 // ============================================================================
 
-export function analyzeVacuum(vacuum: RobotVacuum): number {
-  const { specs, market, risk } = vacuum;
-  // Performans %40 + Piyasa %40 + Güvenilirlik %20
-  const suctionScore = (specs.suctionPower / 8000) * 100;
-  const batteryScore = (specs.batteryCapacity / 6500) * 100;
-  const performanceScore = (suctionScore * 0.7) + (batteryScore * 0.3);
-  const marketScore = (market.liquidityScore * 50) + (market.resaleValue * 50);
-  const reliabilityScore = (10 - risk.chronicIssueRisk) * 10;
-  return (performanceScore * 0.4) + (marketScore * 0.4) + (reliabilityScore * 0.2);
-}
-
 export function compareVacuums(v1: RobotVacuum, v2: RobotVacuum) {
-  const s1 = analyzeVacuum(v1);
-  const s2 = analyzeVacuum(v2);
-  const winner = s1 >= s2 ? v1 : v2;
-  const scoreDiff = Math.abs(s1 - s2);
+  const bounds: VacuumNormalizationBounds = {
+    suctionPower: { min: Math.min(v1.specs.suctionPower, v2.specs.suctionPower), max: Math.max(v1.specs.suctionPower, v2.specs.suctionPower) },
+    batteryCapacity: { min: Math.min(v1.specs.batteryCapacity, v2.specs.batteryCapacity), max: Math.max(v1.specs.batteryCapacity, v2.specs.batteryCapacity) },
+    noiseLevel: { min: Math.min(v1.specs.noiseLevel, v2.specs.noiseLevel), max: Math.max(v1.specs.noiseLevel, v2.specs.noiseLevel) },
+    dustCapacity: { min: Math.min(v1.specs.dustCapacity, v2.specs.dustCapacity), max: Math.max(v1.specs.dustCapacity, v2.specs.dustCapacity) },
+    listPrice: { min: Math.min(v1.market.listPrice, v2.market.listPrice), max: Math.max(v1.market.listPrice, v2.market.listPrice) },
+  };
+  
+  const analysis1 = analyzeVacuum(v1, bounds);
+  const analysis2 = analyzeVacuum(v2, bounds);
+  
+  const scoreDifference = Math.abs(analysis1.finalScore - analysis2.finalScore);
+  
+  let winner: 'vehicle1' | 'vehicle2';
+  if (scoreDifference < 3) {
+    winner = analysis1.vacuum.market.liquidityScore >= analysis2.vacuum.market.liquidityScore ? 'vehicle1' : 'vehicle2';
+  } else {
+    winner = analysis1.finalScore > analysis2.finalScore ? 'vehicle1' : 'vehicle2';
+  }
+  
+  const winnerAnal = winner === 'vehicle1' ? analysis1 : analysis2;
+  const loserAnal = winner === 'vehicle1' ? analysis2 : analysis1;
+  
+  let verdict = `🏆 KESİN KARAR: ${winnerAnal.vacuum.name}`;
   const reasons: string[] = [];
-
-  if (winner.specs.suctionPower > (winner === v1 ? v2 : v1).specs.suctionPower) reasons.push("Daha yüksek emiş gücüyle halılarda derin temizlik.");
-  if (winner.market.liquidityScore > 7) reasons.push("Marka bilinirliği yüksek, elden çıkarması kolay.");
-  if (winner.risk.chronicIssueRisk < 3) reasons.push("Yazılım stabilitesi kanıtlanmış, haritalama hatası yapmayan ünite.");
-
-  let verdict = `🏆 YARGIÇ KARARI: ${winner.name}`;
-  verdict += scoreDiff < 5 
-    ? `\n\nDonanım olarak çok yakın olsalar da ${winner.name} stabilite farkıyla kazanıyor.` 
-    : `\n\nNet bir mühendislik üstünlüğü var. Mantıklı olan bu cihazdır.`;
-
+  
+  if (scoreDifference < 3) reasons.push("Başa baş mücadelede marka bilinirliği ve satış kolaylığı farkıyla öne çıkıyor.");
+  if (winnerAnal.categoryScores.performance > loserAnal.categoryScores.performance + 5) reasons.push(`Emiş gücü (${winnerAnal.vacuum.specs.suctionPower}Pa) ve batarya performansı ile rakibini eziyor.`);
+  if (winnerAnal.categoryScores.intelligence > loserAnal.categoryScores.intelligence + 5) reasons.push(`${winnerAnal.vacuum.specs.mappingTech} teknolojisi ile çok daha akıllı navigasyon.`);
+  if (winnerAnal.categoryScores.market > loserAnal.categoryScores.market + 5) reasons.push("Piyasa değeri koruma ve satış kolaylığı garantili.");
+  if (winnerAnal.categoryScores.reliability > loserAnal.categoryScores.reliability + 5) reasons.push("Yazılım stabilitesi kanıtlanmış, haritalama hatası yapmayan sistem.");
+  
+  verdict += `\n\nANALİZ: ${reasons.join(' ')} Bu bütçede deneme yanılmaya gerek yok.`;
+  
   return {
-    vehicle1: { vehicle: v1, finalScore: s1 },
-    vehicle2: { vehicle: v2, finalScore: s2 },
-    winner: winner === v1 ? 'vehicle1' : 'vehicle2',
+    vehicle1: analysis1,
+    vehicle2: analysis2,
+    winner,
     verdict,
-    detailedReasons: reasons,
-    scoreDifference: scoreDiff
+    detailedReasons: [...reasons, ...winnerAnal.strengths.slice(0, 2)],
+    scoreDifference,
   };
 }
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
 
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
