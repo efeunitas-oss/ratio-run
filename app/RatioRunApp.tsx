@@ -459,27 +459,42 @@ function TableSectionHeader({ title }: { title: string }) {
 }
 
 function ComparisonRow({ label, value1, value2, score1, score2, unit = '', higherIsBetter = true, format = 'number', decimals = 0 }: any) {
-  const formatValue = (val: number) => format === 'currency' ? formatCurrency(val) : val.toFixed(decimals);
-  const winner = score1 > score2 ? 1 : score1 < score2 ? 2 : 0;
-  const difference = Math.abs(value1 - value2);
-  const percentDiff = value1 && value2 ? ((difference / Math.min(value1, value2)) * 100).toFixed(0) : '0';
+  // Metin veya boş verilerde çökmemesi için koruma ekledik
+  const formatValue = (val: any) => {
+    if (val === undefined || val === null) return '-';
+    if (typeof val !== 'number') return val; // String ise olduğu gibi göster (Navigasyon vb.)
+    return format === 'currency' ? formatCurrency(val) : val.toFixed(decimals);
+  };
+
+  // Matematiksel hesaplamalar için değerleri sayıya zorluyoruz
+  const v1Num = typeof value1 === 'number' ? value1 : 0;
+  const v2Num = typeof value2 === 'number' ? value2 : 0;
   
+  const winner = score1 > score2 ? 1 : score1 < score2 ? 2 : 0;
+  const difference = Math.abs(v1Num - v2Num);
+  const percentDiff = v1Num > 0 && v2Num > 0 ? ((difference / Math.min(v1Num, v2Num)) * 100).toFixed(0) : '0';
+
   return (
-    <tr className="hover:bg-white/5 transition-colors group">
-      <td className="p-3 md:p-5 text-zinc-400 font-bold text-[10px] md:text-xs uppercase tracking-tight break-words">
-        {label}
+    <tr className="border-b border-zinc-900/50 last:border-0 hover:bg-white/5 transition-colors group">
+      <td className="p-3 md:p-5">
+        <div className="text-[10px] md:text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">{label}</div>
+        {v1Num > 0 && v2Num > 0 && difference > 0 && (
+          <div className="text-[9px] font-black text-amber-500/80 italic">
+            Δ %{percentDiff} FARK
+          </div>
+        )}
       </td>
-      
-      <td className={`p-2 md:p-5 text-center font-black text-[10px] md:text-sm break-all whitespace-normal ${winner === 1 ? 'bg-emerald-500/10 text-emerald-400' : 'text-zinc-500'}`}>
-        {formatValue(value1)} <span className="text-[8px] md:text-[10px] font-normal opacity-50">{unit}</span>
+      <td className={`p-2 md:p-4 text-center border-l border-white/5 ${winner === 1 ? 'bg-emerald-500/5' : ''}`}>
+        <div className={`text-xs md:text-base font-black ${winner === 1 ? 'text-emerald-400' : 'text-zinc-300'}`}>
+          {formatValue(value1)} <span className="text-[9px] md:text-xs font-normal opacity-50">{unit}</span>
+        </div>
+        <CategoryBar score={score1} label="" />
       </td>
-      
-      <td className={`p-2 md:p-5 text-center font-black text-[10px] md:text-sm break-all whitespace-normal ${winner === 2 ? 'bg-emerald-500/10 text-emerald-400' : 'text-zinc-500'}`}>
-        {formatValue(value2)} <span className="text-[8px] md:text-[10px] font-normal opacity-50">{unit}</span>
-      </td>
-      
-      <td className="hidden md:table-cell p-5 text-center text-zinc-600 text-[10px] font-black group-hover:text-zinc-400 transition-colors">
-        {difference > 0 ? `${percentDiff}%` : '—'}
+      <td className={`p-2 md:p-4 text-center border-l border-white/5 ${winner === 2 ? 'bg-emerald-500/5' : ''}`}>
+        <div className={`text-xs md:text-base font-black ${winner === 2 ? 'text-emerald-400' : 'text-zinc-300'}`}>
+          {formatValue(value2)} <span className="text-[9px] md:text-xs font-normal opacity-50">{unit}</span>
+        </div>
+        <CategoryBar score={score2} label="" />
       </td>
     </tr>
   );
