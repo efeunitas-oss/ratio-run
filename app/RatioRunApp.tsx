@@ -74,7 +74,7 @@ export default function RatioRunApp() {
                 RATIO.RUN
               </h1>
               <p className="text-xs sm:text-sm text-zinc-400 mt-2 tracking-widest uppercase font-bold">
-                Ultimate Decision Engine · Midas Whale Edition
+                KARAR VERMEK MATEMATİKTİR • DUYGULARI KENARA BIRAKIN, VERİYE GÜVENİN
               </p>
             </div>
             
@@ -159,7 +159,7 @@ export default function RatioRunApp() {
             <div className="flex flex-col md:flex-row items-start justify-between mb-6 gap-8">
               <div className="flex-1">
                 <div className="text-xs uppercase tracking-widest text-amber-500 mb-2 font-black">
-                  Executive Decision
+                  SİSTEMİN SEÇİMİ
                 </div>
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 leading-tight text-white tracking-tighter">
                   {comparison.verdict.split('\n')[0]}
@@ -259,10 +259,10 @@ export default function RatioRunApp() {
             <div className="flex items-center gap-2">
               <span className="text-amber-500 font-black text-xl tracking-tighter">RATIO.RUN</span> 
               <span className="text-zinc-800">|</span> 
-              <span className="text-center sm:text-left">© 2024 · Midas Whale Algorithm</span>
+              <span className="text-center sm:text-left">© 2026 RATIO.RUN | GELİŞMİŞ KARAR ALGORİTMASI</span>
             </div>
             <div className="italic text-zinc-400 text-center sm:text-right">
-              Decide with Math, not Emotions.
+              DECIDE WITH MATH, NOT EMOTIONS.
             </div>
           </div>
         </div>
