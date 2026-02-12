@@ -8,6 +8,7 @@ export interface Vehicle {
   model: string;
   year: number;
   segment: string;
+  affiliateUrl?: string;
   engineering: {
     hp: number;
     torque: number;
@@ -37,18 +38,18 @@ export interface Vehicle {
   };
 }
 
-// YENİ EKLENEN SÜPÜRGE TANIMI
 export interface RobotVacuum {
   id: string;
   name: string;
   brand: string;
   category: 'ROBOT_VACUUM';
+  affiliateUrl?: string;
   specs: {
-    suctionPower: number; // Pa
-    batteryCapacity: number; // mAh
-    noiseLevel: number; // dB
-    dustCapacity: number; // Litre
-    mappingTech: string; // Lidar, VSLAM, Camera
+    suctionPower: number;
+    batteryCapacity: number;
+    noiseLevel: number;
+    dustCapacity: number;
+    mappingTech: string;
     mopFeature: boolean;
   };
   market: {
@@ -61,6 +62,21 @@ export interface RobotVacuum {
   risk: {
     chronicIssueRisk: number;
   };
+}
+
+// ============================================================================
+// TYPE UNIONS & GUARDS (Production Safety)
+// ============================================================================
+
+export type Product = Vehicle | RobotVacuum;
+
+// Type Guard Functions
+export function isVehicle(product: Product): product is Vehicle {
+  return 'engineering' in product;
+}
+
+export function isRobotVacuum(product: Product): product is RobotVacuum {
+  return 'specs' in product;
 }
 
 export type TransmissionType = 'Manuel' | 'Otomatik' | 'DSG' | 'CVT' | 'ZF' | 'Şanzıman';

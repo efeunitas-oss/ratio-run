@@ -17,6 +17,7 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     model: '3 Serisi',
     year: 2024,
     segment: 'D',
+    affiliateUrl: 'https://www.bmw.com.tr/tr/all-models/3-series/sedan/2022/bmw-3-serisi-sedan-overview.html?ref=ratiorun',
     engineering: {
       hp: 184, torque: 300, zeroToHundred: 7.1, weight: 1570,
       transmission: 'ZF', fuelConsumption: 6.8, trunkCapacity: 480, engineDisplacement: 1998,
@@ -184,6 +185,7 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     model: 'Corolla',
     year: 2024,
     segment: 'C',
+    affiliateUrl: 'https://www.toyota.com.tr/new-cars/corolla-sedan/index.json?ref=ratiorun',
     engineering: {
       hp: 140, torque: 185, zeroToHundred: 9.3, weight: 1420,
       transmission: 'CVT', fuelConsumption: 4.6, trunkCapacity: 471, engineDisplacement: 1798,
@@ -291,6 +293,7 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     model: 'T10X',
     year: 2024,
     segment: 'C-SUV',
+    affiliateUrl: 'https://www.togg.com.tr/tr/t10x?ref=ratiorun',
     engineering: {
       hp: 218, torque: 350, zeroToHundred: 7.8, weight: 2126,
       transmission: 'Otomatik', fuelConsumption: 16.7, trunkCapacity: 441, engineDisplacement: 0,
@@ -503,6 +506,7 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     model: 'Model Y',
     year: 2024,
     segment: 'D-SUV',
+    affiliateUrl: 'https://www.tesla.com/tr_tr/modely?ref=ratiorun',
     engineering: {
       hp: 514, torque: 493, zeroToHundred: 5.0, weight: 1979,
       transmission: 'Otomatik', fuelConsumption: 16.9, trunkCapacity: 854, engineDisplacement: 0,
@@ -706,6 +710,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     name: 'Roborock S8 Pro Ultra',
     brand: 'Roborock',
     category: 'ROBOT_VACUUM',
+    affiliateUrl: 'https://www.roborock.com/tr/products/roborock-s8-pro-ultra?ref=ratiorun',
     specs: {
       suctionPower: 6000, batteryCapacity: 5200, noiseLevel: 68,
       dustCapacity: 0.4, mappingTech: 'Lidar', mopFeature: true
@@ -783,6 +788,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     name: 'Dreame X40 Ultra',
     brand: 'Dreame',
     category: 'ROBOT_VACUUM',
+    affiliateUrl: 'https://www.dreametech.com/products/dreame-x40-ultra?ref=ratiorun',
     specs: {
       suctionPower: 12000, batteryCapacity: 6400, noiseLevel: 65,
       dustCapacity: 0.35, mappingTech: 'Lidar + AI', mopFeature: true
@@ -830,6 +836,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     name: 'Xiaomi Robot Vacuum X20+',
     brand: 'Xiaomi',
     category: 'ROBOT_VACUUM',
+    affiliateUrl: 'https://www.mi.com/tr/product/xiaomi-robot-vacuum-x20-plus?ref=ratiorun',
     specs: {
       suctionPower: 6000, batteryCapacity: 5200, noiseLevel: 68,
       dustCapacity: 0.4, mappingTech: 'Lidar', mopFeature: true
