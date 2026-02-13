@@ -2429,24 +2429,8 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     affiliateLinks: [
       {
         provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/Roborock-S8-Ultra-Robot-S%C3%BCp%C3%BCrge/dp/B0CH45YNTZ',
-        price: '₺47.999',
+        url: 'https://amzn.to/4tIAOAj',
         isFeatured: true
-      },
-      {
-        provider: 'Trendyol',
-        url: 'https://www.trendyol.com/roborock/s8-pro-ultra-robot-supurge-p-599644506',
-        price: '₺48.499'
-      },
-      {
-        provider: 'Hepsiburada',
-        url: 'https://www.hepsiburada.com/roborock-s8-pro-ultra-robot-supurge-p-HBCV00003MNF',
-        price: '₺47.799'
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://tr.roborock.com/pages/roborock-s8-pro-ultra',
-        price: 'Fiyat Al'
       }
     ],
     specs: {
@@ -2486,24 +2470,8 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     affiliateLinks: [
       {
         provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/Roborock-MaxV-Ultra-Robot-S%C3%BCp%C3%BCrge/dp/B0D1HN8KBK',
-        price: '₺64.999',
+        url: 'https://amzn.to/405LivQ',
         isFeatured: true
-      },
-      {
-        provider: 'Trendyol',
-        url: 'https://www.trendyol.com/roborock/s8-maxv-ultra-robot-supurge-p-803844137',
-        price: '₺65.499'
-      },
-      {
-        provider: 'Hepsiburada',
-        url: 'https://www.hepsiburada.com/roborock-s8-maxv-ultra-robot-supurge-p-HBCV00003U7L',
-        price: '₺64.799'
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://tr.roborock.com/pages/roborock-s8-maxv-ultra',
-        price: 'Fiyat Al'
       }
     ],
     specs: {
@@ -2543,14 +2511,8 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     affiliateLinks: [
       {
         provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=roborock+q+revo',
-        price: '₺37.999',
+        url: 'https://amzn.to/3OdQ4os',
         isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://tr.roborock.com/pages/roborock-qrevo-master',
-        price: 'Fiyat Al'
       }
     ],
     specs: {
@@ -2590,14 +2552,8 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     affiliateLinks: [
       {
         provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=roborock+q8+max',
-        price: '₺21.999',
+        url: 'https://amzn.to/46sgE3B',
         isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://tr.roborock.com/pages/roborock-q8-max',
-        price: 'Fiyat Al'
       }
     ],
     specs: {
@@ -2634,24 +2590,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.dreametech.com/products/dreame-l20-ultra',
     verificationStatus: 'verified',
-    affiliateLinks: [
-      {
-        provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=dreame+l20+ultra',
-        price: '₺51.999',
-        isFeatured: true
-      },
-      {
-        provider: 'Trendyol',
-        url: 'https://www.trendyol.com/sr?q=dreame%20l20%20ultra',
-        price: '₺52.499'
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.dreametech.com/products/dreame-l20-ultra',
-        price: 'Fiyat Al'
-      }
-    ],
+    affiliateLinks: [],
     specs: {
       suctionPower: 7000,
       batteryCapacity: 6400,
@@ -2689,19 +2628,8 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     affiliateLinks: [
       {
         provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=dreame+x40+ultra',
-        price: '₺67.999',
+        url: 'https://amzn.to/4ak15gI',
         isFeatured: true
-      },
-      {
-        provider: 'Trendyol',
-        url: 'https://www.trendyol.com/sr?q=dreame%20x40%20ultra',
-        price: '₺68.499'
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.dreametech.com/products/dreame-x40-ultra',
-        price: 'Fiyat Al'
       }
     ],
     specs: {
@@ -2741,14 +2669,8 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     affiliateLinks: [
       {
         provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=dreame+l10s+pro',
-        price: '₺31.999',
+        url: 'https://amzn.to/40bjOF2',
         isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.dreametech.com/products/dreame-l10s-pro-ultra-heat',
-        price: 'Fiyat Al'
       }
     ],
     specs: {
@@ -2785,19 +2707,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.dreametech.com/products/dreame-d10s-plus',
     verificationStatus: 'verified',
-    affiliateLinks: [
-      {
-        provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=dreame+d10s',
-        price: '₺15.999',
-        isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.dreametech.com/products/dreame-d10s-plus',
-        price: 'Fiyat Al'
-      }
-    ],
+    affiliateLinks: [],
     specs: {
       suctionPower: 5000,
       batteryCapacity: 5200,
@@ -2835,24 +2745,8 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     affiliateLinks: [
       {
         provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/Xiaomi-X20-Robot-S%C3%BCp%C3%BCrge/dp/B0CQY9XXXX',
-        price: '₺23.999',
+        url: 'https://amzn.to/4rPa1jM',
         isFeatured: true
-      },
-      {
-        provider: 'Trendyol',
-        url: 'https://www.trendyol.com/xiaomi/robot-vacuum-x20-plus-p-XXXXXX',
-        price: '₺24.499'
-      },
-      {
-        provider: 'Hepsiburada',
-        url: 'https://www.hepsiburada.com/xiaomi-robot-vacuum-x20-p-HBCV0000XXX',
-        price: '₺23.799'
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.mi.com/tr/product/xiaomi-robot-vacuum-x20-plus',
-        price: 'Fiyat Al'
       }
     ],
     specs: {
@@ -2889,19 +2783,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.mi.com/global/product/xiaomi-robot-vacuum-s10-plus',
     verificationStatus: 'verified',
-    affiliateLinks: [
-      {
-        provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=xiaomi+s10',
-        price: '₺13.999',
-        isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.mi.com/tr/product/xiaomi-robot-vacuum-s10-plus',
-        price: 'Fiyat Al'
-      }
-    ],
+    affiliateLinks: [],
     specs: {
       suctionPower: 4000,
       batteryCapacity: 5200,
@@ -2936,19 +2818,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.mi.com/global/product/xiaomi-robot-vacuum-e10',
     verificationStatus: 'verified',
-    affiliateLinks: [
-      {
-        provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=xiaomi+e10',
-        price: '₺8.499',
-        isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.mi.com/tr/product/xiaomi-robot-vacuum-e10',
-        price: 'Fiyat Al'
-      }
-    ],
+    affiliateLinks: [],
     specs: {
       suctionPower: 3500,
       batteryCapacity: 2600,
@@ -2986,14 +2856,8 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     affiliateLinks: [
       {
         provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=xiaomi+s10t',
-        price: '₺17.999',
+        url: 'https://amzn.to/4rhIRCg',
         isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.mi.com/tr/product/xiaomi-robot-vacuum-s10t',
-        price: 'Fiyat Al'
       }
     ],
     specs: {
@@ -3033,14 +2897,8 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     affiliateLinks: [
       {
         provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=ecovacs+t30',
-        price: '₺41.999',
+        url: 'https://amzn.to/4ak1NdS',
         isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.ecovacs.com/tr/deebot-robotic-vacuum-cleaner/deebot-t30-omni',
-        price: 'Fiyat Al'
       }
     ],
     specs: {
@@ -3077,19 +2935,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.ecovacs.com/tr/deebot-robotic-vacuum-cleaner/deebot-x1-omni',
     verificationStatus: 'verified',
-    affiliateLinks: [
-      {
-        provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=ecovacs+x1',
-        price: '₺34.999',
-        isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.ecovacs.com/tr/deebot-robotic-vacuum-cleaner/deebot-x1-omni',
-        price: 'Fiyat Al'
-      }
-    ],
+    affiliateLinks: [],
     specs: {
       suctionPower: 5000,
       batteryCapacity: 5200,
@@ -3124,19 +2970,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.irobot.com/en_US/roomba-combo-j9-plus/J955020.html',
     verificationStatus: 'verified',
-    affiliateLinks: [
-      {
-        provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=irobot+j9',
-        price: '₺44.999',
-        isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.irobot.com/en_US/roomba-combo-j9-plus/J955020.html',
-        price: 'Fiyat Al'
-      }
-    ],
+    affiliateLinks: [],
     specs: {
       suctionPower: 4500,
       batteryCapacity: 4400,
@@ -3174,14 +3008,8 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     affiliateLinks: [
       {
         provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=irobot+j7',
-        price: '₺27.999',
+        url: 'https://amzn.to/4ajx2Wg',
         isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.irobot.com/en_US/roomba-j7-plus/J755020.html',
-        price: 'Fiyat Al'
       }
     ],
     specs: {
@@ -3218,19 +3046,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.dyson.com.tr/vakum-temizleyiciler/robotlar/dyson-360-vis-nav',
     verificationStatus: 'verified',
-    affiliateLinks: [
-      {
-        provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=dyson+360',
-        price: '₺44.999',
-        isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.dyson.com.tr/vakum-temizleyiciler/robotlar/dyson-360-vis-nav',
-        price: 'Fiyat Al'
-      }
-    ],
+    affiliateLinks: [],
     specs: {
       suctionPower: 3500,
       batteryCapacity: 4000,
@@ -3268,14 +3084,8 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     affiliateLinks: [
       {
         provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=philips+homerun+7000',
-        price: '₺23.999',
+        url: 'https://amzn.to/4rlk9RJ',
         isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.philips.com.tr/c-p/XU7000_01/homerun-7000-seri-robot-supurge',
-        price: 'Fiyat Al'
       }
     ],
     specs: {
@@ -3312,19 +3122,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.tefal.com.tr/Ev-Aletleri/X-plorer-Serie-95-Robot-Supurge/p/7211004374',
     verificationStatus: 'verified',
-    affiliateLinks: [
-      {
-        provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=tefal+xplorer+95',
-        price: '₺18.999',
-        isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.tefal.com.tr/Ev-Aletleri/X-plorer-Serie-95-Robot-Supurge/p/7211004374',
-        price: 'Fiyat Al'
-      }
-    ],
+    affiliateLinks: [],
     specs: {
       suctionPower: 12000,
       batteryCapacity: 5200,
@@ -3359,19 +3157,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://us.eufy.com/products/t2261111',
     verificationStatus: 'verified',
-    affiliateLinks: [
-      {
-        provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=eufy+x8',
-        price: '₺14.999',
-        isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://us.eufy.com/products/t2261111',
-        price: 'Fiyat Al'
-      }
-    ],
+    affiliateLinks: [],
     specs: {
       suctionPower: 4000,
       batteryCapacity: 5200,
@@ -3409,14 +3195,8 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     affiliateLinks: [
       {
         provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=viomi+v5',
-        price: '₺12.999',
+        url: 'https://amzn.to/4kzJd4J',
         isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.viomi.com/product/v5-pro',
-        price: 'Fiyat Al'
       }
     ],
     specs: {
@@ -3453,19 +3233,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.lydsto.com/products/r1',
     verificationStatus: 'verified',
-    affiliateLinks: [
-      {
-        provider: 'Amazon',
-        url: 'https://www.amazon.com.tr/s?k=lydsto+r1',
-        price: '₺10.999',
-        isFeatured: true
-      },
-      {
-        provider: 'Resmi Site',
-        url: 'https://www.lydsto.com/products/r1',
-        price: 'Fiyat Al'
-      }
-    ],
+    affiliateLinks: [],
     specs: {
       suctionPower: 2700,
       batteryCapacity: 5200,
