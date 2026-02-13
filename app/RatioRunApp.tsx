@@ -42,7 +42,7 @@ export default function RatioRunApp() {
               <h1 className="text-2xl sm:text-3xl font-black tracking-tighter bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 bg-clip-text text-transparent">
                 RATIO.RUN
               </h1>
-              <p className="text-xs sm:text-sm text-zinc-400 mt-1">Karşılaştır, Karar Ver, Pişman Olma</p>
+              <p className="text-xs sm:text-sm text-zinc-400 mt-1">Don't buy with emotions. Trust the data.</p>
             </div>
 
             {/* Category Switcher */}
@@ -138,7 +138,7 @@ export default function RatioRunApp() {
               {isVehicleCategory ? '🚗' : '🤖'}
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-zinc-300 mb-2">
-              {isVehicleCategory ? 'Araç Seçin' : 'Robot Süpürge Seçin'}
+              Analizi Başlat / Start Analysis
             </h2>
             <p className="text-sm sm:text-base text-zinc-500">
               Karşılaştırma için yukarıdan iki ürün seçin
@@ -150,7 +150,7 @@ export default function RatioRunApp() {
       {/* Footer */}
       <footer className="border-t border-zinc-800 mt-12 sm:mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 text-center text-xs sm:text-sm text-zinc-500">
-          <p>© 2026 Ratio.Run - Akıllı Karşılaştırma Platformu</p>
+          <p>RatioRun © 2026 - Akıllı Karşılaştırma Platformu</p>
         </div>
       </footer>
     </div>
@@ -219,8 +219,8 @@ function WinnerCard({ comparison, isVehicle }: WinnerCardProps) {
           <div className="flex items-center gap-3 mb-4">
             <span className="text-4xl sm:text-5xl animate-bounce">👑</span>
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-yellow-400 drop-shadow-lg">KAZANAN</h2>
-              <p className="text-xs sm:text-sm text-yellow-300/80">Ağırlıklı Skor Sistemi ile Hesaplandı</p>
+              <h2 className="text-xl sm:text-2xl font-black text-yellow-400 drop-shadow-lg">AKILLI SEÇİM</h2>
+              <p className="text-xs sm:text-sm text-yellow-300/80">Rational Superiority Confirmed</p>
             </div>
           </div>
 
@@ -297,7 +297,7 @@ function ScoreCard({ analysis, isWinner, isVehicle }: ScoreCardProps) {
       {isWinner && (
         <div className="flex items-center gap-2 mb-4 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 px-3 py-2 rounded-lg border border-yellow-500/30">
           <span className="text-2xl animate-pulse">👑</span>
-          <span className="text-sm font-black text-yellow-400 tracking-wide">KAZANAN</span>
+          <span className="text-sm font-black text-yellow-400 tracking-wide">AKILLI SEÇİM</span>
         </div>
       )}
 
