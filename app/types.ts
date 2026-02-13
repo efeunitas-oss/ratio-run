@@ -1,5 +1,17 @@
 // RATIO.RUN - Type Definitions
 // Complete type system for dual-category comparison platform
+// [UPDATED: Affiliate Links Support]
+
+// ============================================================================
+// AFFILIATE LINK SYSTEM
+// ============================================================================
+
+export interface AffiliateLink {
+  provider: 'Amazon' | 'Trendyol' | 'Hepsiburada' | 'Resmi Site';
+  url: string;
+  price?: string;
+  isFeatured?: boolean; // En yüksek komisyonlu link (genelde Amazon)
+}
 
 // ============================================================================
 // CORE PRODUCT TYPES
@@ -21,10 +33,11 @@ export interface Vehicle {
   model: string;
   year: number;
   segment: string;
-  category?: 'VEHICLE'; // Optional for type discrimination
+  category?: 'VEHICLE';
   sourceUrl?: string;
   verificationStatus?: VerificationStatus;
-  affiliateUrl?: string;
+  affiliateUrl?: string; // DEPRECATED - kullanma artık
+  affiliateLinks?: AffiliateLink[]; // YENİ: Çoklu link desteği
   engineering: VehicleEngineering;
   market: MarketData;
   quality: VehicleQuality;
@@ -63,7 +76,8 @@ export interface RobotVacuum {
   category: 'ROBOT_VACUUM';
   sourceUrl?: string;
   verificationStatus?: VerificationStatus;
-  affiliateUrl?: string;
+  affiliateUrl?: string; // DEPRECATED - kullanma artık
+  affiliateLinks?: AffiliateLink[]; // YENİ: Çoklu link desteği
   specs: VacuumSpecs;
   market: MarketData;
   risk: RiskData;

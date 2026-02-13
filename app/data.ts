@@ -28,7 +28,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'D',
     sourceUrl: 'https://www.bmw.com.tr/tr/all-models/3-series/sedan/2022/bmw-3-serisi-sedan-overview.html',
     verificationStatus: 'verified',
-    affiliateUrl: 'https://www.bmw.com.tr/tr/all-models/3-series/sedan/2022/bmw-3-serisi-sedan-overview.html?ref=ratiorun',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.bmw.com.tr/tr/all-models/3-series/sedan/2022/bmw-3-serisi-sedan-overview.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 184,
       torque: 300,
@@ -74,6 +81,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'D',
     sourceUrl: 'https://www.mercedes-benz.com.tr/passengercars/models/saloon/c-class/overview.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.mercedes-benz.com.tr/passengercars/models/saloon/c-class/overview.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 204,
       torque: 320,
@@ -119,6 +134,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'D',
     sourceUrl: 'https://www.audi.com.tr/tr/web/tr/models/a4/a4-sedan.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.audi.com.tr/tr/web/tr/models/a4/a4-sedan.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 265,
       torque: 370,
@@ -164,6 +187,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'D',
     sourceUrl: 'https://www.volkswagen.com.tr/tr/models/passat.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.volkswagen.com.tr/tr/models/passat.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 150,
       torque: 250,
@@ -209,6 +240,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'D',
     sourceUrl: 'https://www.skoda.com.tr/modeller/superb',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.skoda.com.tr/modeller/superb',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 150,
       torque: 250,
@@ -256,6 +295,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.volkswagen.com.tr/tr/models/golf.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.volkswagen.com.tr/tr/models/golf.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 150,
       torque: 250,
@@ -301,6 +348,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.audi.com.tr/tr/web/tr/models/a3/a3-sportback.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.audi.com.tr/tr/web/tr/models/a3/a3-sportback.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 150,
       torque: 250,
@@ -346,6 +401,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.bmw.com.tr/tr/all-models/1-series/5-door/2019/bmw-1-serisi-5-kapi-genel-bakis.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.bmw.com.tr/tr/all-models/1-series/5-door/2019/bmw-1-serisi-5-kapi-genel-bakis.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 140,
       torque: 220,
@@ -391,6 +454,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.mercedes-benz.com.tr/passengercars/models/hatchback/a-class/overview.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.mercedes-benz.com.tr/passengercars/models/hatchback/a-class/overview.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 163,
       torque: 270,
@@ -436,6 +507,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.peugeot.com.tr/modeller/308.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.peugeot.com.tr/modeller/308.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 130,
       torque: 230,
@@ -481,6 +560,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.opel.com.tr/otomobiller/astra/5-kapi.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.opel.com.tr/otomobiller/astra/5-kapi.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 130,
       torque: 230,
@@ -526,7 +613,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.toyota.com.tr/new-cars/corolla-sedan',
     verificationStatus: 'verified',
-    affiliateUrl: 'https://www.toyota.com.tr/new-cars/corolla-sedan/index.json?ref=ratiorun',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.toyota.com.tr/new-cars/corolla-sedan',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 140,
       torque: 185,
@@ -572,6 +666,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.honda.com.tr/cars/new/civic',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.honda.com.tr/cars/new/civic',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 182,
       torque: 240,
@@ -617,6 +719,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.renault.com.tr/otomobiller/megane.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.renault.com.tr/otomobiller/megane.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 140,
       torque: 240,
@@ -662,6 +772,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.fiat.com.tr/otomobil-modelleri/egea',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.fiat.com.tr/otomobil-modelleri/egea',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 130,
       torque: 320,
@@ -707,6 +825,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.skoda.com.tr/modeller/octavia',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.skoda.com.tr/modeller/octavia',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 150,
       torque: 250,
@@ -752,6 +878,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.ford.com.tr/otomobiller/focus',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.ford.com.tr/otomobiller/focus',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 115,
       torque: 300,
@@ -797,6 +931,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.seat.com.tr/modeller/leon.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.seat.com.tr/modeller/leon.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 150,
       torque: 250,
@@ -844,7 +986,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C-SUV',
     sourceUrl: 'https://www.togg.com.tr/tr/t10x',
     verificationStatus: 'verified',
-    affiliateUrl: 'https://www.togg.com.tr/tr/t10x?ref=ratiorun',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.togg.com.tr/tr/t10x',
+        price: 'Sipariş Ver',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 218,
       torque: 350,
@@ -890,6 +1039,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'D-SUV',
     sourceUrl: 'https://www.cheryturkiye.com/tiggo-8-pro',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.cheryturkiye.com/tiggo-8-pro',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 197,
       torque: 290,
@@ -935,6 +1092,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C-SUV',
     sourceUrl: 'https://www.cheryturkiye.com/omoda-5',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.cheryturkiye.com/omoda-5',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 183,
       torque: 275,
@@ -980,6 +1145,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'B-SUV',
     sourceUrl: 'https://www.peugeot.com.tr/modeller/2008.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.peugeot.com.tr/modeller/2008.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 130,
       torque: 230,
@@ -1025,6 +1198,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'B-SUV',
     sourceUrl: 'https://www.opel.com.tr/otomobiller/mokka.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.opel.com.tr/otomobiller/mokka.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 130,
       torque: 230,
@@ -1070,6 +1251,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C-SUV',
     sourceUrl: 'https://www.nissan.com.tr/araclar/yeni-araclar/qashqai.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.nissan.com.tr/araclar/yeni-araclar/qashqai.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 190,
       torque: 330,
@@ -1115,6 +1304,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C-SUV',
     sourceUrl: 'https://www.kia.com/tr/models/sportage/',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.kia.com/tr/models/sportage/',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 150,
       torque: 250,
@@ -1160,6 +1357,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C-SUV',
     sourceUrl: 'https://www.hyundai.com/tr/tr/models/tucson.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.hyundai.com/tr/tr/models/tucson.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 180,
       torque: 265,
@@ -1205,6 +1410,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C-SUV',
     sourceUrl: 'https://www.cupraofficial.com.tr/modeller/formentor.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.cupraofficial.com.tr/modeller/formentor.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 150,
       torque: 250,
@@ -1250,6 +1463,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C-SUV',
     sourceUrl: 'https://www.peugeot.com.tr/modeller/408.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.peugeot.com.tr/modeller/408.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 130,
       torque: 230,
@@ -1295,6 +1516,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C-SUV',
     sourceUrl: 'https://www.dacia.com.tr/araclar/duster.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.dacia.com.tr/araclar/duster.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 150,
       torque: 250,
@@ -1340,6 +1569,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C-SUV',
     sourceUrl: 'https://www.volkswagen.com.tr/tr/models/tiguan.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.volkswagen.com.tr/tr/models/tiguan.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 150,
       torque: 250,
@@ -1385,6 +1622,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'B-SUV',
     sourceUrl: 'https://www.ford.com.tr/otomobiller/puma',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.ford.com.tr/otomobiller/puma',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 125,
       torque: 200,
@@ -1430,6 +1675,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'B-SUV',
     sourceUrl: 'https://www.hyundai.com/tr/tr/models/bayon.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.hyundai.com/tr/tr/models/bayon.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 100,
       torque: 134,
@@ -1477,7 +1730,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'D-SUV',
     sourceUrl: 'https://www.tesla.com/tr_tr/modely',
     verificationStatus: 'verified',
-    affiliateUrl: 'https://www.tesla.com/tr_tr/modely?ref=ratiorun',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.tesla.com/tr_tr/modely/design',
+        price: 'Sipariş Ver',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 514,
       torque: 493,
@@ -1523,6 +1783,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C-SUV',
     sourceUrl: 'https://www.byd.com/tr/car/atto3.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.byd.com/tr/car/atto3.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 204,
       torque: 310,
@@ -1568,6 +1836,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'D-SUV',
     sourceUrl: 'https://www.byd.com/tr/car/seal-u.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.byd.com/tr/car/seal-u.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 218,
       torque: 300,
@@ -1613,6 +1889,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.mgmotor.com.tr/mg4-electric',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.mgmotor.com.tr/mg4-electric',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 204,
       torque: 250,
@@ -1658,6 +1942,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C-SUV',
     sourceUrl: 'https://www.volvocars.com/tr/cars/xc40-electric/',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.volvocars.com/tr/cars/xc40-electric/',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 231,
       torque: 330,
@@ -1703,6 +1995,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'E',
     sourceUrl: 'https://www.mercedes-benz.com.tr/passengercars/models/saloon/eqe/overview.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.mercedes-benz.com.tr/passengercars/models/saloon/eqe/overview.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 292,
       torque: 565,
@@ -1748,6 +2048,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'E-SUV',
     sourceUrl: 'https://www.bmw.com.tr/tr/all-models/bmw-i/ix/2021/bmw-ix-genel-bakis.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.bmw.com.tr/tr/all-models/bmw-i/ix/2021/bmw-ix-genel-bakis.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 326,
       torque: 630,
@@ -1793,6 +2101,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.renault.com.tr/elektrikli-otomobiller/megane-e-tech-electric.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.renault.com.tr/elektrikli-otomobiller/megane-e-tech-electric.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 220,
       torque: 300,
@@ -1838,6 +2154,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'D-SUV',
     sourceUrl: 'https://www.skywelltr.com/et5',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.skywelltr.com/et5',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 204,
       torque: 320,
@@ -1885,6 +2209,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'B',
     sourceUrl: 'https://www.hyundai.com/tr/tr/models/i20.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.hyundai.com/tr/tr/models/i20.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 100,
       torque: 134,
@@ -1930,6 +2262,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'B',
     sourceUrl: 'https://www.renault.com.tr/otomobiller/clio.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.renault.com.tr/otomobiller/clio.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 90,
       torque: 160,
@@ -1975,6 +2315,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'C',
     sourceUrl: 'https://www.fiat.com.tr/otomobil-modelleri/egea-hatchback',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.fiat.com.tr/otomobil-modelleri/egea-hatchback',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 95,
       torque: 127,
@@ -2020,6 +2368,14 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     segment: 'B',
     sourceUrl: 'https://www.opel.com.tr/otomobiller/corsa.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.opel.com.tr/otomobiller/corsa.html',
+        price: 'Bayiden Fiyat Al',
+        isFeatured: true
+      }
+    ],
     engineering: {
       hp: 100,
       torque: 205,
@@ -2070,7 +2426,29 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://global.roborock.com/pages/roborock-s8-pro-ultra',
     verificationStatus: 'verified',
-    affiliateUrl: 'https://www.roborock.com/tr/products/roborock-s8-pro-ultra?ref=ratiorun',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/Roborock-S8-Ultra-Robot-S%C3%BCp%C3%BCrge/dp/B0CH45YNTZ',
+        price: '₺47.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Trendyol',
+        url: 'https://www.trendyol.com/roborock/s8-pro-ultra-robot-supurge-p-599644506',
+        price: '₺48.499'
+      },
+      {
+        provider: 'Hepsiburada',
+        url: 'https://www.hepsiburada.com/roborock-s8-pro-ultra-robot-supurge-p-HBCV00003MNF',
+        price: '₺47.799'
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://tr.roborock.com/pages/roborock-s8-pro-ultra',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 6000,
       batteryCapacity: 5200,
@@ -2105,6 +2483,29 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://global.roborock.com/pages/roborock-s8-maxv-ultra',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/Roborock-MaxV-Ultra-Robot-S%C3%BCp%C3%BCrge/dp/B0D1HN8KBK',
+        price: '₺64.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Trendyol',
+        url: 'https://www.trendyol.com/roborock/s8-maxv-ultra-robot-supurge-p-803844137',
+        price: '₺65.499'
+      },
+      {
+        provider: 'Hepsiburada',
+        url: 'https://www.hepsiburada.com/roborock-s8-maxv-ultra-robot-supurge-p-HBCV00003U7L',
+        price: '₺64.799'
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://tr.roborock.com/pages/roborock-s8-maxv-ultra',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 10000,
       batteryCapacity: 5200,
@@ -2139,6 +2540,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://global.roborock.com/pages/roborock-qrevo-master',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=roborock+q+revo',
+        price: '₺37.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://tr.roborock.com/pages/roborock-qrevo-master',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 7000,
       batteryCapacity: 5200,
@@ -2173,6 +2587,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://global.roborock.com/pages/roborock-q8-max',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=roborock+q8+max',
+        price: '₺21.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://tr.roborock.com/pages/roborock-q8-max',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 5500,
       batteryCapacity: 5200,
@@ -2207,6 +2634,24 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.dreametech.com/products/dreame-l20-ultra',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=dreame+l20+ultra',
+        price: '₺51.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Trendyol',
+        url: 'https://www.trendyol.com/sr?q=dreame%20l20%20ultra',
+        price: '₺52.499'
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.dreametech.com/products/dreame-l20-ultra',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 7000,
       batteryCapacity: 6400,
@@ -2241,7 +2686,24 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.dreametech.com/products/dreame-x40-ultra',
     verificationStatus: 'verified',
-    affiliateUrl: 'https://www.dreametech.com/products/dreame-x40-ultra?ref=ratiorun',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=dreame+x40+ultra',
+        price: '₺67.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Trendyol',
+        url: 'https://www.trendyol.com/sr?q=dreame%20x40%20ultra',
+        price: '₺68.499'
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.dreametech.com/products/dreame-x40-ultra',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 12000,
       batteryCapacity: 6400,
@@ -2276,6 +2738,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.dreametech.com/products/dreame-l10s-pro-ultra-heat',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=dreame+l10s+pro',
+        price: '₺31.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.dreametech.com/products/dreame-l10s-pro-ultra-heat',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 7000,
       batteryCapacity: 5200,
@@ -2310,6 +2785,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.dreametech.com/products/dreame-d10s-plus',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=dreame+d10s',
+        price: '₺15.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.dreametech.com/products/dreame-d10s-plus',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 5000,
       batteryCapacity: 5200,
@@ -2344,7 +2832,29 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.mi.com/global/product/xiaomi-robot-vacuum-x20',
     verificationStatus: 'verified',
-    affiliateUrl: 'https://www.mi.com/tr/product/xiaomi-robot-vacuum-x20-plus?ref=ratiorun',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/Xiaomi-X20-Robot-S%C3%BCp%C3%BCrge/dp/B0CQY9XXXX',
+        price: '₺23.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Trendyol',
+        url: 'https://www.trendyol.com/xiaomi/robot-vacuum-x20-plus-p-XXXXXX',
+        price: '₺24.499'
+      },
+      {
+        provider: 'Hepsiburada',
+        url: 'https://www.hepsiburada.com/xiaomi-robot-vacuum-x20-p-HBCV0000XXX',
+        price: '₺23.799'
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.mi.com/tr/product/xiaomi-robot-vacuum-x20-plus',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 6000,
       batteryCapacity: 5200,
@@ -2379,6 +2889,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.mi.com/global/product/xiaomi-robot-vacuum-s10-plus',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=xiaomi+s10',
+        price: '₺13.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.mi.com/tr/product/xiaomi-robot-vacuum-s10-plus',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 4000,
       batteryCapacity: 5200,
@@ -2413,6 +2936,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.mi.com/global/product/xiaomi-robot-vacuum-e10',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=xiaomi+e10',
+        price: '₺8.499',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.mi.com/tr/product/xiaomi-robot-vacuum-e10',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 3500,
       batteryCapacity: 2600,
@@ -2447,6 +2983,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.mi.com/global/product/xiaomi-robot-vacuum-s10t',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=xiaomi+s10t',
+        price: '₺17.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.mi.com/tr/product/xiaomi-robot-vacuum-s10t',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 8000,
       batteryCapacity: 5200,
@@ -2481,6 +3030,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.ecovacs.com/tr/deebot-robotic-vacuum-cleaner/deebot-t30-omni',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=ecovacs+t30',
+        price: '₺41.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.ecovacs.com/tr/deebot-robotic-vacuum-cleaner/deebot-t30-omni',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 11000,
       batteryCapacity: 5200,
@@ -2515,6 +3077,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.ecovacs.com/tr/deebot-robotic-vacuum-cleaner/deebot-x1-omni',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=ecovacs+x1',
+        price: '₺34.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.ecovacs.com/tr/deebot-robotic-vacuum-cleaner/deebot-x1-omni',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 5000,
       batteryCapacity: 5200,
@@ -2549,6 +3124,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.irobot.com/en_US/roomba-combo-j9-plus/J955020.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=irobot+j9',
+        price: '₺44.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.irobot.com/en_US/roomba-combo-j9-plus/J955020.html',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 4500,
       batteryCapacity: 4400,
@@ -2583,6 +3171,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.irobot.com/en_US/roomba-j7-plus/J755020.html',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=irobot+j7',
+        price: '₺27.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.irobot.com/en_US/roomba-j7-plus/J755020.html',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 2200,
       batteryCapacity: 4400,
@@ -2617,6 +3218,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.dyson.com.tr/vakum-temizleyiciler/robotlar/dyson-360-vis-nav',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=dyson+360',
+        price: '₺44.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.dyson.com.tr/vakum-temizleyiciler/robotlar/dyson-360-vis-nav',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 3500,
       batteryCapacity: 4000,
@@ -2651,6 +3265,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.philips.com.tr/c-p/XU7000_01/homerun-7000-seri-robot-supurge',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=philips+homerun+7000',
+        price: '₺23.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.philips.com.tr/c-p/XU7000_01/homerun-7000-seri-robot-supurge',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 5000,
       batteryCapacity: 5200,
@@ -2685,6 +3312,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.tefal.com.tr/Ev-Aletleri/X-plorer-Serie-95-Robot-Supurge/p/7211004374',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=tefal+xplorer+95',
+        price: '₺18.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.tefal.com.tr/Ev-Aletleri/X-plorer-Serie-95-Robot-Supurge/p/7211004374',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 12000,
       batteryCapacity: 5200,
@@ -2719,6 +3359,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://us.eufy.com/products/t2261111',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=eufy+x8',
+        price: '₺14.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://us.eufy.com/products/t2261111',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 4000,
       batteryCapacity: 5200,
@@ -2753,6 +3406,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.viomi.com/product/v5-pro',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=viomi+v5',
+        price: '₺12.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.viomi.com/product/v5-pro',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 4000,
       batteryCapacity: 5200,
@@ -2787,6 +3453,19 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     category: 'ROBOT_VACUUM',
     sourceUrl: 'https://www.lydsto.com/products/r1',
     verificationStatus: 'verified',
+    affiliateLinks: [
+      {
+        provider: 'Amazon',
+        url: 'https://www.amazon.com.tr/s?k=lydsto+r1',
+        price: '₺10.999',
+        isFeatured: true
+      },
+      {
+        provider: 'Resmi Site',
+        url: 'https://www.lydsto.com/products/r1',
+        price: 'Fiyat Al'
+      }
+    ],
     specs: {
       suctionPower: 2700,
       batteryCapacity: 5200,

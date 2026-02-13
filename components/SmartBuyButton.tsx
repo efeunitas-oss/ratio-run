@@ -1,107 +1,103 @@
 'use client';
 
-import React from 'react';
-import { Product, isVehicle } from '../app/types';
+import React, { useState } from 'react';
+import { ChevronDown, ShoppingCart, ExternalLink, Search } from 'lucide-react';
 
-interface SmartBuyButtonProps {
-  product: Product;
-  className?: string;
+interface AffiliateLink {
+  provider: string;
+  url: string;
+  price?: string;
+  isFeatured?: boolean;
 }
 
-export const SmartBuyButton: React.FC<SmartBuyButtonProps> = ({ 
-  product, 
-  className = '' 
-}) => {
-  const handleClick = () => {
-    if (product.affiliateUrl) {
-      // Affiliate linki varsa direkt oraya git
-      window.open(product.affiliateUrl, '_blank', 'noopener,noreferrer');
-    } else {
-      // Type Guard ile kategori belirleme
-      const searchQuery = `${product.brand} ${isVehicle(product) ? product.model : ''} fiyatları`.trim();
-      
-      let finalUrl: string;
-      if (isVehicle(product)) {
-        // Arabalar için: Genel Google Araması (Sahibinden vb.)
-        finalUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
-      } else {
-        // Robot Süpürgeler için: Google Shopping sekmesi
-        finalUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}&tbm=shop`;
-      }
-      
-      window.open(finalUrl, '_blank', 'noopener,noreferrer');
-    }
+interface SmartBuyButtonProps {
+  product: {
+    brand: string;
+    model?: string;
+    name?: string;
+    category?: string;
+    affiliateLinks?: AffiliateLink[];
+  };
+}
+
+export default function SmartBuyButton({ product }: SmartBuyButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const links = product.affiliateLinks || [];
+
+  // Link yoksa Google Arama'ya yönlendirir
+  const handleSearchClick = () => {
+    const productModel = product.model || product.name || '';
+    const searchQuery = `${product.brand} ${productModel} fiyatları`;
+    const isVacuum = product.category === 'ROBOT_VACUUM' || product.name?.toLowerCase().includes('vacuum');
+    const url = isVacuum
+      ? `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}&tbm=shop`
+      : `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  // 1. DURUM: HİÇ LİNK YOKSA (GOOGLE ARAMA BUTONU)
+  if (links.length === 0) {
+    return (
+      <button
+        onClick={handleSearchClick}
+        className="group relative inline-flex items-center justify-center gap-3 w-full px-8 py-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-black font-black text-lg uppercase tracking-wider rounded-xl shadow-xl transition-all duration-300 hover:scale-[1.02]"
+      >
+        <Search className="w-5 h-5" />
+        <span>Fiyatları Gör</span>
+      </button>
+    );
+  }
+
+  const featuredLink = links.find(l => l.isFeatured) || links[0];
+  const otherLinks = links.filter(l => l !== featuredLink);
+
+  // 2. DURUM: LİNK VARSA (AFFILIATE BUTONU + DROPDOWN)
   return (
-    <button
-      onClick={handleClick}
-      className={`
-        group relative inline-flex items-center justify-center gap-3 
-        px-10 py-5 
-        bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 
-        hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700
-        text-black font-black text-xl uppercase tracking-wider
-        rounded-xl shadow-2xl shadow-emerald-500/30 
-        hover:shadow-emerald-500/50
-        border-2 border-emerald-400/50
-        transform transition-all duration-300 
-        hover:scale-105 active:scale-95
-        overflow-hidden
-        ${className}
-      `}
-      aria-label={
-        product.affiliateUrl 
-          ? `${product.brand} satın al` 
-          : `${product.brand} fiyatlarını gör`
-      }
-    >
-      {/* Animasyonlu arka plan efekti */}
-      <span className="absolute inset-0 bg-gradient-to-r from-emerald-300 to-green-300 opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
-      
-      {/* Işıltı efekti */}
-      <span className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.3),transparent_50%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      
-      {/* İkon - Alışveriş Sepeti */}
-      <svg 
-        className="w-7 h-7 relative z-10 transition-transform group-hover:rotate-12 group-hover:scale-110" 
-        fill="currentColor" 
-        viewBox="0 0 24 24"
-      >
-        <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
-      </svg>
-      
-      {/* Metin */}
-      <span className="relative z-10 drop-shadow-sm">
-        {product.affiliateUrl ? 'Hemen Satın Al' : 'Fiyatları Gör'}
-      </span>
-      
-      {/* Sağ ok animasyonu */}
-      <svg 
-        className="w-6 h-6 relative z-10 transition-transform group-hover:translate-x-2" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth={3}
-        viewBox="0 0 24 24"
-      >
-        <path 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          d="M13 7l5 5m0 0l-5 5m5-5H6" 
-        />
-      </svg>
+    <div className="relative w-full flex flex-col gap-2">
+      <div className="flex w-full group">
+        <a
+          href={featuredLink.url}
+          target="_blank"
+          rel="noopener noreferrer sponsored"
+          className="flex-1 inline-flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black text-lg uppercase tracking-wider rounded-l-xl border-y border-l border-orange-400/30 transition-all duration-300"
+        >
+          <ShoppingCart className="w-5 h-5" />
+          <span>HEMEN SATIN AL</span>
+        </a>
 
-      {/* Alt köşe rozet (link varsa) */}
-      {product.affiliateUrl && (
-        <span className="absolute -bottom-1 -right-1 bg-amber-400 text-black text-[10px] font-black px-2 py-0.5 rounded-tl-lg uppercase tracking-widest">
-          Partner
-        </span>
+        {links.length > 1 && (
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="px-4 py-4 bg-orange-700 hover:bg-orange-800 text-white rounded-r-xl border-y border-r border-orange-400/30 transition-all duration-300"
+          >
+            <ChevronDown className={`w-6 h-6 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+          </button>
+        )}
+      </div>
+
+      {/* Diğer Satıcılar Dropdown */}
+      {isOpen && otherLinks.length > 0 && (
+        <div className="absolute top-full left-0 w-full mt-2 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden z-50 shadow-2xl animate-in fade-in slide-in-from-top-1">
+          <div className="px-4 py-2 bg-zinc-800/50 text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+            Diğer Satıcılar
+          </div>
+          {otherLinks.map((link, index) => (
+            <a
+              key={index}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              className="flex items-center justify-between px-6 py-4 hover:bg-zinc-800 transition-colors border-t border-zinc-800/50"
+            >
+              <span className="text-zinc-300 font-bold uppercase text-sm">{link.provider}</span>
+              <div className="flex items-center gap-3">
+                {link.price && <span className="text-amber-400 font-bold">{link.price}</span>}
+                <ExternalLink className="w-4 h-4 text-zinc-500" />
+              </div>
+            </a>
+          ))}
+        </div>
       )}
-
-      {/* Işık süzmesi efekti */}
-      <div className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white/20 opacity-40 group-hover:animate-shine" />
-    </button>
+    </div>
   );
-};
-
-export default SmartBuyButton;
+}
