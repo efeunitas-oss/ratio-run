@@ -1824,7 +1824,7 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
       'Geniş servis ağı - Türkiye geneli'
     ],
     documentedWeaknesses: [
-      'Dar iç mekan - benze'li Megane kadar geniş değil',
+      'Dar iç mekan - benzinli Megane kadar geniş değil',
       'Yavaş şarj - 7.4kW AC şarj',
       'Menzil kaygısı - 300km gerçek menzil'
     ]
@@ -2229,7 +2229,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
       'MopExtend - kenar temizliği'
     ],
     documentedWeaknesses: [
-      'Marka bilinirliği düşük - Roborock'un gölgesinde',
+      'Marka bilinirliği düşük - Roborock\'un gölgesinde',
       'Servis ağı sınırlı - sadece büyük şehirler',
       'Küçük toz haznesi - 300ml'
     ]
@@ -2369,7 +2369,7 @@ export const SAMPLE_VACUUMS: RobotVacuum[] = [
     documentedWeaknesses: [
       'Mapping stabilitesi - harita kaybı bildirimleri',
       'Uygulama Çince kaynaklı - çeviri hataları',
-      'Build kalitesi - Roborock'tan düşük plastik'
+      "Build kalitesi - Roborocktan düşük plastik"
     ]
   },
   {
