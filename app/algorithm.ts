@@ -1,6 +1,6 @@
 // RATIO.RUN - Algorithm & Calculation Engine
 // The Brain: Ağırlıklı matris sistemi ve tüm hesaplamalar
-// [Production Edition - Type-Safe & Calibrated]
+// [Production Edition - Type-Safe & Calibrated - FAIR SCORING]
 
 import {
   Vehicle,
@@ -87,7 +87,6 @@ interface VacuumNormalizationBounds {
 // ============================================================================
 
 function normalizeHigherIsBetter(value: number, min: number, max: number): number {
-  // Type safety
   const safeValue = safeNumber(value, 0);
   const safeMin = safeNumber(min, 0);
   const safeMax = safeNumber(max, 100);
@@ -99,7 +98,6 @@ function normalizeHigherIsBetter(value: number, min: number, max: number): numbe
 }
 
 function normalizeLowerIsBetter(value: number, min: number, max: number): number {
-  // Type safety
   const safeValue = safeNumber(value, 100);
   const safeMin = safeNumber(min, 0);
   const safeMax = safeNumber(max, 100);
@@ -115,14 +113,13 @@ function normalizeLowerIsBetter(value: number, min: number, max: number): number
 // ============================================================================
 
 function scoreTransmission(type: TransmissionType): number {
-  // HASSAS KALİBRASYON: ZF vs Otomatik farkı artırıldı
   const scores: Record<TransmissionType, number> = {
-    'ZF': 100,          // BMW ZF 8HP - sektör standardı
-    'DSG': 90,          // VW/Audi DSG - hızlı ama mekatronik riski
-    'Manuel': 75,       // Eski teknoloji ama güvenilir
-    'Otomatik': 70,     // Genel otomatik - ZF olmayan
-    'Şanzıman': 65,     // Belirsiz otomatik
-    'CVT': 35,          // Hissiz sürüş - Toyota/Honda
+    'ZF': 100,
+    'DSG': 90,
+    'Manuel': 75,
+    'Otomatik': 70,
+    'Şanzıman': 65,
+    'CVT': 35,
   };
   
   const score = scores[type];
@@ -142,7 +139,6 @@ function scoreTrimLevel(trim: TrimLevel): number {
 }
 
 function scoreMappingTech(tech: string): number {
-  // Type-safe string handling
   const safeTech = safeString(tech, 'Unknown');
   
   const scores: Record<string, number> = {
@@ -175,8 +171,6 @@ function calculateHillPerformance(torque: number, weight: number): number {
   if (safeWeight === 0) return 0;
   
   const torqueToWeight = safeTorque / safeWeight;
-  
-  // Kalibrasyon: 0.10 = zayıf, 0.25 = mükemmel
   const score = ((torqueToWeight - 0.10) / (0.25 - 0.10)) * 100;
   return Math.max(0, Math.min(100, score));
 }
@@ -189,23 +183,23 @@ function calculatePriceValue(listPrice: number, marketAverage: number): number {
   
   const difference = ((safeMarket - safeList) / safeMarket) * 100;
   
-  // Fiyat avantajı: %10 indirim = +25 puan
-  const score = 50 + (difference * 2.5);
+  // DÜZELTME: Fiyat avantajı daha yumuşak - %10 indirim = +15 puan (önceden +25)
+  const score = 50 + (difference * 1.5);
   return Math.max(0, Math.min(100, score));
 }
 
 // ============================================================================
-// STRATEGIC WEIGHTING (Midas Whale Standard)
+// STRATEGIC WEIGHTING - FAIR SCORING (ADİL PUANLAMA)
 // ============================================================================
 
 export const DEFAULT_WEIGHTS: ScoringWeights = {
-  liquidityAndResale: 0.25,    // En önemli - satış kolaylığı
-  torqueAndPerformance: 0.20,  // Mühendislik kalitesi
-  prestigeAndQuality: 0.20,    // İç mekan ve marka
-  priceAdvantage: 0.15,        // Pazarlık fırsatı
-  reliability: 0.10,           // Kronik arıza riski
-  fuelEconomy: 0.05,           // Yakıt tasarrufu
-  features: 0.05,              // Donanım seviyesi
+  liquidityAndResale: 0.25,    // Piyasa değeri - değişmedi
+  torqueAndPerformance: 0.25,  // 0.20 → 0.25 (MÜHENDİSLİK ÖDÜLÜ +%25)
+  prestigeAndQuality: 0.25,    // 0.20 → 0.25 (KALİTE ÖDÜLÜ +%25)
+  priceAdvantage: 0.10,        // 0.15 → 0.10 (FİYAT BASKISI -%33)
+  reliability: 0.10,           // Güvenilirlik - değişmedi
+  fuelEconomy: 0.03,           // 0.05 → 0.03 (Yakıt etkisi azaltıldı)
+  features: 0.02,              // 0.05 → 0.02 (Donanım etkisi azaltıldı)
 };
 
 // ============================================================================
@@ -217,13 +211,11 @@ export function analyzeVehicle(
   bounds: NormalizationBounds,
   weights: ScoringWeights = DEFAULT_WEIGHTS
 ): VehicleAnalysis {
-  // Type-safe destructuring with fallbacks
   const engineering = vehicle.engineering || {} as any;
   const market = vehicle.market || {} as any;
   const quality = vehicle.quality || {} as any;
   const risk = vehicle.risk || {} as any;
   
-  // Normalized scores with type safety
   const normalizedScores: NormalizedScores = {
     hpScore: normalizeHigherIsBetter(
       safeNumber(engineering.hp, 0),
@@ -283,7 +275,6 @@ export function analyzeVehicle(
     ),
   };
   
-  // Category scores with weighted formulas
   const categoryScores: CategoryScores = {
     engineering: (
       normalizedScores.hpScore * 0.15 +
@@ -313,18 +304,16 @@ export function analyzeVehicle(
     ),
   };
   
-  // Final score with strategic weights
   const finalScore = (
     categoryScores.market * safeNumber(weights.liquidityAndResale, 0.25) +
-    categoryScores.engineering * safeNumber(weights.torqueAndPerformance, 0.20) +
-    categoryScores.quality * safeNumber(weights.prestigeAndQuality, 0.20) +
-    normalizedScores.priceValueScore * safeNumber(weights.priceAdvantage, 0.15) +
+    categoryScores.engineering * safeNumber(weights.torqueAndPerformance, 0.25) +
+    categoryScores.quality * safeNumber(weights.prestigeAndQuality, 0.25) +
+    normalizedScores.priceValueScore * safeNumber(weights.priceAdvantage, 0.10) +
     categoryScores.risk * safeNumber(weights.reliability, 0.10) +
-    normalizedScores.fuelScore * safeNumber(weights.fuelEconomy, 0.05) +
-    normalizedScores.trimScore * safeNumber(weights.features, 0.05)
+    normalizedScores.fuelScore * safeNumber(weights.fuelEconomy, 0.03) +
+    normalizedScores.trimScore * safeNumber(weights.features, 0.02)
   );
   
-  // Warning generation
   const warnings: string[] = [];
   const strengths: string[] = [];
   const weaknesses: string[] = [];
@@ -371,7 +360,6 @@ export function analyzeVacuum(
   vacuum: RobotVacuum,
   bounds: VacuumNormalizationBounds
 ): VacuumAnalysis {
-  // Type-safe destructuring
   const specs = vacuum.specs || {} as any;
   const market = vacuum.market || {} as any;
   const risk = vacuum.risk || {} as any;
@@ -493,7 +481,6 @@ export function compareVehicles(
   vehicle2: Vehicle,
   weights: ScoringWeights = DEFAULT_WEIGHTS
 ): ComparisonResult {
-  // Type-safe bounds calculation
   const bounds: NormalizationBounds = {
     hp: {
       min: Math.min(
@@ -596,7 +583,6 @@ export function compareVehicles(
   
   let winner: 'vehicle1' | 'vehicle2';
   if (scoreDifference < 3) {
-    // Tie-breaker: liquidity
     winner = safeNumber(analysis1.vehicle.market?.liquidityScore, 0) >= 
              safeNumber(analysis2.vehicle.market?.liquidityScore, 0) 
              ? 'vehicle1' : 'vehicle2';

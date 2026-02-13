@@ -209,9 +209,9 @@ function WinnerCard({ comparison, isVehicle }: WinnerCardProps) {
     : (winnerAnalysis as VacuumAnalysis).vacuum;
 
   return (
-    <div className="relative bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-amber-500/20 rounded-2xl p-6 sm:p-8 border-2 border-amber-500/40 shadow-2xl shadow-amber-500/20 animate-pulse-slow">
+    <div className="relative bg-gradient-to-br from-yellow-500/20 via-amber-500/10 to-yellow-500/20 rounded-2xl p-6 sm:p-8 border-2 border-yellow-500 shadow-lg shadow-yellow-500/50">
       {/* Golden Glow Effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/10 to-amber-500/0 rounded-2xl blur-xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/0 via-yellow-500/10 to-yellow-500/0 rounded-2xl blur-xl"></div>
       
       <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         {/* Left: Winner Info */}
@@ -219,8 +219,8 @@ function WinnerCard({ comparison, isVehicle }: WinnerCardProps) {
           <div className="flex items-center gap-3 mb-4">
             <span className="text-4xl sm:text-5xl animate-bounce">👑</span>
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-amber-400 drop-shadow-lg">KAZANAN</h2>
-              <p className="text-xs sm:text-sm text-amber-300/80">Ağırlıklı Skor Sistemi ile Hesaplandı</p>
+              <h2 className="text-xl sm:text-2xl font-black text-yellow-400 drop-shadow-lg">KAZANAN</h2>
+              <p className="text-xs sm:text-sm text-yellow-300/80">Ağırlıklı Skor Sistemi ile Hesaplandı</p>
             </div>
           </div>
 
@@ -238,15 +238,21 @@ function WinnerCard({ comparison, isVehicle }: WinnerCardProps) {
           <SmartBuyButton product={winnerProduct} />
         </div>
 
-        {/* Right: Final Score Box */}
-        <div className="lg:w-48 bg-gradient-to-br from-amber-500/10 to-orange-500/10 backdrop-blur-sm rounded-xl p-6 border-2 border-amber-500/30 text-center shadow-xl">
-          <div className="text-xs font-bold text-amber-400 mb-2 tracking-wider">FİNAL SKOR</div>
-          <div className="text-6xl sm:text-7xl font-black bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 bg-clip-text text-transparent italic tracking-tighter drop-shadow-2xl">
+        {/* Right: Final Score Box - FIXED OVERFLOW */}
+        <div className="lg:w-52 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 backdrop-blur-sm rounded-xl p-6 border-2 border-yellow-500/50 text-center shadow-xl">
+          <div className="text-xs font-bold text-yellow-400 mb-2 tracking-wider">FİNAL SKOR</div>
+          <div 
+            className="font-black bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-500 bg-clip-text text-transparent italic tracking-tighter overflow-visible"
+            style={{
+              fontSize: 'clamp(3rem, 8vw, 4.5rem)',
+              lineHeight: '1.1',
+            }}
+          >
             {typeof winnerAnalysis.finalScore === 'number' 
               ? winnerAnalysis.finalScore.toFixed(1) 
               : '0.0'}
           </div>
-          <div className="text-xs text-amber-400/70 mt-2">/ 100</div>
+          <div className="text-xs text-yellow-400/70 mt-2">/ 100</div>
         </div>
       </div>
     </div>
@@ -284,14 +290,14 @@ function ScoreCard({ analysis, isWinner, isVehicle }: ScoreCardProps) {
     <div
       className={`bg-zinc-900 rounded-xl p-4 sm:p-6 border-2 transition-all ${
         isWinner 
-          ? 'border-amber-500 ring-4 ring-amber-500/30 shadow-2xl shadow-amber-500/20' 
+          ? 'border-yellow-500 ring-4 ring-yellow-500/30 shadow-lg shadow-yellow-500/20' 
           : 'border-zinc-800 hover:border-zinc-700'
       }`}
     >
       {isWinner && (
-        <div className="flex items-center gap-2 mb-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 px-3 py-2 rounded-lg border border-amber-500/30">
+        <div className="flex items-center gap-2 mb-4 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 px-3 py-2 rounded-lg border border-yellow-500/30">
           <span className="text-2xl animate-pulse">👑</span>
-          <span className="text-sm font-black text-amber-400 tracking-wide">KAZANAN</span>
+          <span className="text-sm font-black text-yellow-400 tracking-wide">KAZANAN</span>
         </div>
       )}
 
@@ -299,6 +305,7 @@ function ScoreCard({ analysis, isWinner, isVehicle }: ScoreCardProps) {
         {isVehicle ? (product as Vehicle).name : (product as RobotVacuum).name}
       </h3>
 
+      {/* PROGRESS BARS - RESTORED */}
       <div className="space-y-4 mb-6">
         {categories.map((cat) => (
           <CategoryBar key={cat.label} label={cat.label} score={cat.score} icon={cat.icon} />
@@ -312,7 +319,7 @@ function ScoreCard({ analysis, isWinner, isVehicle }: ScoreCardProps) {
         </span>
       </div>
 
-      {/* Warnings - Enhanced */}
+      {/* Warnings */}
       {analysis.warnings && analysis.warnings.length > 0 && (
         <div className="mt-4 p-4 bg-gradient-to-br from-red-500/10 to-red-600/5 border-2 border-red-500/30 rounded-lg backdrop-blur-sm">
           <div className="flex items-center gap-2 mb-3">
@@ -330,7 +337,7 @@ function ScoreCard({ analysis, isWinner, isVehicle }: ScoreCardProps) {
         </div>
       )}
 
-      {/* Strengths - Enhanced */}
+      {/* Strengths */}
       {analysis.strengths && analysis.strengths.length > 0 && (
         <div className="mt-4 p-4 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-2 border-emerald-500/30 rounded-lg backdrop-blur-sm">
           <div className="flex items-center gap-2 mb-3">
@@ -348,7 +355,7 @@ function ScoreCard({ analysis, isWinner, isVehicle }: ScoreCardProps) {
         </div>
       )}
 
-      {/* Weaknesses - Enhanced */}
+      {/* Weaknesses */}
       {analysis.weaknesses && analysis.weaknesses.length > 0 && (
         <div className="mt-4 p-4 bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-2 border-orange-500/30 rounded-lg backdrop-blur-sm">
           <div className="flex items-center gap-2 mb-3">
@@ -369,14 +376,15 @@ function ScoreCard({ analysis, isWinner, isVehicle }: ScoreCardProps) {
   );
 }
 
+// PROGRESS BAR COMPONENT - FULLY RESTORED
 function CategoryBar({ label, score, icon }: { label: string; score: number; icon: string }) {
   const safeScore = typeof score === 'number' ? score : 0;
   
-  // Color gradient based on score
+  // Dynamic color based on score
   const getProgressColor = (score: number): string => {
-    if (score >= 75) return 'from-emerald-500 to-emerald-400';
-    if (score >= 50) return 'from-yellow-500 to-yellow-400';
-    return 'from-red-500 to-red-400';
+    if (score >= 75) return 'from-emerald-500 via-emerald-400 to-emerald-500';
+    if (score >= 50) return 'from-yellow-500 via-yellow-400 to-yellow-500';
+    return 'from-red-500 via-red-400 to-red-500';
   };
 
   const getScoreTextColor = (score: number): string => {
@@ -396,6 +404,7 @@ function CategoryBar({ label, score, icon }: { label: string; score: number; ico
           {safeScore.toFixed(1)}
         </span>
       </div>
+      {/* ANIMATED PROGRESS BAR */}
       <div className="h-3 bg-zinc-800 rounded-full overflow-hidden shadow-inner">
         <div
           className={`h-full bg-gradient-to-r ${getProgressColor(safeScore)} transition-all duration-1000 ease-out shadow-lg`}
@@ -407,7 +416,7 @@ function CategoryBar({ label, score, icon }: { label: string; score: number; ico
 }
 
 // ============================================================================
-// DETAILED COMPARISON TABLE
+// DETAILED COMPARISON TABLE - FULL VERSION WITH CHECKMARKS & HIGHLIGHTS
 // ============================================================================
 
 interface DetailedComparisonTableProps {
@@ -432,6 +441,13 @@ function DetailedComparisonTable({ analysis1, analysis2, isVehicle }: DetailedCo
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-zinc-800">
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-bold text-zinc-400">KRİTER</th>
+                <th className="px-3 sm:px-4 py-3 text-right text-xs font-bold text-zinc-400">{v1.name}</th>
+                <th className="px-3 sm:px-4 py-3 text-right text-xs font-bold text-zinc-400">{v2.name}</th>
+              </tr>
+            </thead>
             <tbody className="divide-y divide-zinc-800">
               <TableSectionHeader title="MÜHENDİSLİK & PERFORMANS" />
               <ComparisonRow
@@ -460,6 +476,7 @@ function DetailedComparisonTable({ analysis1, analysis2, isVehicle }: DetailedCo
                 score2={n2.accelerationScore}
                 unit="sn"
                 higherIsBetter={false}
+                decimals={1}
               />
               <ComparisonRow
                 label="Ağırlık"
@@ -506,6 +523,7 @@ function DetailedComparisonTable({ analysis1, analysis2, isVehicle }: DetailedCo
                 score2={50}
                 unit="TL"
                 format="currency"
+                higherIsBetter={false}
               />
               <ComparisonRow
                 label="Piyasa Likidite Skoru"
@@ -620,7 +638,6 @@ function DetailedComparisonTable({ analysis1, analysis2, isVehicle }: DetailedCo
       </div>
     );
   } else {
-    // Vacuum comparison table
     const v1 = (analysis1 as VacuumAnalysis).vacuum;
     const v2 = (analysis2 as VacuumAnalysis).vacuum;
     const n1 = (analysis1 as VacuumAnalysis).normalizedScores;
@@ -635,6 +652,13 @@ function DetailedComparisonTable({ analysis1, analysis2, isVehicle }: DetailedCo
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-zinc-800">
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-bold text-zinc-400">KRİTER</th>
+                <th className="px-3 sm:px-4 py-3 text-right text-xs font-bold text-zinc-400">{v1.name}</th>
+                <th className="px-3 sm:px-4 py-3 text-right text-xs font-bold text-zinc-400">{v2.name}</th>
+              </tr>
+            </thead>
             <tbody className="divide-y divide-zinc-800">
               <TableSectionHeader title="PERFORMANS & TEKNOLOJİ" />
               <ComparisonRow
@@ -698,6 +722,7 @@ function DetailedComparisonTable({ analysis1, analysis2, isVehicle }: DetailedCo
                 score2={50}
                 unit="TL"
                 format="currency"
+                higherIsBetter={false}
               />
               <ComparisonRow
                 label="Piyasa Likidite Skoru"
@@ -811,6 +836,8 @@ function ComparisonRow({
 }: ComparisonRowProps) {
   const s1 = typeof score1 === 'number' ? score1 : 0;
   const s2 = typeof score2 === 'number' ? score2 : 0;
+  const v1 = typeof value1 === 'number' ? value1 : 0;
+  const v2 = typeof value2 === 'number' ? value2 : 0;
 
   const formatValue = (val: any) => {
     if (val === undefined || val === null) return '-';
@@ -818,33 +845,49 @@ function ComparisonRow({
     return format === 'currency' ? formatCurrency(val) : val.toFixed(decimals);
   };
 
-  // Winner determination with 10-point threshold for bold highlight
-  const scoreDiff = Math.abs(s1 - s2);
-  const hasSignificantDifference = scoreDiff > 10;
+  // SMART COMPARISON LOGIC
+  const percentDiff = Math.abs((v1 - v2) / Math.max(v1, v2, 1)) * 100;
+  const hasRealDifference = percentDiff > 1; // Fark %1'den fazla mı?
   
-  const winner1 = hasSignificantDifference && s1 > s2;
-  const winner2 = hasSignificantDifference && s2 > s1;
+  let winner1 = false;
+  let winner2 = false;
+  
+  if (hasRealDifference) {
+    if (higherIsBetter) {
+      winner1 = v1 > v2;
+      winner2 = v2 > v1;
+    } else {
+      winner1 = v1 < v2;
+      winner2 = v2 < v1;
+    }
+  }
 
   return (
-    <tr className="hover:bg-zinc-800/50 transition-colors">
+    <tr className={`transition-all ${winner1 || winner2 ? 'bg-emerald-500/5' : 'hover:bg-zinc-800/50'}`}>
       <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm text-zinc-400 w-1/3 font-medium">{label}</td>
       <td
         className={`px-3 sm:px-4 py-3 text-xs sm:text-sm text-right font-mono transition-all ${
           winner1 
-            ? 'text-emerald-400 font-black text-base drop-shadow-lg scale-105' 
+            ? 'text-emerald-400 font-black text-base drop-shadow-lg bg-emerald-500/10 border-l-2 border-emerald-500' 
             : 'text-zinc-300'
         }`}
       >
-        {formatValue(value1)} {unit}
+        <div className="flex items-center justify-end gap-2">
+          {winner1 && <span className="text-emerald-400 font-bold">✓</span>}
+          <span>{formatValue(value1)} {unit}</span>
+        </div>
       </td>
       <td
         className={`px-3 sm:px-4 py-3 text-xs sm:text-sm text-right font-mono transition-all ${
           winner2 
-            ? 'text-emerald-400 font-black text-base drop-shadow-lg scale-105' 
+            ? 'text-emerald-400 font-black text-base drop-shadow-lg bg-emerald-500/10 border-l-2 border-emerald-500' 
             : 'text-zinc-300'
         }`}
       >
-        {formatValue(value2)} {unit}
+        <div className="flex items-center justify-end gap-2">
+          {winner2 && <span className="text-emerald-400 font-bold">✓</span>}
+          <span>{formatValue(value2)} {unit}</span>
+        </div>
       </td>
     </tr>
   );
@@ -873,25 +916,31 @@ function TextComparisonRow({
   const winner2 = hasSignificantDifference && s2 > s1;
 
   return (
-    <tr className="hover:bg-zinc-800/50 transition-colors">
+    <tr className={`transition-all ${winner1 || winner2 ? 'bg-emerald-500/5' : 'hover:bg-zinc-800/50'}`}>
       <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm text-zinc-400 w-1/3 font-medium">{label}</td>
       <td
         className={`px-3 sm:px-4 py-3 text-xs sm:text-sm text-right transition-all ${
           winner1 
-            ? 'text-emerald-400 font-black text-base drop-shadow-lg' 
+            ? 'text-emerald-400 font-black text-base drop-shadow-lg bg-emerald-500/10 border-l-2 border-emerald-500' 
             : 'text-zinc-300'
         }`}
       >
-        {value1}
+        <div className="flex items-center justify-end gap-2">
+          {winner1 && <span className="text-emerald-400 font-bold">✓</span>}
+          <span>{value1}</span>
+        </div>
       </td>
       <td
         className={`px-3 sm:px-4 py-3 text-xs sm:text-sm text-right transition-all ${
           winner2 
-            ? 'text-emerald-400 font-black text-base drop-shadow-lg' 
+            ? 'text-emerald-400 font-black text-base drop-shadow-lg bg-emerald-500/10 border-l-2 border-emerald-500' 
             : 'text-zinc-300'
         }`}
       >
-        {value2}
+        <div className="flex items-center justify-end gap-2">
+          {winner2 && <span className="text-emerald-400 font-bold">✓</span>}
+          <span>{value2}</span>
+        </div>
       </td>
     </tr>
   );
