@@ -1,5 +1,18 @@
 // RATIO.RUN - Type Definitions
-// Sistemin Anayasası: Araç ve Süpürge Tanımları
+// Complete type system for dual-category comparison platform
+
+// ============================================================================
+// CORE PRODUCT TYPES
+// ============================================================================
+
+export type Category = 'VEHICLE' | 'ROBOT_VACUUM';
+export type TransmissionType = 'ZF' | 'DSG' | 'Manuel' | 'Otomatik' | 'Şanzıman' | 'CVT';
+export type TrimLevel = 'Gırtlak Dolu' | 'Dolu' | 'Orta' | 'Boş';
+export type VerificationStatus = 'verified' | 'pending' | 'unverified';
+
+// ============================================================================
+// VEHICLE TYPES
+// ============================================================================
 
 export interface Vehicle {
   id: string;
@@ -8,79 +21,84 @@ export interface Vehicle {
   model: string;
   year: number;
   segment: string;
+  category?: 'VEHICLE'; // Optional for type discrimination
+  sourceUrl?: string;
+  verificationStatus?: VerificationStatus;
   affiliateUrl?: string;
-  engineering: {
-    hp: number;
-    torque: number;
-    zeroToHundred: number;
-    weight: number;
-    transmission: TransmissionType;
-    fuelConsumption: number;
-    trunkCapacity: number;
-    engineDisplacement: number;
-  };
-  market: {
-    listPrice: number;
-    marketAverage: number;
-    liquidityScore: number;
-    resaleValue: number;
-    serviceNetwork: number;
-  };
-  quality: {
-    materialQuality: number;
-    soundInsulation: number;
-    rideComfort: number;
-    prestigeScore: number;
-    trimLevel: TrimLevel;
-  };
-  risk: {
-    chronicIssueRisk: number;
-  };
+  engineering: VehicleEngineering;
+  market: MarketData;
+  quality: VehicleQuality;
+  risk: RiskData;
+  documentedStrengths?: string[];
+  documentedWeaknesses?: string[];
 }
+
+export interface VehicleEngineering {
+  hp: number;
+  torque: number;
+  zeroToHundred: number;
+  weight: number;
+  transmission: TransmissionType;
+  fuelConsumption: number;
+  trunkCapacity: number;
+  engineDisplacement: number;
+}
+
+export interface VehicleQuality {
+  materialQuality: number;
+  soundInsulation: number;
+  rideComfort: number;
+  prestigeScore: number;
+  trimLevel: TrimLevel;
+}
+
+// ============================================================================
+// ROBOT VACUUM TYPES
+// ============================================================================
 
 export interface RobotVacuum {
   id: string;
   name: string;
   brand: string;
   category: 'ROBOT_VACUUM';
+  sourceUrl?: string;
+  verificationStatus?: VerificationStatus;
   affiliateUrl?: string;
-  specs: {
-    suctionPower: number;
-    batteryCapacity: number;
-    noiseLevel: number;
-    dustCapacity: number;
-    mappingTech: string;
-    mopFeature: boolean;
-  };
-  market: {
-    listPrice: number;
-    marketAverage: number;
-    liquidityScore: number;
-    resaleValue: number;
-    serviceNetwork: number;
-  };
-  risk: {
-    chronicIssueRisk: number;
-  };
+  specs: VacuumSpecs;
+  market: MarketData;
+  risk: RiskData;
+  documentedStrengths?: string[];
+  documentedWeaknesses?: string[];
+}
+
+export interface VacuumSpecs {
+  suctionPower: number;
+  batteryCapacity: number;
+  noiseLevel: number;
+  dustCapacity: number;
+  mappingTech: string;
+  mopFeature: boolean;
 }
 
 // ============================================================================
-// TYPE UNIONS & GUARDS (Production Safety)
+// SHARED TYPES
 // ============================================================================
 
-export type Product = Vehicle | RobotVacuum;
-
-// Type Guard Functions
-export function isVehicle(product: Product): product is Vehicle {
-  return 'engineering' in product;
+export interface MarketData {
+  listPrice: number;
+  marketAverage: number;
+  liquidityScore: number;
+  resaleValue: number;
+  serviceNetwork: number;
 }
 
-export function isRobotVacuum(product: Product): product is RobotVacuum {
-  return 'specs' in product;
+export interface RiskData {
+  chronicIssueRisk: number;
 }
 
-export type TransmissionType = 'Manuel' | 'Otomatik' | 'DSG' | 'CVT' | 'ZF' | 'Şanzıman';
-export type TrimLevel = 'Boş' | 'Orta' | 'Dolu' | 'Gırtlak Dolu';
+// ============================================================================
+// ANALYSIS TYPES
+// ============================================================================
 
 export interface VehicleAnalysis {
   vehicle: Vehicle;
@@ -121,15 +139,52 @@ export interface CategoryScores {
   risk: number;
 }
 
+export interface VacuumAnalysis {
+  vacuum: RobotVacuum;
+  normalizedScores: VacuumNormalizedScores;
+  categoryScores: VacuumCategoryScores;
+  finalScore: number;
+  warnings: string[];
+  strengths: string[];
+  weaknesses: string[];
+}
+
+export interface VacuumNormalizedScores {
+  suctionScore: number;
+  batteryScore: number;
+  noiseScore: number;
+  dustCapacityScore: number;
+  mappingScore: number;
+  mopScore: number;
+  liquidityScore: number;
+  resaleScore: number;
+  serviceScore: number;
+  reliabilityScore: number;
+}
+
+export interface VacuumCategoryScores {
+  performance: number;
+  intelligence: number;
+  market: number;
+  reliability: number;
+}
+
+// ============================================================================
+// COMPARISON RESULT TYPE
+// ============================================================================
+
 export interface ComparisonResult {
-  vehicle1: VehicleAnalysis;
-  vehicle2: VehicleAnalysis;
+  vehicle1: VehicleAnalysis | VacuumAnalysis;
+  vehicle2: VehicleAnalysis | VacuumAnalysis;
   winner: 'vehicle1' | 'vehicle2';
   verdict: string;
   detailedReasons: string[];
   scoreDifference: number;
-  segmentWarning?: string;
 }
+
+// ============================================================================
+// SCORING WEIGHTS
+// ============================================================================
 
 export interface ScoringWeights {
   liquidityAndResale: number;
@@ -141,6 +196,10 @@ export interface ScoringWeights {
   features: number;
 }
 
+// ============================================================================
+// NORMALIZATION BOUNDS
+// ============================================================================
+
 export interface NormalizationBounds {
   hp: { min: number; max: number };
   torque: { min: number; max: number };
@@ -151,4 +210,36 @@ export interface NormalizationBounds {
   engineDisplacement: { min: number; max: number };
   listPrice: { min: number; max: number };
   marketAverage: { min: number; max: number };
+}
+
+export interface VacuumNormalizationBounds {
+  suctionPower: { min: number; max: number };
+  batteryCapacity: { min: number; max: number };
+  noiseLevel: { min: number; max: number };
+  dustCapacity: { min: number; max: number };
+  listPrice: { min: number; max: number };
+}
+
+// ============================================================================
+// UNION TYPES & TYPE GUARDS
+// ============================================================================
+
+export type Product = Vehicle | RobotVacuum;
+export type Analysis = VehicleAnalysis | VacuumAnalysis;
+
+// Type guard functions
+export function isVehicle(product: Product): product is Vehicle {
+  return !('category' in product) || product.category !== 'ROBOT_VACUUM';
+}
+
+export function isRobotVacuum(product: Product): product is RobotVacuum {
+  return 'category' in product && product.category === 'ROBOT_VACUUM';
+}
+
+export function isVehicleAnalysis(analysis: Analysis): analysis is VehicleAnalysis {
+  return 'vehicle' in analysis;
+}
+
+export function isVacuumAnalysis(analysis: Analysis): analysis is VacuumAnalysis {
+  return 'vacuum' in analysis;
 }
