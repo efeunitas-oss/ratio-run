@@ -50,13 +50,24 @@ interface SupabaseProduct {
 export async function POST(request: NextRequest) {
   console.log('🎯 === WEBHOOK BAŞLADI ===');
   
+  // DEBUG: Environment variable'ları kontrol et
+  console.log('🔍 ENV CHECK:');
+  console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'MEVCUT ✅' : 'YOK ❌');
+  console.log('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'MEVCUT ✅' : 'YOK ❌');
+  console.log('APIFY_TOKEN:', process.env.APIFY_TOKEN ? 'MEVCUT ✅' : 'YOK ❌');
+  
   try {
     // Supabase client'ı runtime'da oluştur
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+    console.log('🔍 supabaseUrl:', supabaseUrl ? 'BULUNDU' : 'BULUNAMADI');
+    console.log('🔍 supabaseKey:', supabaseKey ? 'BULUNDU' : 'BULUNAMADI');
+
     if (!supabaseUrl || !supabaseKey) {
       console.error('❌ Supabase credentials bulunamadı!');
+      console.error('supabaseUrl:', supabaseUrl);
+      console.error('supabaseKey:', supabaseKey ? 'EXISTS' : 'NULL');
       return NextResponse.json(
         { error: 'Supabase yapılandırılmamış' },
         { status: 500 }
@@ -64,6 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+    console.log('✅ Supabase client oluşturuldu');
 
     const body: ApifyWebhookPayload = await request.json();
     console.log('📥 Gelen veri:', JSON.stringify(body, null, 2));
