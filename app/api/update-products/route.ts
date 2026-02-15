@@ -380,7 +380,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('products')
       .upsert(products, {
-        onConflict: 'source_name,source_url'
+        onConflict: 'source_url'
       });
 
     if (error) {
