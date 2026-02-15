@@ -2,19 +2,24 @@
 
 import React, { useState, useMemo } from 'react';
 import { Vehicle, RobotVacuum, Product } from './types';
-import { SAMPLE_VEHICLES, SAMPLE_VACUUMS } from './data';
 import { compareVehicles, compareVacuums, formatCurrency, getScoreColor, getScoreLabel, VacuumAnalysis } from './algorithm';
 import { VehicleAnalysis } from './types';
 import SmartBuyButton from '@/components/SmartBuyButton';
 
 type Category = 'VEHICLE' | 'ROBOT_VACUUM';
 
-export default function RatioRunApp() {
+export default function RatioRunApp({ 
+  initialVehicles, 
+  initialVacuums 
+}: { 
+  initialVehicles: any[]; 
+  initialVacuums: any[]; 
+}) {
   const [category, setCategory] = useState<Category>('VEHICLE');
   const [product1Id, setProduct1Id] = useState<string>('');
   const [product2Id, setProduct2Id] = useState<string>('');
 
-  const products = category === 'VEHICLE' ? SAMPLE_VEHICLES : SAMPLE_VACUUMS;
+  const products = category === 'VEHICLE' ? initialVehicles : initialVacuums;
   const isVehicleCategory = category === 'VEHICLE';
 
   const comparison = useMemo(() => {

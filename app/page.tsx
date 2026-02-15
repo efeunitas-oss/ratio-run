@@ -1,36 +1,54 @@
 import { Metadata } from 'next';
 import RatioRunApp from './RatioRunApp';
+import { supabase, convertToVehicle, convertToVacuum } from '@/lib/supabase';
 
-// ============================================================================
-// DYNAMIC SEO METADATA GENERATION
-// ============================================================================
+export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
-  // Default metadata (sayfa ilk yüklendiğinde)
-  const defaultMetadata: Metadata = {
+  return {
     title: 'Ratio.Run - Ultimate Decision Engine | Akıllı Ürün Karşılaştırma',
-    description: 'Otomobil ve robot süpürge karşılaştırmalarını matematiksel analizle yapın. Ağırlıklı matris algoritması ile en doğru kararı verin. 50+ araba, 25+ robot süpürge.',
-    keywords: ['otomobil karşılaştırma', 'araba kıyaslama', 'robot süpürge karşılaştırma', 'ürün karşılaştırma', 'karar motoru'],
-    openGraph: {
-      title: 'Ratio.Run - Ultimate Decision Engine',
-      description: 'Akıllı ürün karşılaştırma platformu. Matematiksel analizle en doğru kararı verin.',
-      type: 'website',
-      locale: 'tr_TR',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: 'Ratio.Run - Ultimate Decision Engine',
-      description: 'Akıllı ürün karşılaştırma platformu',
-    },
+    description: 'Otomobil ve robot süpürge karşılaştırmalarını matematiksel analizle yapın.',
   };
-
-  // TODO: URL parametrelerinden karşılaştırma bilgisi çekilirse dinamik metadata
-  // Örnek: /compare?v1=bmw-320i&v2=mercedes-c200
-  // Bu durumda title: "BMW 320i vs Mercedes C200 Kıyaslaması - Kazanan Kim?"
-  
-  return defaultMetadata;
 }
 
-export default function Page() {
-  return <RatioRunApp />;
+export default async function Page() {
+// Kategori ID'leri (Supabase'den hardcode - RLS sorununu bypass eder)
+const carCategoryId = 'c173ed40-b7bb-4372-9a53-45fb972b850d';
+const vacuumCategoryId = '74faa732-8f34-478c-9580-ab87bc63005e';
+
+console.log('🔍 Using hardcoded category IDs');
+console.log('   Car Category ID:', carCategoryId);
+console.log('   Vacuum Category ID:', vacuumCategoryId);
+  // DEBUG: Tüm ürünleri çek (kategori filtresi olmadan)
+const { data: allProducts, error: allError } = await supabase
+  .from('products')
+  .select('*');
+
+console.log('🔍 SUPABASE TEST:');
+console.log('   Total products in DB:', allProducts?.length || 0);
+console.log('   Error:', allError);
+if (allProducts && allProducts.length > 0) {
+  console.log('   First product:', allProducts[0]);
+}
+  // Arabaları çek
+  const { data: carProducts } = await supabase
+    .from('products')
+    .select('*')
+    .eq('category_id', carCategoryId);
+  
+  // Robot süpürgeleri çek
+  const { data: vacuumProducts } = await supabase
+    .from('products')
+    .select('*')
+    .eq('category_id', vacuumCategoryId);
+
+  // Formatı çevir
+  const vehicles = (carProducts || []).map(convertToVehicle);
+  const vacuums = (vacuumProducts || []).map(convertToVacuum);
+
+  console.log('📊 Supabase\'den çekilen ürünler:');
+  console.log(`   - ${vehicles.length} araba`);
+  console.log(`   - ${vacuums.length} robot süpürge`);
+
+  return <RatioRunApp initialVehicles={vehicles} initialVacuums={vacuums} />;
 }
