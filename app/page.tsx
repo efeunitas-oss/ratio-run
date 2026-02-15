@@ -6,49 +6,40 @@ export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Ratio.Run - Ultimate Decision Engine | Akıllı Ürün Karşılaştırma',
-    description: 'Otomobil ve robot süpürge karşılaştırmalarını matematiksel analizle yapın.',
+    title: 'Ratio.Run - Ultimate Decision Engine',
+    description: 'Akıllı ürün karşılaştırma platformu.',
   };
 }
 
 export default async function Page() {
-// Kategori ID'leri (Supabase'den hardcode - RLS sorununu bypass eder)
-const carCategoryId = 'c173ed40-b7bb-4372-9a53-45fb972b850d';
-const vacuumCategoryId = '74faa732-8f34-478c-9580-ab87bc63005e';
+  // Tüm kategorileri çek
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('*')
+    .order('display_order');
 
-console.log('🔍 Using hardcoded category IDs');
-console.log('   Car Category ID:', carCategoryId);
-console.log('   Vacuum Category ID:', vacuumCategoryId);
-  // DEBUG: Tüm ürünleri çek (kategori filtresi olmadan)
-const { data: allProducts, error: allError } = await supabase
-  .from('products')
-  .select('*');
+  console.log('📂 Kategoriler:', categories?.length);
 
-console.log('🔍 SUPABASE TEST:');
-console.log('   Total products in DB:', allProducts?.length || 0);
-console.log('   Error:', allError);
-if (allProducts && allProducts.length > 0) {
-  console.log('   First product:', allProducts[0]);
-}
+  // Araba ve robot kategorilerini bul
+  const carCategory = categories?.find(c => c.slug === 'otomobil');
+  const vacuumCategory = categories?.find(c => c.slug === 'robot-supurge');
+
   // Arabaları çek
   const { data: carProducts } = await supabase
     .from('products')
     .select('*')
-    .eq('category_id', carCategoryId);
+    .eq('category_id', carCategory?.id || '');
   
   // Robot süpürgeleri çek
   const { data: vacuumProducts } = await supabase
     .from('products')
     .select('*')
-    .eq('category_id', vacuumCategoryId);
+    .eq('category_id', vacuumCategory?.id || '');
 
-  // Formatı çevir
   const vehicles = (carProducts || []).map(convertToVehicle);
   const vacuums = (vacuumProducts || []).map(convertToVacuum);
 
-  console.log('📊 Supabase\'den çekilen ürünler:');
-  console.log(`   - ${vehicles.length} araba`);
-  console.log(`   - ${vacuums.length} robot süpürge`);
+  console.log(`📊 ${vehicles.length} araba, ${vacuums.length} robot`);
 
   return <RatioRunApp initialVehicles={vehicles} initialVacuums={vacuums} />;
 }
