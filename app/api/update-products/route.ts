@@ -1,11 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 interface ApifyWebhookPayload {
   userId: string;
   createdAt: string;
@@ -56,6 +51,20 @@ export async function POST(request: NextRequest) {
   console.log('🎯 === WEBHOOK BAŞLADI ===');
   
   try {
+    // Supabase client'ı runtime'da oluştur
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('❌ Supabase credentials bulunamadı!');
+      return NextResponse.json(
+        { error: 'Supabase yapılandırılmamış' },
+        { status: 500 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
     const body: ApifyWebhookPayload = await request.json();
     console.log('📥 Gelen veri:', JSON.stringify(body, null, 2));
 
