@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! 
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(req: Request) {
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       image_url: item.thumbnailImage,
       source_url: item.url,
       source_name: 'Amazon',
-      category_slug: 'robot-supurge', // Bunu sabit tutuyoruz, otomatik eşleşecek
+      category_slug: 'robot-supurge',
       specifications: {
         asin: item.asin,
         stars: item.stars,
