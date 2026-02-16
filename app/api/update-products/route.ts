@@ -51,9 +51,6 @@ interface ProductScores {
   [key: string]: number;
 }
 
-// ============================================
-// ROBOT SÜPÜRGE SKORLAMA
-// ============================================
 function calculateRobotVacuumScores(product: ApifyProduct): ProductScores {
   const stars = parseFloat(String(product.stars || 0));
   const reviewCount = parseInt(String(product.reviewsCount || 0));
@@ -113,9 +110,6 @@ function calculateRobotVacuumScores(product: ApifyProduct): ProductScores {
   };
 }
 
-// ============================================
-// LAPTOP SKORLAMA
-// ============================================
 function calculateLaptopScores(product: ApifyProduct): ProductScores {
   const stars = parseFloat(String(product.stars || 0));
   const reviewCount = parseInt(String(product.reviewsCount || 0));
@@ -160,9 +154,6 @@ function calculateLaptopScores(product: ApifyProduct): ProductScores {
   };
 }
 
-// ============================================
-// TELEFON SKORLAMA
-// ============================================
 function calculatePhoneScores(product: ApifyProduct): ProductScores {
   const stars = parseFloat(String(product.stars || 0));
   const reviewCount = parseInt(String(product.reviewsCount || 0));
@@ -206,9 +197,6 @@ function calculatePhoneScores(product: ApifyProduct): ProductScores {
   };
 }
 
-// ============================================
-// KULAKLIK SKORLAMA
-// ============================================
 function calculateHeadphoneScores(product: ApifyProduct): ProductScores {
   const stars = parseFloat(String(product.stars || 0));
   const reviewCount = parseInt(String(product.reviewsCount || 0));
@@ -252,9 +240,6 @@ function calculateHeadphoneScores(product: ApifyProduct): ProductScores {
   };
 }
 
-// ============================================
-// SAAT SKORLAMA
-// ============================================
 function calculateSmartWatchScores(product: ApifyProduct): ProductScores {
   const stars = parseFloat(String(product.stars || 0));
   const reviewCount = parseInt(String(product.reviewsCount || 0));
@@ -295,9 +280,6 @@ function calculateSmartWatchScores(product: ApifyProduct): ProductScores {
   };
 }
 
-// ============================================
-// TABLET SKORLAMA
-// ============================================
 function calculateTabletScores(product: ApifyProduct): ProductScores {
   const stars = parseFloat(String(product.stars || 0));
   const reviewCount = parseInt(String(product.reviewsCount || 0));
@@ -364,9 +346,6 @@ function calculateTabletScores(product: ApifyProduct): ProductScores {
   };
 }
 
-// ============================================
-// TV SKORLAMA
-// ============================================
 function calculateTVScores(product: ApifyProduct): ProductScores {
   const stars = parseFloat(String(product.stars || 0));
   const reviewCount = parseInt(String(product.reviewsCount || 0));
@@ -430,9 +409,6 @@ function calculateTVScores(product: ApifyProduct): ProductScores {
   };
 }
 
-// ============================================
-// WEBHOOK ENDPOINT
-// ============================================
 export async function POST(request: NextRequest) {
   console.log('🎯 === WEBHOOK BAŞLADI ===');
   
@@ -476,7 +452,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Apify Run Details'dan dataset ID'yi al
     const runDetailsUrl = `https://api.apify.com/v2/actor-runs/${runId}?token=${apifyToken}`;
     const runDetailsResponse = await fetch(runDetailsUrl);
     
@@ -533,7 +508,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Kategori ID: ${category.id} (${categorySlug})`);
 
-    const products: SupabaseProduct[] = rawProducts.map((item: ApifyProduct) => {
+    const allProducts: SupabaseProduct[] = rawProducts.map((item: ApifyProduct) => {
       let price: number | null = null;
       if (item.price) {
         const priceStr = String(item.price).replace(/[^0-9.]/g, '');
@@ -605,33 +580,32 @@ export async function POST(request: NextRequest) {
       };
     });
 
-console.log(`📝 ${products.length} ürün formatlandı (skorlarla)`);
+    console.log(`📝 ${allProducts.length} ürün formatlandı (skorlarla)`);
 
-// Duplicate URL'leri temizle
-const uniqueProducts = products.filter((product, index, self) =>
-  index === self.findIndex((p) => p.source_url === product.source_url)
-);
-console.log(`🔄 ${products.length} üründen ${uniqueProducts.length} unique ürün`);
+    const uniqueProducts = allProducts.filter((product, index, self) =>
+      index === self.findIndex((p) => p.model === product.model)
+    );
+    console.log(`🔄 ${allProducts.length} üründen ${uniqueProducts.length} unique ürün (ASIN bazlı)`);
 
-const { data, error } = await supabase
-  .from('products')
-  .upsert(uniqueProducts, {
-    onConflict: 'source_url'
-  });
+    const { error: upsertError } = await supabase
+      .from('products')
+      .upsert(uniqueProducts, {
+        onConflict: 'model'
+      });
 
-    if (error) {
-      console.error('❌ Supabase hatası:', error);
-      throw error;
+    if (upsertError) {
+      console.error('❌ Supabase hatası:', upsertError);
+      throw upsertError;
     }
 
-    console.log(`💾 ${products.length} ürün Supabase'e kaydedildi`);
+    console.log(`💾 ${uniqueProducts.length} ürün Supabase'e kaydedildi`);
     console.log('🎉 === WEBHOOK TAMAMLANDI ===');
 
     return NextResponse.json({ 
       success: true,
-      inserted: products.length,
+      inserted: uniqueProducts.length,
       category: categorySlug,
-      message: `${products.length} ürün (${categorySlug}) başarıyla güncellendi`
+      message: `${uniqueProducts.length} ürün (${categorySlug}) başarıyla güncellendi`
     });
 
   } catch (error) {
