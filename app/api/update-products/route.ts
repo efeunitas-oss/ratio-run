@@ -588,10 +588,10 @@ export async function POST(request: NextRequest) {
     console.log(`🔄 ${allProducts.length} üründen ${uniqueProducts.length} unique ürün (ASIN bazlı)`);
 
     const { error: upsertError } = await supabase
-      .from('products')
-      .upsert(uniqueProducts, {
-        onConflict: 'model'
-      });
+  .from('products')
+  .upsert(uniqueProducts, {
+    onConflict: 'model,source_name'
+  });
 
     if (upsertError) {
       console.error('❌ Supabase hatası:', upsertError);
