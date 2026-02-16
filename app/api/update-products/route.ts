@@ -551,7 +551,7 @@ export async function POST(request: NextRequest) {
           scores = calculateTVScores(item);
           break;
         default:
-          console.warn(`⚠️ Bilinmeyen kategori: ${categorySlug}, varsayılan skorlama kullanılıyor`);
+          console.warn(`⚠️ Bilinmeyen kategori: ${categorySlug}`);
           scores = {
             overall_score: Math.min(10, Math.round((stars || 0) * 2))
           };
@@ -561,7 +561,7 @@ export async function POST(request: NextRequest) {
         category_id: category.id,
         name: item.title || '',
         brand: item.brand || '',
-        model: item.asin || '',
+        model: item.asin || `unknown-${Date.now()}-${Math.random()}`,
         price: price,
         currency: 'TRY',
         image_url: item.thumbnailImage || null,
@@ -580,32 +580,46 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    console.log(`📝 ${allProducts.length} ürün formatlandı (skorlarla)`);
+    console.log(`📝 ${allProducts.length} ürün formatlandı`);
 
+    // ASIN bazlı unique yap
     const uniqueProducts = allProducts.filter((product, index, self) =>
-      index === self.findIndex((p) => p.model === product.model)
+      index === self.findIndex((p) => p.model === product.model && p.model.startsWith('B'))
     );
-    console.log(`🔄 ${allProducts.length} üründen ${uniqueProducts.length} unique ürün (ASIN bazlı)`);
+    console.log(`🔄 ${allProducts.length} üründen ${uniqueProducts.length} unique ürün`);
 
-const { error: upsertError } = await supabase
-  .from('products')
-  .upsert(uniqueProducts, {
-    onConflict: 'model'
-  });
+    // Her ürünü tek tek ekle, duplicate ignore
+    let insertedCount = 0;
+    let skippedCount = 0;
 
-    if (upsertError) {
-      console.error('❌ Supabase hatası:', upsertError);
-      throw upsertError;
+    for (const product of uniqueProducts) {
+      try {
+        const { error } = await supabase
+          .from('products')
+          .insert(product);
+        
+        if (!error) {
+          insertedCount++;
+        } else if (error.code === '23505') {
+          // Duplicate key, skip
+          skippedCount++;
+        } else {
+          console.error('❌ Insert error:', error.message);
+        }
+      } catch (err) {
+        console.error('❌ Unexpected error:', err);
+      }
     }
 
-    console.log(`💾 ${uniqueProducts.length} ürün Supabase'e kaydedildi`);
+    console.log(`💾 ${insertedCount} yeni ürün eklendi, ${skippedCount} duplicate atlandı`);
     console.log('🎉 === WEBHOOK TAMAMLANDI ===');
 
     return NextResponse.json({ 
       success: true,
-      inserted: uniqueProducts.length,
+      inserted: insertedCount,
+      skipped: skippedCount,
       category: categorySlug,
-      message: `${uniqueProducts.length} ürün (${categorySlug}) başarıyla güncellendi`
+      total: uniqueProducts.length
     });
 
   } catch (error) {
