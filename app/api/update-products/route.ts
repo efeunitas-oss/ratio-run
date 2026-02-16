@@ -605,13 +605,19 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    console.log(`📝 ${products.length} ürün formatlandı (skorlarla)`);
+console.log(`📝 ${products.length} ürün formatlandı (skorlarla)`);
 
-    const { data, error } = await supabase
-      .from('products')
-      .upsert(products, {
-        onConflict: 'source_url'
-      });
+// Duplicate URL'leri temizle
+const uniqueProducts = products.filter((product, index, self) =>
+  index === self.findIndex((p) => p.source_url === product.source_url)
+);
+console.log(`🔄 ${products.length} üründen ${uniqueProducts.length} unique ürün`);
+
+const { data, error } = await supabase
+  .from('products')
+  .upsert(uniqueProducts, {
+    onConflict: 'source_url'
+  });
 
     if (error) {
       console.error('❌ Supabase hatası:', error);
