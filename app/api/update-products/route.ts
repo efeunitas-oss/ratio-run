@@ -6,11 +6,15 @@ interface ApifyWebhookPayload {
   createdAt: string;
   eventType: string;
   actorId: string;
-  actorRunId: string;
+  actorRunId?: string;
+  category?: string;
   eventData: {
     status: string;
-    datasetId: string;
+    datasetId?: string;
     category?: string;
+    actorRunId?: string;
+    actorId?: string;
+    actorTaskId?: string;
   };
 }
 
@@ -292,7 +296,7 @@ function calculateSmartWatchScores(product: ApifyProduct): ProductScores {
 }
 
 // ============================================
-// YENİ: TABLET SKORLAMA
+// TABLET SKORLAMA
 // ============================================
 function calculateTabletScores(product: ApifyProduct): ProductScores {
   const stars = parseFloat(String(product.stars || 0));
@@ -361,7 +365,7 @@ function calculateTabletScores(product: ApifyProduct): ProductScores {
 }
 
 // ============================================
-// YENİ: TV SKORLAMA
+// TV SKORLAMA
 // ============================================
 function calculateTVScores(product: ApifyProduct): ProductScores {
   const stars = parseFloat(String(product.stars || 0));
@@ -425,6 +429,7 @@ function calculateTVScores(product: ApifyProduct): ProductScores {
     overall_score: Math.min(10, Math.max(1, overall_score)),
   };
 }
+
 // ============================================
 // WEBHOOK ENDPOINT
 // ============================================
@@ -447,19 +452,19 @@ export async function POST(request: NextRequest) {
     const body: ApifyWebhookPayload = await request.json();
     console.log('📥 Gelen veri:', JSON.stringify(body, null, 2));
 
-    const { eventData, actorRunId } = body;
-    const datasetId = eventData?.datasetId;
-    const categorySlug = eventData?.category || 'robot-supurge';
+    const { eventData } = body;
+    const categorySlug = body.category || eventData?.category || 'robot-supurge';
+    const runId = body.actorRunId || eventData?.actorRunId;
     
-    if (!datasetId) {
-      console.error('❌ Dataset ID bulunamadı!');
+    if (!runId) {
+      console.error('❌ Actor Run ID bulunamadı!');
       return NextResponse.json(
-        { error: 'Dataset ID bulunamadı' },
+        { error: 'Actor Run ID bulunamadı' },
         { status: 400 }
       );
     }
 
-    console.log(`📦 Dataset ID: ${datasetId}`);
+    console.log(`🎬 Actor Run ID: ${runId}`);
     console.log(`📂 Kategori: ${categorySlug}`);
 
     const apifyToken = process.env.APIFY_TOKEN;
@@ -470,6 +475,28 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Apify Run Details'dan dataset ID'yi al
+    const runDetailsUrl = `https://api.apify.com/v2/actor-runs/${runId}?token=${apifyToken}`;
+    const runDetailsResponse = await fetch(runDetailsUrl);
+    
+    if (!runDetailsResponse.ok) {
+      console.error(`❌ Apify Run Details hatası: ${runDetailsResponse.status}`);
+      throw new Error(`Apify Run Details hatası: ${runDetailsResponse.status}`);
+    }
+
+    const runDetails = await runDetailsResponse.json();
+    const datasetId = runDetails.data?.defaultDatasetId;
+
+    if (!datasetId) {
+      console.error('❌ Dataset ID run details\'da bulunamadı!');
+      return NextResponse.json(
+        { error: 'Dataset ID bulunamadı' },
+        { status: 400 }
+      );
+    }
+
+    console.log(`📦 Dataset ID: ${datasetId}`);
 
     const apifyUrl = `https://api.apify.com/v2/datasets/${datasetId}/items?token=${apifyToken}`;
     const apifyResponse = await fetch(apifyUrl);
