@@ -1,8 +1,8 @@
 "use client";
 
 // ============================================================================
-// RATIO.RUN — ANA SAYFA
-// Düzeltme: Hardcoded SERVICE_ROLE_KEY kaldırıldı. ANON KEY env'den okunuyor.
+// RATIO.RUN — ANA SAYFA (HOTFIX)
+// Hardcoded fallback + düzeltilmiş encoding + çalışan kategori linkleri
 // ============================================================================
 
 import { useEffect, useState } from "react";
@@ -10,11 +10,16 @@ import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// ✅ Güvenli: Anahtarlar .env.local'dan geliyor, kod içinde sabit değer yok.
-// ✅ Kullanılan key: ANON KEY (okuma yetkisi) — SERVICE_ROLE_KEY değil.
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  "https://srypulfxbckherkmrjgs.supabase.co";
+
+// ✅ ANON key kullanılıyor (okuma için yeterli, güvenli)
+const supabaseKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyeXB1bGZ4YmNraGVya21yamdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNTczMDcsImV4cCI6MjA4NjczMzMwN30.gEYVh5tjSrO3sgc5rsnYgVrIy6YdK3I5qU5S6FwkX-I";
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const CATEGORIES = [
   { id: "laptop",        label: "Laptop",        icon: "💻", link: "laptop"        },
@@ -28,14 +33,12 @@ const CATEGORIES = [
 ];
 
 export default function Home() {
-  const [counts, setCounts]       = useState<Record<string, number>>({});
+  const [counts, setCounts]         = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading]     = useState(true);
+  const [loading, setLoading]       = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    fetchCounts();
-  }, []);
+  useEffect(() => { fetchCounts(); }, []);
 
   async function fetchCounts() {
     try {
@@ -46,19 +49,14 @@ export default function Home() {
 
       if (!prodData || !catData) return;
 
-      // slug → DB id haritası
       const slugToId: Record<string, string> = {};
-      catData.forEach((c) => {
-        if (c.slug) slugToId[c.slug.toLowerCase()] = c.id;
-      });
+      catData.forEach((c) => { if (c.slug) slugToId[c.slug.toLowerCase()] = c.id; });
 
-      // DB id → menü id haritası (DB slug ile menü id'si her zaman aynı değil)
+      // DB id → menü id (otomobil → araba)
       const dbIdToMenuId: Record<string, string> = {};
       CATEGORIES.forEach((cat) => {
-        // 'araba' menü item'ı DB'de 'otomobil' slug'ıyla saklı olabilir
-        const slug = cat.id === "araba" ? "otomobil" : cat.id;
-        if (slugToId[slug]) dbIdToMenuId[slugToId[slug]] = cat.id;
-        // Direkt eşleşme de dene
+        const dbSlug = cat.id === "araba" ? "otomobil" : cat.id;
+        if (slugToId[dbSlug]) dbIdToMenuId[slugToId[dbSlug]] = cat.id;
         if (slugToId[cat.id]) dbIdToMenuId[slugToId[cat.id]] = cat.id;
       });
 
@@ -70,7 +68,7 @@ export default function Home() {
 
       setCounts(stats);
     } catch (err) {
-      console.error("[Home] Sayım alınamadı:", err);
+      console.error("[Home] Sayım hatası:", err);
     } finally {
       setLoading(false);
     }
@@ -79,9 +77,7 @@ export default function Home() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const term = searchTerm.trim();
-    if (term) {
-      router.push(`/compare/all?search=${encodeURIComponent(term)}`);
-    }
+    if (term) router.push(`/compare/all?search=${encodeURIComponent(term)}`);
   };
 
   return (
@@ -107,11 +103,7 @@ export default function Home() {
           </span>
         </h1>
 
-        {/* Arama */}
-        <form
-          onSubmit={handleSearch}
-          className="w-full max-w-2xl relative mb-20 group"
-        >
+        <form onSubmit={handleSearch} className="w-full max-w-2xl relative mb-20">
           <input
             type="text"
             placeholder="Model veya marka ara..."

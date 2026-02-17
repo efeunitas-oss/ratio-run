@@ -1,14 +1,28 @@
-// lib/supabase.ts
-// Supabase client helper
+// ============================================================================
+// RATIO.RUN — SUPABASE CLIENT
+// Düzeltme: Hardcoded anahtarlar kaldırıldı, .env.local'dan okunuyor.
+// .env.local içinde şunlar OLMALI:
+//   NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+//   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+//   SUPABASE_SERVICE_ROLE_KEY=eyJ...  (sadece server-side route'larda kullan)
+// ============================================================================
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://srypulfxbckherkmrjgs.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyeXB1bGZ4YmNraGVya21yamdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNTczMDcsImV4cCI6MjA4NjczMzMwN30.gEYVh5tjSrO3sgc5rsnYgVrIy6YdK3I5qU5S6FwkX-I';
+const supabaseUrl  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    '[supabase.ts] NEXT_PUBLIC_SUPABASE_URL veya NEXT_PUBLIC_SUPABASE_ANON_KEY ' +
+    '.env.local dosyasında tanımlı değil.'
+  );
+}
+
+// Frontend (public) client — sadece ANON KEY kullanır
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Product type from Supabase
+// ─── Tipler ──────────────────────────────────────────────────────────────────
 export interface Product {
   id: string;
   category_id: string;
@@ -20,7 +34,7 @@ export interface Product {
   image_url: string | null;
   source_url: string;
   source_name: string;
-  specifications: any;
+  specifications: Record<string, any> | null;
   comparison_score: number | null;
   is_active: boolean;
   stock_status: string;
@@ -39,34 +53,33 @@ export interface Category {
   updated_at: string;
 }
 
-// Helper functions
-export async function getCategories() {
+// ─── Kategori Sorguları ───────────────────────────────────────────────────────
+export async function getCategories(): Promise<Category[]> {
   const { data, error } = await supabase
     .from('categories')
     .select('*')
     .order('display_order', { ascending: true });
 
   if (error) {
-    console.error('Error fetching categories:', error);
+    console.error('[supabase] Kategoriler alınamadı:', error.message);
     return [];
   }
-
-  return data as Category[];
+  return (data as Category[]) ?? [];
 }
 
-export async function getProductsByCategory(categorySlug: string) {
-  // First get category ID
-  const { data: category } = await supabase
+// ─── Kategoriye Göre Ürünler ──────────────────────────────────────────────────
+export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
+  const { data: category, error: catError } = await supabase
     .from('categories')
     .select('id')
     .eq('slug', categorySlug)
     .single();
 
-  if (!category) {
+  if (catError || !category) {
+    console.error(`[supabase] Kategori bulunamadı: ${categorySlug}`);
     return [];
   }
 
-  // Then get products
   const { data, error } = await supabase
     .from('products')
     .select('*')
@@ -75,14 +88,14 @@ export async function getProductsByCategory(categorySlug: string) {
     .order('price', { ascending: true });
 
   if (error) {
-    console.error('Error fetching products:', error);
+    console.error('[supabase] Ürünler alınamadı:', error.message);
     return [];
   }
-
-  return data as Product[];
+  return (data as Product[]) ?? [];
 }
 
-export async function getAllProducts() {
+// ─── Tüm Ürünler ──────────────────────────────────────────────────────────────
+export async function getAllProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')
     .select('*')
@@ -90,55 +103,59 @@ export async function getAllProducts() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching products:', error);
+    console.error('[supabase] Ürünler alınamadı:', error.message);
     return [];
   }
-
-  return data as Product[];
+  return (data as Product[]) ?? [];
 }
-// Supabase Product'ı Vehicle/RobotVacuum formatına çevir
+
+// ─── Dönüştürücüler ───────────────────────────────────────────────────────────
+// Supabase Product → algorithm.ts'in beklediği Vehicle formatı
 export function convertToVehicle(product: Product): any {
+  const s = product.specifications ?? {};
   return {
     id: product.id,
     name: product.name,
     brand: product.brand,
     model: product.model,
-    year: product.specifications?.year || 2024,
-    segment: product.specifications?.segment || 'D',
+    year: s.year || 2024,
+    segment: s.segment || 'D',
     sourceUrl: product.source_url,
     verificationStatus: 'verified',
     affiliateLinks: [],
     engineering: {
-      hp: product.specifications?.hp || 150,
-      torque: product.specifications?.torque || 250,
-      zeroToHundred: product.specifications?.zeroToHundred || 8.5,
-      weight: product.specifications?.weight || 1500,
-      transmission: product.specifications?.transmission || 'Otomatik',
-      fuelConsumption: product.specifications?.fuelConsumption || 6.5,
-      trunkCapacity: product.specifications?.trunkCapacity || 450,
-      engineDisplacement: 1500,
+      hp:               s.hp               || 150,
+      torque:           s.torque           || 250,
+      zeroToHundred:    s.zeroToHundred    || 8.5,
+      weight:           s.weight           || 1500,
+      transmission:     s.transmission     || 'Otomatik',
+      fuelConsumption:  s.fuelConsumption  || 6.5,
+      trunkCapacity:    s.trunkCapacity    || 450,
+      engineDisplacement: s.engineDisplacement || 1500,
     },
     market: {
-      listPrice: product.price || 2000000,
-      marketAverage: product.specifications?.marketAverage || product.price || 2000000,
-      liquidityScore: product.specifications?.liquidityScore || 8,
-      resaleValue: product.specifications?.resaleValue || 8,
-      serviceNetwork: 8,
+      listPrice:      product.price       || 2000000,
+      marketAverage:  s.marketAverage     || product.price || 2000000,
+      liquidityScore: s.liquidityScore    || 8,
+      resaleValue:    s.resaleValue       || 8,
+      serviceNetwork: s.serviceNetwork    || 8,
     },
     quality: {
-      materialQuality: 7,
-      soundInsulation: 7,
-      rideComfort: 7,
-      prestigeScore: 7,
-      trimLevel: 'Dolu',
+      materialQuality:  s.materialQuality  || 7,
+      soundInsulation:  s.soundInsulation  || 7,
+      rideComfort:      s.rideComfort      || 7,
+      prestigeScore:    s.prestigeScore    || 7,
+      trimLevel:        s.trimLevel        || 'Dolu',
     },
-    risk: { chronicIssueRisk: 3 },
-    documentedStrengths: product.specifications?.strengths || [],
-    documentedWeaknesses: product.specifications?.weaknesses || [],
+    risk: { chronicIssueRisk: s.chronicIssueRisk || 3 },
+    documentedStrengths: s.strengths  || [],
+    documentedWeaknesses:s.weaknesses || [],
   };
 }
 
+// Supabase Product → algorithm.ts'in beklediği RobotVacuum formatı
 export function convertToVacuum(product: Product): any {
+  const s = product.specifications ?? {};
   return {
     id: product.id,
     name: product.name,
@@ -148,22 +165,22 @@ export function convertToVacuum(product: Product): any {
     verificationStatus: 'verified',
     affiliateLinks: [],
     specs: {
-      suctionPower: product.specifications?.suctionPower || 5000,
-      batteryCapacity: product.specifications?.batteryCapacity || 5200,
-      noiseLevel: product.specifications?.noiseLevel || 68,
-      dustCapacity: product.specifications?.dustCapacity || 0.4,
-      mappingTech: product.specifications?.mappingTech || 'Lidar',
-      mopFeature: product.specifications?.mopFeature || true,
+      suctionPower:   s.suctionPower   || 5000,
+      batteryCapacity:s.batteryCapacity|| 5200,
+      noiseLevel:     s.noiseLevel     || 68,
+      dustCapacity:   s.dustCapacity   || 0.4,
+      mappingTech:    s.mappingTech    || 'Lidar',
+      mopFeature:     s.mopFeature     ?? true,
     },
     market: {
-      listPrice: product.price || 20000,
-      marketAverage: product.specifications?.marketAverage || product.price || 20000,
-      liquidityScore: product.specifications?.liquidityScore || 8,
-      resaleValue: product.specifications?.resaleValue || 7,
-      serviceNetwork: 7,
+      listPrice:      product.price    || 20000,
+      marketAverage:  s.marketAverage  || product.price || 20000,
+      liquidityScore: s.liquidityScore || 8,
+      resaleValue:    s.resaleValue    || 7,
+      serviceNetwork: s.serviceNetwork || 7,
     },
-    risk: { chronicIssueRisk: 3 },
-    documentedStrengths: product.specifications?.strengths || [],
-    documentedWeaknesses: product.specifications?.weaknesses || [],
+    risk: { chronicIssueRisk: s.chronicIssueRisk || 3 },
+    documentedStrengths: s.strengths  || [],
+    documentedWeaknesses:s.weaknesses || [],
   };
 }

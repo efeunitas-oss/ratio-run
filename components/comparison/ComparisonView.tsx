@@ -1,34 +1,37 @@
 'use client';
 
 // ============================================================================
-// RATIO.RUN - COMPARISON VIEW
-// Premium VS screen with brand glow effects and decision recommendation
+// RATIO.RUN - COMPARISON VIEW v2
+// Düzeltmeler:
+//   • product.title → product.name
+//   • .title.split() null crash'i giderildi
+//   • Türkçe encoding düzeltildi
 // ============================================================================
 
-import { ComparisonResult } from '@/lib/types';
+import { RatioComparisonResult } from '@/lib/types';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { TechSpecsTable } from '@/components/ui/TechSpecsTable';
 import { extractBrand, getSpecConfig } from '@/lib/spec-config';
 import { useEffect, useState } from 'react';
 
 interface ComparisonViewProps {
-  comparison: ComparisonResult;
+  comparison: RatioComparisonResult;
   categorySlug: string;
 }
 
 export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps) {
   const [mounted, setMounted] = useState(false);
-  
-  const brandA = extractBrand(comparison.product_a.title);
-  const brandB = extractBrand(comparison.product_b.title);
+
+  // ── Marka tespiti: name kullan, title değil ───────────────────────────────
+  const brandA = extractBrand(comparison.product_a.name);
+  const brandB = extractBrand(comparison.product_b.name);
   const config = getSpecConfig(categorySlug);
-  
+
   const colorA = config.brand_colors[brandA] || {
     primary: '#10B981',
     glow: 'rgba(16, 185, 129, 0.3)',
     accent: '#FFFFFF',
   };
-  
   const colorB = config.brand_colors[brandB] || {
     primary: '#3B82F6',
     glow: 'rgba(59, 130, 246, 0.3)',
@@ -39,43 +42,43 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
     setMounted(true);
   }, []);
 
+  // ── Kısa başlık yardımcısı — null-safe ───────────────────────────────────
+  const shortName = (name: string | null | undefined, wordCount = 5) => {
+    if (!name) return 'Ürün';
+    return name.split(' ').slice(0, wordCount).join(' ');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
-      {/* Animated Background Gradients */}
+      {/* Animasyonlu arka plan gradyanları */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div
           className={`absolute top-0 left-0 w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 transition-all duration-1000 ${
             mounted ? 'scale-100' : 'scale-0'
           }`}
-          style={{
-            background: `radial-gradient(circle, ${colorA.primary}, transparent 70%)`,
-          }}
+          style={{ background: `radial-gradient(circle, ${colorA.primary}, transparent 70%)` }}
         />
         <div
           className={`absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 transition-all duration-1000 delay-300 ${
             mounted ? 'scale-100' : 'scale-0'
           }`}
-          style={{
-            background: `radial-gradient(circle, ${colorB.primary}, transparent 70%)`,
-          }}
+          style={{ background: `radial-gradient(circle, ${colorB.primary}, transparent 70%)` }}
         />
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-8 lg:py-12">
-        {/* Header */}
+        {/* Başlık */}
         <div className="text-center mb-12">
           <h1 className="text-4xl lg:text-6xl font-black mb-4 bg-gradient-to-r from-gray-100 via-gray-300 to-gray-100 bg-clip-text text-transparent">
             Ratio.Run
           </h1>
-          <p className="text-gray-400 text-lg">
-            Akıllı Karar Mekanizması
-          </p>
+          <p className="text-gray-400 text-lg">Akıllı Karar Mekanizması</p>
         </div>
 
-        {/* VS Header */}
+        {/* VS Alanı */}
         <div className="mb-12">
           <div className="relative">
-            {/* VS Badge */}
+            {/* VS Rozeti */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
               <div className="relative">
                 <div className="absolute inset-0 animate-ping">
@@ -89,7 +92,7 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
               </div>
             </div>
 
-            {/* Product Cards Grid */}
+            {/* Ürün Kartları */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
               <div className={`transition-all duration-700 ${mounted ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}>
                 <ProductCard
@@ -114,41 +117,24 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
           </div>
         </div>
 
-        {/* Recommendation Card */}
-        <div className={`mb-12 transition-all duration-700 delay-500 ${
-          mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-        }`}>
+        {/* Karar Analizi */}
+        <div className={`mb-12 transition-all duration-700 delay-500 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
           <div className="backdrop-blur-xl bg-gradient-to-br from-gray-900/60 to-gray-900/40 border border-gray-800/50 rounded-2xl p-8 shadow-2xl">
             <div className="flex items-start gap-4">
-              {/* Icon */}
               <div className="flex-shrink-0">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border border-emerald-500/30 flex items-center justify-center">
-                  <svg
-                    className="w-8 h-8 text-emerald-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
+                  <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
 
-              {/* Content */}
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-100 mb-3">
-                  Karar Analizi
-                </h2>
+                <h2 className="text-2xl font-bold text-gray-100 mb-3">Karar Analizi</h2>
                 <p className="text-gray-300 text-lg leading-relaxed mb-4">
                   {comparison.recommendation}
                 </p>
 
-                {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                   <div className="backdrop-blur-sm bg-gray-800/30 rounded-xl p-4 border border-gray-700/50">
                     <div className="text-sm text-gray-500 mb-1">Fark Yüzdesi</div>
@@ -156,14 +142,12 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
                       %{comparison.advantage_percentage.toFixed(1)}
                     </div>
                   </div>
-
                   <div className="backdrop-blur-sm bg-gray-800/30 rounded-xl p-4 border border-gray-700/50">
                     <div className="text-sm text-gray-500 mb-1">Ürün A Ratio</div>
                     <div className="text-2xl font-bold text-gray-100">
                       {comparison.ratio_a.normalized_score.toFixed(1)}
                     </div>
                   </div>
-
                   <div className="backdrop-blur-sm bg-gray-800/30 rounded-xl p-4 border border-gray-700/50">
                     <div className="text-sm text-gray-500 mb-1">Ürün B Ratio</div>
                     <div className="text-2xl font-bold text-gray-100">
@@ -176,10 +160,8 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
           </div>
         </div>
 
-        {/* Technical Specifications */}
-        <div className={`transition-all duration-700 delay-700 ${
-          mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-        }`}>
+        {/* Teknik Özellikler Tablosu */}
+        <div className={`transition-all duration-700 delay-700 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
           <TechSpecsTable
             productA={comparison.product_a}
             productB={comparison.product_b}
@@ -187,72 +169,96 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
           />
         </div>
 
-        {/* Score Breakdown (Expandable) */}
-        <div className={`mt-12 transition-all duration-700 delay-900 ${
-          mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-        }`}>
+        {/* Detaylı Puan Dağılımı */}
+        <div className={`mt-12 transition-all duration-700 delay-900 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
           <details className="backdrop-blur-xl bg-gray-900/40 border border-gray-800/50 rounded-2xl overflow-hidden">
             <summary className="cursor-pointer p-6 hover:bg-gray-800/30 transition-colors">
-              <span className="text-xl font-bold text-gray-100">
-                Detaylı Puan Dağılımı
-              </span>
+              <span className="text-xl font-bold text-gray-100">Detaylı Puan Dağılımı</span>
             </summary>
             <div className="p-6 border-t border-gray-800/50">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Product A Breakdown */}
+                {/* Ürün A */}
                 <div>
                   <h3 className="text-lg font-semibold text-emerald-400 mb-4">
-                    {comparison.product_a.title.split(' ').slice(0, 5).join(' ')}
+                    {shortName(comparison.product_a.name)}
                   </h3>
-                  <div className="space-y-3">
-                    {Object.entries(comparison.ratio_a.breakdown.individual_scores).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between">
-                        <span className="text-gray-400 capitalize">{key.replace('_', ' ')}</span>
-                        <div className="flex items-center gap-3">
-                          <div className="w-32 h-2 bg-gray-800 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full"
-                              style={{ width: `${(value / 100) * 100}%` }}
-                            />
-                          </div>
-                          <span className="text-gray-300 font-mono w-12 text-right">
-                            {value.toFixed(1)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <ScoreBreakdown scores={comparison.ratio_a.breakdown.individual_scores} color="emerald" />
+                  {/* "Neden bu puanı aldı?" açıklamaları */}
+                  {comparison.ratio_a.breakdown.explanations?.length > 0 && (
+                    <ExplanationList explanations={comparison.ratio_a.breakdown.explanations} />
+                  )}
                 </div>
 
-                {/* Product B Breakdown */}
+                {/* Ürün B */}
                 <div>
                   <h3 className="text-lg font-semibold text-blue-400 mb-4">
-                    {comparison.product_b.title.split(' ').slice(0, 5).join(' ')}
+                    {shortName(comparison.product_b.name)}
                   </h3>
-                  <div className="space-y-3">
-                    {Object.entries(comparison.ratio_b.breakdown.individual_scores).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between">
-                        <span className="text-gray-400 capitalize">{key.replace('_', ' ')}</span>
-                        <div className="flex items-center gap-3">
-                          <div className="w-32 h-2 bg-gray-800 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"
-                              style={{ width: `${(value / 100) * 100}%` }}
-                            />
-                          </div>
-                          <span className="text-gray-300 font-mono w-12 text-right">
-                            {value.toFixed(1)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <ScoreBreakdown scores={comparison.ratio_b.breakdown.individual_scores} color="blue" />
+                  {comparison.ratio_b.breakdown.explanations?.length > 0 && (
+                    <ExplanationList explanations={comparison.ratio_b.breakdown.explanations} />
+                  )}
                 </div>
               </div>
             </div>
           </details>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Alt Bileşenler ───────────────────────────────────────────────────────────
+
+function ScoreBreakdown({
+  scores,
+  color,
+}: {
+  scores: Record<string, number>;
+  color: 'emerald' | 'blue';
+}) {
+  const barColor = color === 'emerald'
+    ? 'from-emerald-500 to-emerald-400'
+    : 'from-blue-500 to-blue-400';
+
+  return (
+    <div className="space-y-3 mb-4">
+      {Object.entries(scores).map(([key, value]) => (
+        <div key={key} className="flex items-center justify-between">
+          <span className="text-gray-400 capitalize text-sm">
+            {key.replace(/_/g, ' ')}
+          </span>
+          <div className="flex items-center gap-3">
+            <div className="w-32 h-2 bg-gray-800 rounded-full overflow-hidden">
+              <div
+                className={`h-full bg-gradient-to-r ${barColor} rounded-full`}
+                style={{ width: `${Math.min(value, 100)}%` }}
+              />
+            </div>
+            <span className="text-gray-300 font-mono w-12 text-right text-sm">
+              {value.toFixed(1)}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ExplanationList({ explanations }: { explanations: string[] }) {
+  return (
+    <div className="mt-4 p-3 bg-gray-800/40 rounded-xl border border-gray-700/30">
+      <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+        Neden bu puanı aldı?
+      </div>
+      <ul className="space-y-1">
+        {explanations.map((exp, i) => (
+          <li key={i} className="text-xs text-gray-400 flex items-start gap-1.5">
+            <span className="text-emerald-500 mt-0.5">›</span>
+            {exp}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
