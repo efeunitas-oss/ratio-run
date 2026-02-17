@@ -6,10 +6,10 @@ import {
   GenericProduct,
   GenericAnalysis,
   ComparisonResult,
-} from './types';
+} from '@/lib/types';
 
 // ============================================================================
-// VEHICLE COMPARISON - SIMPLIFIED
+// VEHICLE COMPARISON
 // ============================================================================
 
 export function compareVehicles(v1: Vehicle, v2: Vehicle): ComparisonResult {
@@ -21,13 +21,13 @@ export function compareVehicles(v1: Vehicle, v2: Vehicle): ComparisonResult {
     normalizedScores: {} as any,
     categoryScores: {
       engineering: score1.engineering,
-      market: score1.market,
-      quality: score1.quality,
-      risk: score1.risk,
+      market:      score1.market,
+      quality:     score1.quality,
+      risk:        score1.risk,
     },
     finalScore: score1.final,
-    warnings: score1.warnings,
-    strengths: score1.strengths,
+    warnings:   score1.warnings,
+    strengths:  score1.strengths,
     weaknesses: [],
   };
 
@@ -36,13 +36,13 @@ export function compareVehicles(v1: Vehicle, v2: Vehicle): ComparisonResult {
     normalizedScores: {} as any,
     categoryScores: {
       engineering: score2.engineering,
-      market: score2.market,
-      quality: score2.quality,
-      risk: score2.risk,
+      market:      score2.market,
+      quality:     score2.quality,
+      risk:        score2.risk,
     },
     finalScore: score2.final,
-    warnings: score2.warnings,
-    strengths: score2.strengths,
+    warnings:   score2.warnings,
+    strengths:  score2.strengths,
     weaknesses: [],
   };
 
@@ -56,23 +56,24 @@ export function compareVehicles(v1: Vehicle, v2: Vehicle): ComparisonResult {
 
 function calculateVehicleScore(v: Vehicle) {
   const engineering = (v.engineering.hp / 10 + v.engineering.torque / 10) / 2;
-  const market = (v.market.liquidityScore || 7) * 10;
-  const quality = (v.quality.rideComfort || 7) * 10;
-  const risk = 100 - (v.risk?.chronicIssueRisk || 3) * 10;
+  const market      = (v.market.liquidityScore  || 7) * 10;
+  // ✅ quality opsiyonel — ?. ile güvenli erişim
+  const quality     = (v.quality?.rideComfort   || 7) * 10;
+  const risk        = 100 - (v.risk?.chronicIssueRisk || 3) * 10;
 
   return {
     engineering: Math.min(engineering, 100),
-    market: Math.min(market, 100),
-    quality: Math.min(quality, 100),
-    risk: Math.min(risk, 100),
-    final: (engineering + market + quality + risk) / 4,
-    warnings: v.market.listPrice > 3000000 ? ['Çok pahalı'] : [],
-    strengths: [`${v.brand} kalitesi`, `${v.engineering.hp} HP güç`],
+    market:      Math.min(market,      100),
+    quality:     Math.min(quality,     100),
+    risk:        Math.min(risk,        100),
+    final:       (engineering + market + quality + risk) / 4,
+    warnings:    v.market.listPrice > 3000000 ? ['Çok pahalı'] : [],
+    strengths:   [`${v.brand} kalitesi`, `${v.engineering.hp} HP güç`],
   };
 }
 
 // ============================================================================
-// VACUUM COMPARISON - SIMPLIFIED
+// VACUUM COMPARISON
 // ============================================================================
 
 export function compareVacuums(v1: RobotVacuum, v2: RobotVacuum): ComparisonResult {
@@ -83,14 +84,14 @@ export function compareVacuums(v1: RobotVacuum, v2: RobotVacuum): ComparisonResu
     vacuum: v1,
     normalizedScores: {} as any,
     categoryScores: {
-      performance: score1.performance,
+      performance:  score1.performance,
       intelligence: score1.intelligence,
-      market: score1.market,
-      reliability: score1.reliability,
+      market:       score1.market,
+      reliability:  score1.reliability,
     },
     finalScore: score1.final,
-    warnings: score1.warnings,
-    strengths: score1.strengths,
+    warnings:   score1.warnings,
+    strengths:  score1.strengths,
     weaknesses: [],
   };
 
@@ -98,14 +99,14 @@ export function compareVacuums(v1: RobotVacuum, v2: RobotVacuum): ComparisonResu
     vacuum: v2,
     normalizedScores: {} as any,
     categoryScores: {
-      performance: score2.performance,
+      performance:  score2.performance,
       intelligence: score2.intelligence,
-      market: score2.market,
-      reliability: score2.reliability,
+      market:       score2.market,
+      reliability:  score2.reliability,
     },
     finalScore: score2.final,
-    warnings: score2.warnings,
-    strengths: score2.strengths,
+    warnings:   score2.warnings,
+    strengths:  score2.strengths,
     weaknesses: [],
   };
 
@@ -118,24 +119,24 @@ export function compareVacuums(v1: RobotVacuum, v2: RobotVacuum): ComparisonResu
 }
 
 function calculateVacuumScore(v: RobotVacuum) {
-  const performance = (v.specs.suctionPower / 100 + v.specs.batteryCapacity / 100) / 2;
-  const intelligence = v.specs.mappingTech === 'Lidar' ? 90 : 70;
-  const market = (v.market.liquidityScore || 7) * 10;
-  const reliability = 100 - (v.risk?.chronicIssueRisk || 3) * 10;
+  const performance   = (v.specs.suctionPower / 100 + v.specs.batteryCapacity / 100) / 2;
+  const intelligence  = v.specs.mappingTech === 'Lidar' ? 90 : 70;
+  const market        = (v.market.liquidityScore    || 7) * 10;
+  const reliability   = 100 - (v.risk?.chronicIssueRisk || 3) * 10;
 
   return {
-    performance: Math.min(performance, 100),
+    performance:  Math.min(performance, 100),
     intelligence,
-    market: Math.min(market, 100),
-    reliability: Math.min(reliability, 100),
-    final: (performance + intelligence + market + reliability) / 4,
-    warnings: v.specs.noiseLevel > 70 ? ['Gürültülü'] : [],
-    strengths: [`${v.specs.suctionPower}Pa emiş`, v.specs.mappingTech],
+    market:       Math.min(market,      100),
+    reliability:  Math.min(reliability, 100),
+    final:        (performance + intelligence + market + reliability) / 4,
+    warnings:     v.specs.noiseLevel > 70 ? ['Gürültülü'] : [],
+    strengths:    [`${v.specs.suctionPower}Pa emiş`, v.specs.mappingTech],
   };
 }
 
 // ============================================================================
-// GENERIC COMPARISON - SIMPLIFIED
+// GENERIC COMPARISON
 // ============================================================================
 
 export function compareGeneric(p1: GenericProduct, p2: GenericProduct): ComparisonResult {
@@ -146,13 +147,13 @@ export function compareGeneric(p1: GenericProduct, p2: GenericProduct): Comparis
     product: p1,
     categoryScores: {
       performance: score1.performance,
-      quality: score1.quality,
-      market: score1.market,
-      value: score1.value,
+      quality:     score1.quality,
+      market:      score1.market,
+      value:       score1.value,
     },
     finalScore: score1.final,
-    warnings: score1.warnings,
-    strengths: score1.strengths,
+    warnings:   score1.warnings,
+    strengths:  score1.strengths,
     weaknesses: [],
   };
 
@@ -160,13 +161,13 @@ export function compareGeneric(p1: GenericProduct, p2: GenericProduct): Comparis
     product: p2,
     categoryScores: {
       performance: score2.performance,
-      quality: score2.quality,
-      market: score2.market,
-      value: score2.value,
+      quality:     score2.quality,
+      market:      score2.market,
+      value:       score2.value,
     },
     finalScore: score2.final,
-    warnings: score2.warnings,
-    strengths: score2.strengths,
+    warnings:   score2.warnings,
+    strengths:  score2.strengths,
     weaknesses: [],
   };
 
@@ -179,25 +180,25 @@ export function compareGeneric(p1: GenericProduct, p2: GenericProduct): Comparis
 }
 
 function calculateGenericScore(p: GenericProduct) {
-  const specs = p.specifications || {};
+  const specs       = p.specifications || {};
   const performance = (specs.performance_score || 7) * 10;
-  const quality = (specs.quality_score || 7) * 10;
-  const market = (p.market.liquidityScore || 7) * 10;
-  const value = (specs.value_score || 7) * 10;
+  const quality     = (specs.quality_score     || 7) * 10;
+  const market      = (p.market.liquidityScore  || 7) * 10;
+  const value       = (specs.value_score        || 7) * 10;
 
   return {
     performance: Math.min(performance, 100),
-    quality: Math.min(quality, 100),
-    market: Math.min(market, 100),
-    value: Math.min(value, 100),
-    final: (performance + quality + market + value) / 4,
-    warnings: p.market.listPrice > 50000 ? ['Pahalı'] : [],
-    strengths: [`${p.brand} kalitesi`],
+    quality:     Math.min(quality,     100),
+    market:      Math.min(market,      100),
+    value:       Math.min(value,       100),
+    final:       (performance + quality + market + value) / 4,
+    warnings:    p.market.listPrice > 50000 ? ['Pahalı'] : [],
+    strengths:   [`${p.brand} kalitesi`],
   };
 }
 
 // ============================================================================
-// HELPER FUNCTIONS
+// HELPERS
 // ============================================================================
 
 export function formatCurrency(value: number): string {
