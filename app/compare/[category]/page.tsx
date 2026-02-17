@@ -1,21 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 
 const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
   'https://srypulfxbckherkmrjgs.supabase.co';
 
 const supabaseKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyeXB1bGZ4YmNraGVya21yamdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNTczMDcsImV4cCI6MjA4NjczMzMwN30.gEYVh5tjSrO3sgc5rsnYgVrIy6YdK3I5qU5S6FwkX-I';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Slug alias — "araba" URL'i DB'de "otomobil" olarak aranır
 const SLUG_MAP: Record<string, string> = {
   araba: 'otomobil',
 };
@@ -24,58 +23,84 @@ interface Product {
   id: string;
   name: string;
   brand: string;
-  model: string;
   price: number | null;
-  currency: string;
   image_url: string | null;
   source_url: string;
   specifications: Record<string, any> | null;
-  comparison_score: number | null;
-  is_active: boolean;
+}
+
+function getPrice(product: Product): number | null {
+  if (product.price && product.price > 0) return product.price;
+  const s = product.specifications ?? {};
+  if (s.price && Number(s.price) > 0) return Number(s.price);
+  if (s.listPrice && Number(s.listPrice) > 0) return Number(s.listPrice);
+  return null;
 }
 
 export default function CategoryPage() {
-  const params   = useParams();
-  const router   = useRouter();
-  const slug     = params?.category as string ?? '';
+  const params       = useParams();
+  const searchParams = useSearchParams();
+  const router       = useRouter();
+  const slug         = params?.category as string ?? '';
+  const searchQuery  = searchParams?.get('search') ?? '';
 
-  const [products,  setProducts]  = useState<Product[]>([]);
-  const [catName,   setCatName]   = useState('');
-  const [loading,   setLoading]   = useState(true);
-  const [notFound,  setNotFound]  = useState(false);
-  const [selected,  setSelected]  = useState<string[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [catName,  setCatName]  = useState('');
+  const [loading,  setLoading]  = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
 
   useEffect(() => {
     if (slug) fetchProducts();
-  }, [slug]);
+  }, [slug, searchQuery]);
 
   async function fetchProducts() {
     setLoading(true);
+    setNotFound(false);
     try {
-      const dbSlug = SLUG_MAP[slug.toLowerCase()] ?? slug.toLowerCase();
-
-      const { data: category } = await supabase
-        .from('categories')
-        .select('id, name')
-        .eq('slug', dbSlug)
-        .maybeSingle();
-
-      if (!category) {
-        setNotFound(true);
+      // "all" slug'ı → tüm ürünlerde arama yap
+      if (slug === 'all') {
+        if (searchQuery) {
+          setCatName(`"${searchQuery}" için sonuçlar`);
+          const { data } = await supabase
+            .from('products')
+            .select('*')
+            .or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%,model.ilike.%${searchQuery}%`)
+            .eq('is_active', true)
+            .order('price', { ascending: true })
+            .limit(40);
+          setProducts((data as Product[]) ?? []);
+        } else {
+          setCatName('Tüm Ürünler');
+          const { data } = await supabase
+            .from('products').select('*').eq('is_active', true)
+            .order('created_at', { ascending: false }).limit(40);
+          setProducts((data as Product[]) ?? []);
+        }
         setLoading(false);
         return;
       }
 
+      // Normal kategori slug'ı
+      const dbSlug = SLUG_MAP[slug.toLowerCase()] ?? slug.toLowerCase();
+      const { data: category } = await supabase
+        .from('categories').select('id, name').eq('slug', dbSlug).maybeSingle();
+
+      if (!category) { setNotFound(true); setLoading(false); return; }
       setCatName(category.name);
 
-      const { data } = await supabase
-        .from('products')
-        .select('*')
-        .eq('category_id', category.id)
-        .eq('is_active', true)
-        .order('price', { ascending: true })
-        .limit(40);
+      let query = supabase.from('products').select('*')
+        .eq('category_id', category.id).eq('is_active', true)
+        .order('price', { ascending: true }).limit(40);
 
+      if (searchQuery) {
+        query = supabase.from('products').select('*')
+          .eq('category_id', category.id).eq('is_active', true)
+          .or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%`)
+          .limit(40);
+      }
+
+      const { data } = await query;
       setProducts((data as Product[]) ?? []);
     } catch (err) {
       console.error('[CategoryPage]', err);
@@ -100,7 +125,7 @@ export default function CategoryPage() {
 
   if (notFound) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4 px-4 text-center">
         <div className="text-6xl">🔍</div>
         <h1 className="text-2xl font-bold">Kategori bulunamadı</h1>
         <p className="text-gray-400">"{slug}" kategorisi veritabanında mevcut değil.</p>
@@ -121,30 +146,28 @@ export default function CategoryPage() {
         <span className="text-sm text-gray-400 font-medium">{catName}</span>
       </nav>
 
-      {/* Karşılaştır Butonu — 2 ürün seçilince çıkar */}
+      {/* Karşılaştır Butonu */}
       {selected.length === 2 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-          <button
-            onClick={handleCompare}
-            className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-2xl shadow-blue-500/30 transition-all text-lg flex items-center gap-3"
-          >
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-bounce-once">
+          <button onClick={handleCompare}
+            className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-2xl shadow-blue-500/30 transition-all text-lg flex items-center gap-3">
             ⚡ Karşılaştır
             <span className="text-sm opacity-70">(2 ürün seçildi)</span>
           </button>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        {/* Başlık */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="mb-8">
           <h1 className="text-4xl font-black mb-2">{catName}</h1>
           <p className="text-gray-400">
-            {loading ? '...' : `${products.length} ürün`} •{' '}
-            <span className="text-blue-400">Karşılaştırmak için 2 ürün seç</span>
+            {loading ? '...' : `${products.length} ürün`}
+            {selected.length < 2 && !loading && products.length > 0 && (
+              <span className="text-blue-400"> • Karşılaştırmak için 2 ürün seç</span>
+            )}
           </p>
         </div>
 
-        {/* Ürün Izgarası */}
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => (
@@ -164,61 +187,48 @@ export default function CategoryPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {products.map((product) => {
               const isSelected = selected.includes(product.id);
+              const price      = getPrice(product);
               const specs      = product.specifications ?? {};
               const rating     = typeof specs.stars === 'number' ? specs.stars : 0;
 
               return (
-                <div
-                  key={product.id}
-                  onClick={() => toggleSelect(product.id)}
-                  className={`
-                    relative cursor-pointer rounded-2xl border p-4 transition-all duration-200
+                <div key={product.id} onClick={() => toggleSelect(product.id)}
+                  className={`relative cursor-pointer rounded-2xl border p-4 transition-all duration-200
                     ${isSelected
                       ? 'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20 scale-[1.02]'
                       : 'border-gray-800 bg-gray-900/40 hover:border-gray-600 hover:bg-gray-900/60'
-                    }
-                  `}
+                    }`}
                 >
-                  {/* Seçim rozeti */}
                   {isSelected && (
-                    <div className="absolute top-3 right-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs font-bold">
+                    <div className="absolute top-3 right-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs font-bold z-10">
                       {selected.indexOf(product.id) + 1}
                     </div>
                   )}
 
-                  {/* Görsel */}
                   <div className="aspect-square mb-3 rounded-xl overflow-hidden bg-gray-800 flex items-center justify-center">
                     {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-full h-full object-contain p-2"
-                        referrerPolicy="no-referrer"
+                      <img src={product.image_url} alt={product.name}
+                        className="w-full h-full object-contain p-2" referrerPolicy="no-referrer"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
-                    ) : (
-                      <span className="text-4xl opacity-20">📦</span>
-                    )}
+                    ) : <span className="text-4xl opacity-20">📦</span>}
                   </div>
 
-                  {/* Ürün adı */}
                   <h3 className="text-sm font-semibold text-gray-200 line-clamp-2 leading-tight mb-2">
                     {product.name}
                   </h3>
 
-                  {/* Yıldız */}
                   {rating > 0 && (
-                    <div className="flex items-center gap-1 mb-2">
-                      <span className="text-amber-400 text-xs">{'★'.repeat(Math.round(rating))}</span>
+                    <div className="flex items-center gap-1 mb-1.5">
+                      <span className="text-amber-400 text-xs">{'★'.repeat(Math.min(Math.round(rating), 5))}</span>
                       <span className="text-gray-500 text-xs">{rating.toFixed(1)}</span>
                     </div>
                   )}
 
-                  {/* Fiyat */}
-                  <div className="text-lg font-bold text-white">
-                    {product.price
-                      ? `₺${product.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
-                      : <span className="text-gray-500 text-sm">Fiyat yok</span>
+                  <div className="text-base font-bold text-white">
+                    {price
+                      ? `₺${price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
+                      : <span className="text-gray-500 text-xs">Fiyat güncelleniyor</span>
                     }
                   </div>
                 </div>
