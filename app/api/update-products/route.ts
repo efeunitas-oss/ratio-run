@@ -64,34 +64,48 @@ interface SupabaseProduct {
 function parsePrice(raw: any): number | null {
   if (!raw) return null;
 
-  let val: string;
+  // Apify price objesi: {value: 22.599, currency: "TL"}
+  // Türk formatında nokta binlik ayırıcı → 22.599 = 22599 TL
   if (typeof raw === 'object' && raw !== null && 'value' in raw) {
-    val = String(raw.value);
-  } else if (typeof raw === 'number') {
-    val = String(raw);
-  } else if (typeof raw === 'string') {
-    val = raw;
-  } else return null;
-
-  // Türk fiyat formatı: nokta = binlik ayırıcı, virgül = ondalık
-  // "7.912" = 7912 TL, "22.599" = 22599 TL, "1.234,50" = 1234.50 TL
-  val = val.replace(/[^\d.,]/g, '');
-  if (!val) return null;
-
-  if (val.includes(',')) {
-    // Virgül varsa → virgül ondalık, noktalar binlik
-    val = val.replace(/\./g, '').replace(',', '.');
-  } else if (val.includes('.')) {
-    const parts = val.split('.');
-    // Son kısım 3 haneli ise → nokta binlik ayırıcı (7.912 → 7912)
-    if (parts[parts.length - 1].length === 3) {
-      val = val.replace(/\./g, '');
+    const num = Number(raw.value);
+    if (isNaN(num) || num <= 0) return null;
+    // 3 ondalık hane varsa → Türk binlik formatı (7.912 → 7912)
+    const str = String(raw.value);
+    const dotIdx = str.indexOf('.');
+    if (dotIdx !== -1 && str.length - dotIdx - 1 === 3) {
+      return Math.round(num * 1000);
     }
-    // Değilse gerçek ondalık, olduğu gibi bırak
+    // 2 ondalık hane → gerçek ondalık (normal float)
+    return num;
   }
 
-  const n = parseFloat(val);
-  return isNaN(n) || n <= 0 ? null : n;
+  if (typeof raw === 'number') {
+    if (raw <= 0) return null;
+    const str = String(raw);
+    const dotIdx = str.indexOf('.');
+    if (dotIdx !== -1 && str.length - dotIdx - 1 === 3) {
+      return Math.round(raw * 1000);
+    }
+    return raw;
+  }
+
+  if (typeof raw === 'string') {
+    const clean = raw.replace(/[^\d.,]/g, '');
+    if (!clean) return null;
+    // "22.599" veya "22.599,00" formatı
+    if (clean.includes(',')) {
+      const n = parseFloat(clean.replace(/\./g, '').replace(',', '.'));
+      return isNaN(n) || n <= 0 ? null : n;
+    }
+    const parts = clean.split('.');
+    if (parts.length > 1 && parts[parts.length - 1].length === 3) {
+      return parseInt(clean.replace(/\./g, ''), 10) || null;
+    }
+    const n = parseFloat(clean);
+    return isNaN(n) || n <= 0 ? null : n;
+  }
+
+  return null;
 }
 
 // ── İsim Temizleyici ──────────────────────────────────────────────────────────
