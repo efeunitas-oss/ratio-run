@@ -63,16 +63,35 @@ interface SupabaseProduct {
 // Apify price: {value: 22599, currency: "TL"} veya number veya string
 function parsePrice(raw: any): number | null {
   if (!raw) return null;
+
+  let val: string;
   if (typeof raw === 'object' && raw !== null && 'value' in raw) {
-    const v = parseFloat(String(raw.value));
-    return isNaN(v) || v <= 0 ? null : v;
+    val = String(raw.value);
+  } else if (typeof raw === 'number') {
+    val = String(raw);
+  } else if (typeof raw === 'string') {
+    val = raw;
+  } else return null;
+
+  // Türk fiyat formatı: nokta = binlik ayırıcı, virgül = ondalık
+  // "7.912" = 7912 TL, "22.599" = 22599 TL, "1.234,50" = 1234.50 TL
+  val = val.replace(/[^\d.,]/g, '');
+  if (!val) return null;
+
+  if (val.includes(',')) {
+    // Virgül varsa → virgül ondalık, noktalar binlik
+    val = val.replace(/\./g, '').replace(',', '.');
+  } else if (val.includes('.')) {
+    const parts = val.split('.');
+    // Son kısım 3 haneli ise → nokta binlik ayırıcı (7.912 → 7912)
+    if (parts[parts.length - 1].length === 3) {
+      val = val.replace(/\./g, '');
+    }
+    // Değilse gerçek ondalık, olduğu gibi bırak
   }
-  if (typeof raw === 'number') return raw > 0 ? raw : null;
-  if (typeof raw === 'string') {
-    const v = parseFloat(raw.replace(/[^0-9.,]/g, '').replace(',', '.'));
-    return isNaN(v) || v <= 0 ? null : v;
-  }
-  return null;
+
+  const n = parseFloat(val);
+  return isNaN(n) || n <= 0 ? null : n;
 }
 
 // ── İsim Temizleyici ──────────────────────────────────────────────────────────

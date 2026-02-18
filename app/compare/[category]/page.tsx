@@ -68,13 +68,13 @@ export default function CategoryPage() {
             .or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%,model.ilike.%${searchQuery}%`)
             .eq('is_active', true)
             .order('price', { ascending: true })
-            .limit(40);
+            .limit(200);
           setProducts((data as Product[]) ?? []);
         } else {
           setCatName('Tüm Ürünler');
           const { data } = await supabase
             .from('products').select('*').eq('is_active', true)
-            .order('created_at', { ascending: false }).limit(40);
+            .order('created_at', { ascending: false }).limit(200);
           setProducts((data as Product[]) ?? []);
         }
         setLoading(false);
@@ -91,13 +91,13 @@ export default function CategoryPage() {
 
       let query = supabase.from('products').select('*')
         .eq('category_id', category.id).eq('is_active', true)
-        .order('price', { ascending: true }).limit(40);
+        .order('price', { ascending: true }).limit(200);
 
       if (searchQuery) {
         query = supabase.from('products').select('*')
           .eq('category_id', category.id).eq('is_active', true)
           .or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%`)
-          .limit(40);
+          .limit(200);
       }
 
       const { data } = await query;
