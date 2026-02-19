@@ -134,7 +134,7 @@ export default function ComparisonPage() {
       <div className="relative max-w-6xl mx-auto px-4 py-10">
 
         {/* VS Header */}
-        <div className="relative grid grid-cols-2 gap-8 mb-12">
+        <div className="relative grid grid-cols-2 gap-8 mb-12 items-start">
           {/* VS Rozeti */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
             <div className="bg-gray-900 border-2 border-gray-700 rounded-full w-16 h-16 flex items-center justify-center shadow-2xl">
@@ -256,12 +256,16 @@ function ProductPanel({ product, price, score, isWinner, side }: {
 
   return (
     <div className={`bg-gray-900/40 border rounded-2xl p-5 transition-all ${borderColor}`}>
-      {isWinner && (
-        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mb-3
-          ${side === 'a' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'}`}>
-          🏆 KAZANAN
-        </div>
-      )}
+      {/* Her iki kart da aynı yükseklikte rozet alanı — kazanan yoksa şeffaf */}
+      <div className="mb-3 h-7">
+        {isWinner && (
+          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold
+            ${side === 'a' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'}`}>
+            🏆 KAZANAN
+          </div>
+        )}
+      </div>
+
       <div className="w-full mb-4 rounded-xl overflow-hidden bg-gray-800" style={{ position: 'relative', paddingBottom: '100%' }}>
         {product.image_url ? (
           <img src={product.image_url} alt={product.name}
