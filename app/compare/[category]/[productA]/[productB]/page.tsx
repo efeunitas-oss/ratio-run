@@ -1,9 +1,103 @@
+// DYNAMIC SPEC TABLE — kategori bazlı özellik karşılaştırması
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
+
+// ─── Kategori bazlı spec tanımları ───────────────────────────────────────────
+interface SpecDef {
+  label: string;
+  extract: (s: Record<string, any>) => string;
+  higher?: boolean; // true = büyük değer kazanır, false = küçük, undefined = karşılaştırma yok
+}
+
+function boolStr(val: any): string {
+  if (val === true  || val === 'true'  || val === 1) return 'Var';
+  if (val === false || val === 'false' || val === 0) return 'Yok';
+  return '—';
+}
+
+const CATEGORY_SPECS: Record<string, SpecDef[]> = {
+  telefon: [
+    { label: 'İşlemci',       extract: s => s.spec_labels?.['İşlemci'] || s.processor || s.chipset || '—' },
+    { label: 'RAM',           extract: s => s.spec_labels?.['RAM'] || (s.ram_gb ? `${s.ram_gb} GB` : '—'),                higher: true },
+    { label: 'Depolama',      extract: s => s.spec_labels?.['Depolama'] || (s.storage_gb ? `${s.storage_gb} GB` : '—'),   higher: true },
+    { label: 'Ekran',         extract: s => s.spec_labels?.['Ekran'] || s.display || '—' },
+    { label: 'Batarya',       extract: s => s.spec_labels?.['Batarya'] || (s.battery_mah ? `${s.battery_mah} mAh` : '—'), higher: true },
+    { label: 'Şarj Hızı',    extract: s => s.spec_labels?.['Şarj Hızı'] || (s.charging_w ? `${s.charging_w}W` : '—'),    higher: true },
+    { label: 'Arka Kamera',   extract: s => s.spec_labels?.['Arka Kamera'] || s.camera || s.rear_camera || '—' },
+    { label: 'Ön Kamera',     extract: s => s.spec_labels?.['Ön Kamera'] || s.front_camera || '—' },
+  ],
+  laptop: [
+    { label: 'İşlemci',       extract: s => s.spec_labels?.['İşlemci'] || s.processor || s.cpu || '—' },
+    { label: 'GPU',           extract: s => s.spec_labels?.['GPU'] || s.gpu || s.graphics || '—' },
+    { label: 'RAM',           extract: s => s.spec_labels?.['RAM'] || (s.ram_gb ? `${s.ram_gb} GB` : '—'),              higher: true },
+    { label: 'SSD',           extract: s => s.spec_labels?.['SSD'] || (s.storage_gb ? `${s.storage_gb} GB` : '—'),      higher: true },
+    { label: 'Ekran',         extract: s => s.spec_labels?.['Ekran'] || s.display || '—' },
+    { label: 'Parlaklık',     extract: s => s.spec_labels?.['Parlaklık'] || (s.brightness_nits ? `${s.brightness_nits} nits` : '—'), higher: true },
+    { label: 'Batarya (Wh)', extract: s => s.spec_labels?.['Batarya'] || (s.battery_wh ? `${s.battery_wh} Wh` : '—'),  higher: true },
+  ],
+  tablet: [
+    { label: 'İşlemci (SoC)', extract: s => s.spec_labels?.['İşlemci'] || s.processor || s.chipset || '—' },
+    { label: 'RAM',           extract: s => s.spec_labels?.['RAM'] || (s.ram_gb ? `${s.ram_gb} GB` : '—'),              higher: true },
+    { label: 'Depolama',      extract: s => s.spec_labels?.['Depolama'] || (s.storage_gb ? `${s.storage_gb} GB` : '—'), higher: true },
+    { label: 'Ekran',         extract: s => s.spec_labels?.['Ekran'] || s.display || '—' },
+    { label: 'Yenileme Hızı', extract: s => s.spec_labels?.['Yenileme Hızı'] || (s.refresh_rate ? `${s.refresh_rate} Hz` : '—'), higher: true },
+    { label: 'Batarya',       extract: s => s.spec_labels?.['Batarya'] || (s.battery_mah ? `${s.battery_mah} mAh` : '—'), higher: true },
+    { label: 'Kalem Desteği', extract: s => s.spec_labels?.['Kalem Desteği'] || (s.stylus_support != null ? boolStr(s.stylus_support) : '—') },
+  ],
+  'akilli-saat': [
+    { label: 'Pil Ömrü',        extract: s => s.spec_labels?.['Pil Ömrü'] || (s.battery_days ? `${s.battery_days} gün` : '—'), higher: true },
+    { label: 'İşletim Sistemi', extract: s => s.spec_labels?.['İşletim Sistemi'] || s.os || '—' },
+    { label: 'Ekran',           extract: s => s.spec_labels?.['Ekran'] || s.display_type || '—' },
+    { label: 'Kasa Boyutu',     extract: s => s.spec_labels?.['Kasa Boyutu'] || (s.size_mm ? `${s.size_mm} mm` : '—') },
+    { label: 'Parlaklık',       extract: s => s.spec_labels?.['Parlaklık'] || (s.brightness_nits ? `${s.brightness_nits} nits` : '—'), higher: true },
+    { label: 'Malzeme',         extract: s => s.spec_labels?.['Malzeme'] || s.case_material || '—' },
+    { label: 'ECG',             extract: s => s.spec_labels?.['ECG'] || (s.has_ecg != null ? boolStr(s.has_ecg) : '—') },
+  ],
+  kulaklik: [
+    { label: 'ANC',            extract: s => s.spec_labels?.['ANC'] || (s.has_anc != null ? boolStr(s.has_anc) : '—') },
+    { label: 'Codec Desteği',  extract: s => s.spec_labels?.['Codec'] || s.codec || '—' },
+    { label: 'Toplam Batarya', extract: s => s.spec_labels?.['Batarya'] || (s.battery_hours ? `${s.battery_hours} saat` : '—'), higher: true },
+    { label: 'Mikrofon',       extract: s => s.spec_labels?.['Mikrofon'] || s.mic_quality || '—' },
+    { label: 'Multipoint',     extract: s => s.spec_labels?.['Multipoint'] || (s.multipoint != null ? boolStr(s.multipoint) : '—') },
+  ],
+  'robot-supurge': [
+    { label: 'Navigasyon',      extract: s => s.spec_labels?.['Navigasyon'] || s.navigation || '—' },
+    { label: 'Emme Gücü (Pa)', extract: s => s.spec_labels?.['Emme Gücü'] || (s.suction_pa ? `${s.suction_pa} Pa` : '—'), higher: true },
+    { label: 'İstasyon',        extract: s => s.spec_labels?.['İstasyon'] || s.station_features || '—' },
+    { label: 'Mop Teknolojisi', extract: s => s.spec_labels?.['Mop'] || s.mop_type || '—' },
+    { label: 'Engel Tanıma',    extract: s => s.spec_labels?.['Engel Tanıma'] || s.obstacle_avoidance || '—' },
+    { label: 'Batarya',         extract: s => s.spec_labels?.['Batarya'] || (s.battery_min ? `${s.battery_min} dk` : '—'), higher: true },
+  ],
+  televizyon: [
+    { label: 'Panel Tipi',        extract: s => s.spec_labels?.['Panel'] || s.panel_type || '—' },
+    { label: 'Yenileme Hızı',     extract: s => s.spec_labels?.['Yenileme Hızı'] || (s.refresh_rate ? `${s.refresh_rate} Hz` : '—'), higher: true },
+    { label: 'Parlaklık',         extract: s => s.spec_labels?.['Parlaklık'] || (s.brightness_nits ? `${s.brightness_nits} nits` : '—'), higher: true },
+    { label: 'HDR Formatları',    extract: s => s.spec_labels?.['HDR'] || s.hdr_formats || '—' },
+    { label: 'HDMI 2.1',          extract: s => s.spec_labels?.['HDMI 2.1'] || (s.hdmi_21 != null ? boolStr(s.hdmi_21) : '—') },
+    { label: 'İşlemci/Upscaling', extract: s => s.spec_labels?.['İşlemci'] || s.processor || '—' },
+  ],
+};
+
+const SLUG_ALIAS: Record<string, string> = {
+  'akilli-saat': 'akilli-saat', 'saat': 'akilli-saat', 'smartwatch': 'akilli-saat',
+  'kulaklik': 'kulaklik', 'kulaklık': 'kulaklik', 'earbuds': 'kulaklik',
+  'robot-supurge': 'robot-supurge', 'robot': 'robot-supurge',
+  'televizyon': 'televizyon', 'tv': 'televizyon',
+  'laptop': 'laptop', 'dizustu': 'laptop',
+  'tablet': 'tablet',
+  'telefon': 'telefon', 'cep-telefonu': 'telefon',
+};
+
+function extractNumeric(val: string): number | null {
+  if (!val || val === '—') return null;
+  const m = val.match(/[\d.]+/);
+  return m ? parseFloat(m[0]) : null;
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 const supabaseUrl =
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -38,10 +132,11 @@ function getRatioScore(product: Product, maxPrice: number): number {
 }
 
 function getPrice(product: Product): number | null {
-  if (product.price && product.price > 0) return product.price;
+  // 100 TL altı yanlış parse edilmiş veri — gösterme
+  if (product.price && product.price >= 100) return product.price;
   const specs = product.specifications ?? {};
-  if (specs.price && specs.price > 0) return Number(specs.price);
-  if (specs.listPrice && specs.listPrice > 0) return Number(specs.listPrice);
+  if (specs.price && Number(specs.price) >= 100) return Number(specs.price);
+  if (specs.listPrice && Number(specs.listPrice) >= 100) return Number(specs.listPrice);
   return null;
 }
 
@@ -97,19 +192,29 @@ export default function ComparisonPage() {
     );
   }
 
-  const priceA  = getPrice(productA);
-  const priceB  = getPrice(productB);
-  const maxP    = Math.max(priceA ?? 0, priceB ?? 0, 1);
-  const scoreA  = getRatioScore(productA, maxP);
-  const scoreB  = getRatioScore(productB, maxP);
-  const diff    = Math.abs(scoreA - scoreB);
-  const winner  = scoreA > scoreB ? 'a' : scoreB > scoreA ? 'b' : 'tie';
-  const specsA  = productA.specifications ?? {};
-  const specsB  = productB.specifications ?? {};
+  const priceA = getPrice(productA);
+  const priceB = getPrice(productB);
+  const maxP   = Math.max(priceA ?? 0, priceB ?? 0, 1);
+  const scoreA = getRatioScore(productA, maxP);
+  const scoreB = getRatioScore(productB, maxP);
+  const diff   = Math.abs(scoreA - scoreB);
+  const winner = scoreA > scoreB ? 'a' : scoreB > scoreA ? 'b' : 'tie';
+  const specsA = productA.specifications ?? {};
+  const specsB = productB.specifications ?? {};
 
   const verdict = winner === 'tie'
     ? 'Bu iki ürün neredeyse eşit performans/fiyat oranına sahip.'
-    : `${winner === 'a' ? productA.name : productB.name}, rakibine göre %${diff.toFixed(1)} daha iyi bir denge sunuyor.`;
+    : `${winner === 'a' ? productA.name : productB.name}, rakibine göre %${diff.toFixed(1)} daha iyi bir değer sunuyor.`;
+
+  // Kategori spec tanımları
+  const catKey   = SLUG_ALIAS[slug.toLowerCase()] ?? slug.toLowerCase();
+  const specDefs = CATEGORY_SPECS[catKey] ?? null;
+
+  // Fallback: her iki üründeki spec_labels birleşimi
+  const fallbackKeys = Array.from(new Set([
+    ...Object.keys(specsA.spec_labels ?? {}),
+    ...Object.keys(specsB.spec_labels ?? {}),
+  ]));
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -175,8 +280,71 @@ export default function ComparisonPage() {
           </div>
         </div>
 
-        {/* Spec Karşılaştırma */}
-        <DynamicSpecTable slug={slug} productA={productA} productB={productB} specsA={specsA} specsB={specsB} scoreA={scoreA} scoreB={scoreB} priceA={priceA} priceB={priceB} />
+        {/* Teknik Karşılaştırma — kategori bazlı dinamik tablo */}
+        <div className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden">
+          <div className="p-5 border-b border-gray-800">
+            <h2 className="text-xl font-bold">Teknik Karşılaştırma</h2>
+          </div>
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-800/50 bg-gray-900/30">
+                <th className="text-left p-4 text-gray-400 text-sm w-1/3">Özellik</th>
+                <th className="text-center p-4 text-emerald-400 text-sm w-1/3">{productA.name.split(' ').slice(0, 3).join(' ')}</th>
+                <th className="text-center p-4 text-blue-400 text-sm w-1/3">{productB.name.split(' ').slice(0, 3).join(' ')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <SpecRow
+                label="Fiyat"
+                valA={priceA ? `₺${priceA.toLocaleString('tr-TR')}` : '—'}
+                valB={priceB ? `₺${priceB.toLocaleString('tr-TR')}` : '—'}
+                winnerA={!!priceA && !!priceB && priceA < priceB}
+                winnerB={!!priceA && !!priceB && priceB < priceA}
+              />
+              {specDefs
+                ? specDefs.map((def) => {
+                    const vA = def.extract(specsA);
+                    const vB = def.extract(specsB);
+                    let wA = false, wB = false;
+                    if (def.higher !== undefined && vA !== '—' && vB !== '—') {
+                      const nA = extractNumeric(vA);
+                      const nB = extractNumeric(vB);
+                      if (nA !== null && nB !== null) {
+                        wA = def.higher ? nA > nB : nA < nB;
+                        wB = def.higher ? nB > nA : nB < nA;
+                      } else {
+                        wA = vA === 'Var' && vB === 'Yok';
+                        wB = vB === 'Var' && vA === 'Yok';
+                      }
+                    }
+                    return <SpecRow key={def.label} label={def.label} valA={vA} valB={vB} winnerA={wA} winnerB={wB} />;
+                  })
+                : fallbackKeys.map((key) => (
+                    <SpecRow
+                      key={key} label={key}
+                      valA={String(specsA.spec_labels?.[key] ?? '—')}
+                      valB={String(specsB.spec_labels?.[key] ?? '—')}
+                      winnerA={false} winnerB={false}
+                    />
+                  ))
+              }
+              <SpecRow
+                label="Yorum Sayısı"
+                valA={specsA.reviewsCount ? Number(specsA.reviewsCount).toLocaleString('tr-TR') : '—'}
+                valB={specsB.reviewsCount ? Number(specsB.reviewsCount).toLocaleString('tr-TR') : '—'}
+                winnerA={(specsA.reviewsCount ?? 0) > (specsB.reviewsCount ?? 0)}
+                winnerB={(specsB.reviewsCount ?? 0) > (specsA.reviewsCount ?? 0)}
+              />
+              <SpecRow
+                label="Ratio Skoru (100 üzerinden)"
+                valA={`${scoreA.toFixed(1)} / 100`}
+                valB={`${scoreB.toFixed(1)} / 100`}
+                winnerA={scoreA > scoreB}
+                winnerB={scoreB > scoreA}
+              />
+            </tbody>
+          </table>
+        </div>
 
         {/* Linkler */}
         <div className="grid grid-cols-2 gap-4 mt-6">
@@ -240,171 +408,16 @@ function ProductPanel({ product, price, score, isWinner, side }: {
 function SpecRow({ label, valA, valB, winnerA, winnerB }: {
   label: string; valA: string; valB: string; winnerA: boolean; winnerB: boolean;
 }) {
+  if (valA === '—' && valB === '—') return null;
   return (
     <tr className="border-b border-gray-800/30 hover:bg-gray-800/20 transition-colors">
       <td className="p-4 text-gray-400 text-sm font-medium">{label}</td>
-      <td className={`p-4 text-center font-bold ${winnerA ? 'text-emerald-400 bg-emerald-500/5' : 'text-gray-300'}`}>
+      <td className={`p-4 text-center text-sm font-bold ${winnerA ? 'text-emerald-400 bg-emerald-500/5' : 'text-gray-300'}`}>
         {winnerA && <span className="mr-1">✓</span>}{valA}
       </td>
-      <td className={`p-4 text-center font-bold ${winnerB ? 'text-blue-400 bg-blue-500/5' : 'text-gray-300'}`}>
+      <td className={`p-4 text-center text-sm font-bold ${winnerB ? 'text-blue-400 bg-blue-500/5' : 'text-gray-300'}`}>
         {winnerB && <span className="mr-1">✓</span>}{valB}
       </td>
     </tr>
-  );
-}
-
-function ScoreBar({ score, side }: { score: number; side: 'a' | 'b' }) {
-  const pct = Math.min(100, Math.max(0, (score / 10) * 100));
-  const color = side === 'a' ? '#10b981' : '#3b82f6';
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-      <div style={{ width: 80, height: 6, background: '#1f2937', borderRadius: 3, overflow: 'hidden' }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 3 }} />
-      </div>
-      <span style={{ fontSize: 13, fontWeight: 700, color, minWidth: 28 }}>{score}/10</span>
-    </div>
-  );
-}
-
-interface SpecDef { label: string; key: string; higherIsBetter: boolean; }
-
-const CATEGORY_SPECS: Record<string, SpecDef[]> = {
-  'telefon': [
-    { label: 'İşlemci Skoru',      key: 'performance_score', higherIsBetter: true },
-    { label: 'Kamera Skoru',       key: 'camera_score',      higherIsBetter: true },
-    { label: 'Batarya Skoru',      key: 'battery_score',     higherIsBetter: true },
-    { label: 'Ekran Skoru',        key: 'display_score',     higherIsBetter: true },
-    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
-  ],
-  'laptop': [
-    { label: 'Performans Skoru',   key: 'performance_score', higherIsBetter: true },
-    { label: 'RAM Skoru',          key: 'ram_score',         higherIsBetter: true },
-    { label: 'Ekran Skoru',        key: 'display_score',     higherIsBetter: true },
-    { label: 'Batarya Skoru',      key: 'battery_score',     higherIsBetter: true },
-    { label: 'Depolama Skoru',     key: 'storage_score',     higherIsBetter: true },
-    { label: 'Yapı Kalitesi',      key: 'build_quality',     higherIsBetter: true },
-    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
-  ],
-  'tablet': [
-    { label: 'Performans Skoru',   key: 'performance_score', higherIsBetter: true },
-    { label: 'Ekran Skoru',        key: 'display_score',     higherIsBetter: true },
-    { label: 'Batarya Skoru',      key: 'battery_score',     higherIsBetter: true },
-    { label: 'Depolama Skoru',     key: 'storage_score',     higherIsBetter: true },
-    { label: 'Yapı Kalitesi',      key: 'build_quality',     higherIsBetter: true },
-    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
-  ],
-  'saat': [
-    { label: 'Fitness Takip',      key: 'fitness_tracking',  higherIsBetter: true },
-    { label: 'Batarya Skoru',      key: 'battery_score',     higherIsBetter: true },
-    { label: 'Ekran Skoru',        key: 'display_score',     higherIsBetter: true },
-    { label: 'Sağlık Özellikleri', key: 'health_features',   higherIsBetter: true },
-    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
-  ],
-  'kulaklik': [
-    { label: 'Ses Kalitesi',       key: 'sound_quality',     higherIsBetter: true },
-    { label: 'Gürültü Engelleme',  key: 'noise_cancelling',  higherIsBetter: true },
-    { label: 'Batarya Skoru',      key: 'battery_score',     higherIsBetter: true },
-    { label: 'Konfor Skoru',       key: 'comfort_score',     higherIsBetter: true },
-    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
-  ],
-  'robot-supurge': [
-    { label: 'Emme Gücü Skoru',    key: 'suction_score',     higherIsBetter: true },
-    { label: 'Navigasyon Skoru',   key: 'navigation_score',  higherIsBetter: true },
-    { label: 'Mop Skoru',          key: 'mop_score',         higherIsBetter: true },
-    { label: 'Batarya Skoru',      key: 'battery_score',     higherIsBetter: true },
-    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
-  ],
-  'tv': [
-    { label: 'Görüntü Kalitesi',   key: 'picture_quality',   higherIsBetter: true },
-    { label: 'HDR Desteği',        key: 'hdr_support',       higherIsBetter: true },
-    { label: 'Ekran Boyutu Skoru', key: 'screen_size_score', higherIsBetter: true },
-    { label: 'Akıllı Özellikler',  key: 'smart_features',    higherIsBetter: true },
-    { label: 'Ses Kalitesi',       key: 'sound_quality',     higherIsBetter: true },
-    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
-  ],
-};
-
-function DynamicSpecTable({ slug, productA, productB, specsA, specsB, scoreA, scoreB, priceA, priceB }: {
-  slug: string;
-  productA: Product; productB: Product;
-  specsA: Record<string, any>; specsB: Record<string, any>;
-  scoreA: number; scoreB: number;
-  priceA: number | null; priceB: number | null;
-}) {
-  const specs = CATEGORY_SPECS[slug] ?? CATEGORY_SPECS['laptop'];
-  const labelsA = specsA.spec_labels ?? {};
-  const labelsB = specsB.spec_labels ?? {};
-  const extraLabels = Array.from(new Set([...Object.keys(labelsA), ...Object.keys(labelsB)]));
-
-  return (
-    <div className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden">
-      <div className="p-5 border-b border-gray-800">
-        <h2 className="text-xl font-bold">Teknik Karşılaştırma</h2>
-      </div>
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-gray-800/50">
-            <th className="text-left p-4 text-gray-400 text-sm w-1/3">Özellik</th>
-            <th className="text-center p-4 text-emerald-400 text-sm w-1/3">
-              {productA.name.split(' ').slice(0, 3).join(' ')}
-            </th>
-            <th className="text-center p-4 text-blue-400 text-sm w-1/3">
-              {productB.name.split(' ').slice(0, 3).join(' ')}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <SpecRow
-            label="Fiyat"
-            valA={priceA ? `₺${priceA.toLocaleString('tr-TR')}` : '—'}
-            valB={priceB ? `₺${priceB.toLocaleString('tr-TR')}` : '—'}
-            winnerA={!!priceA && !!priceB && priceA < priceB}
-            winnerB={!!priceA && !!priceB && priceB < priceA}
-          />
-          <SpecRow
-            label="Yorum Sayısı"
-            valA={specsA.reviewsCount ? Number(specsA.reviewsCount).toLocaleString('tr-TR') : '—'}
-            valB={specsB.reviewsCount ? Number(specsB.reviewsCount).toLocaleString('tr-TR') : '—'}
-            winnerA={Number(specsA.reviewsCount) > Number(specsB.reviewsCount)}
-            winnerB={Number(specsB.reviewsCount) > Number(specsA.reviewsCount)}
-          />
-          {extraLabels.map((label) => (
-            <SpecRow key={label} label={label}
-              valA={labelsA[label] ?? '—'} valB={labelsB[label] ?? '—'}
-              winnerA={false} winnerB={false}
-            />
-          ))}
-          {specs.map((spec) => {
-            const vA = specsA[spec.key];
-            const vB = specsB[spec.key];
-            if (vA == null && vB == null) return null;
-            const numA = Number(vA ?? 0);
-            const numB = Number(vB ?? 0);
-            const winA = spec.higherIsBetter ? numA > numB : numA < numB;
-            const winB = spec.higherIsBetter ? numB > numA : numB < numA;
-            return (
-              <tr key={spec.key} className="border-b border-gray-800/30 hover:bg-gray-800/20 transition-colors">
-                <td className="p-4 text-gray-400 text-sm font-medium">{spec.label}</td>
-                <td className={`p-4 ${winA ? 'bg-emerald-500/5' : ''}`}>
-                  {vA != null ? <ScoreBar score={numA} side="a" /> : <span className="block text-center text-gray-600">—</span>}
-                </td>
-                <td className={`p-4 ${winB ? 'bg-blue-500/5' : ''}`}>
-                  {vB != null ? <ScoreBar score={numB} side="b" /> : <span className="block text-center text-gray-600">—</span>}
-                </td>
-              </tr>
-            );
-          })}
-          <tr className="border-t-2 border-gray-700 bg-gray-900/30">
-            <td className="p-4 text-white font-bold text-sm">Ratio Skoru</td>
-            <td className={`p-4 ${scoreA > scoreB ? 'bg-emerald-500/10' : ''}`}>
-              <ScoreBar score={parseFloat(scoreA.toFixed(1))} side="a" />
-            </td>
-            <td className={`p-4 ${scoreB > scoreA ? 'bg-blue-500/10' : ''}`}>
-              <ScoreBar score={parseFloat(scoreB.toFixed(1))} side="b" />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   );
 }
