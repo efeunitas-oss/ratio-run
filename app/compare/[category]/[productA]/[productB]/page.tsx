@@ -122,13 +122,22 @@ interface Product {
 }
 
 function getRatioScore(product: Product, maxPrice: number): number {
-  const specs = product.specifications ?? {};
-  const overall = (specs.overall_score ?? 0) * 10;
-  const stars   = (specs.stars         ?? 0) * 20;
-  const price   = product.price ?? specs.price ?? 0;
-  const priceFactor = price > 0 ? (1 - (Math.log10(price + 1) / Math.log10(maxPrice + 1)) * 0.4) : 0.6;
-  const baseScore = overall > 0 ? overall : stars > 0 ? stars : 50;
-  return Math.min(Math.max(baseScore * priceFactor, 0), 100);
+  const specs   = product.specifications ?? {};
+  const overall = Number(specs.overall_score ?? 0);   // 0–10
+  const stars   = Number(specs.stars         ?? 0);   // 0–5
+  const price   = product.price && product.price >= 100 ? product.price : null;
+
+  // Temel skor: overall_score varsa kullan (0-10 → 0-100), yoksa stars (0-5 → 0-100)
+  let baseScore = overall > 0 ? overall * 10 : stars > 0 ? stars * 20 : 0;
+
+  // Fiyat bonusu/malus: fiyat varsa düşük fiyat bonus verir
+  if (price && maxPrice > 100) {
+    const priceRatio  = price / maxPrice;          // 0–1 (0=en ucuz)
+    const priceBonus  = (1 - priceRatio) * 20;     // max +20 puan ucuz ürüne
+    baseScore = Math.min(100, baseScore + priceBonus);
+  }
+
+  return Math.min(100, Math.max(0, baseScore));
 }
 
 function getPrice(product: Product): number | null {
