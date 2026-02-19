@@ -246,8 +246,8 @@ export default function ComparisonPage() {
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Nav */}
       <nav className="border-b border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 bg-gray-950/90 backdrop-blur z-50">
-        <Link href="/" className="text-xl font-black tracking-tighter">
-          RATIO<span className="text-blue-500">.RUN</span>
+        <Link href="/">
+          <img src="/logo.png" alt="Ratio.Run" style={{ height: 32, width: 'auto' }} />
         </Link>
         <Link href={`/compare/${slug}`} className="text-sm text-gray-400 hover:text-white transition-colors">
           ← Geri

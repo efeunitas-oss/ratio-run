@@ -64,8 +64,8 @@ export default function RatioRunApp({ categories, productsByCategory }: RatioRun
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex flex-col gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tighter bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 bg-clip-text text-transparent">
-                RATIO.RUN
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tighter">
+                <img src="/logo.png" alt="Ratio.Run" style={{ height: 36, width: 'auto' }} />
               </h1>
               <p className="text-xs sm:text-sm text-zinc-400 mt-1">Duygularla değil, verilerle karar ver.</p>
             </div>
