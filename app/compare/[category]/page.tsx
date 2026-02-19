@@ -30,11 +30,75 @@ interface Product {
 }
 
 function getPrice(product: Product): number | null {
-  if (product.price && product.price > 0) return product.price;
+  // 100 TL altı yanlış parse edilmiş veriler — gösterme
+  if (product.price && product.price >= 100) return product.price;
   const s = product.specifications ?? {};
-  if (s.price && Number(s.price) > 0) return Number(s.price);
-  if (s.listPrice && Number(s.listPrice) > 0) return Number(s.listPrice);
+  if (s.price && Number(s.price) >= 100) return Number(s.price);
+  if (s.listPrice && Number(s.listPrice) >= 100) return Number(s.listPrice);
   return null;
+}
+
+// Gürültü kelimeleri — bunlar isimden çıkarılır
+const NOISE_WORDS = [
+  'Android Akıllı Telefon', 'Akıllı Telefon', 'Cep Telefonu',
+  'Akıllı Saat', 'Spor Saati', 'Fitness Tracker', 'Smartwatch', 'Smart Watch',
+  'Dizüstü Bilgisayar', 'Bilgisayar', 'Laptop', 'Notebook',
+  'Robot Süpürge', 'Akıllı Süpürge', 'Robot Vacuum',
+  'Kablosuz Kulaklık', 'Kulak İçi Kulaklık', 'Kulaklık', 'Earbuds',
+  'Akıllı TV', 'Smart TV', 'Televizyon', 'QLED TV', 'OLED TV',
+  'Tablet Bilgisayar', 'Android Tablet',
+  'Türkiye Garantili', 'Türkiye Garanti', 'TR Garantili',
+  'Siyah', 'Beyaz', 'Gri', 'Mavi', 'Kırmızı', 'Altın', 'Gümüş',
+];
+
+function formatName(name: string, brand: string): string {
+  if (!name) return brand || 'Ürün';
+
+  let s = name.trim();
+
+  // Parantez içini tamamen at: (Samsung Türkiye Garantili) gibi
+  s = s.replace(/\s*\([^)]*\)/g, '').trim();
+
+  // Köşeli parantezi at
+  s = s.replace(/\s*\[[^\]]*\]/g, '').trim();
+
+  // Virgülden sonrasını at
+  s = s.split(',')[0].trim();
+
+  // " – " veya " - " ile başlayan açıklamaları at
+  s = s.split(/\s+[–—]\s+/)[0].trim();
+
+  // " | " ile başlayan ek bilgileri at
+  s = s.split(' | ')[0].trim();
+
+  // Gürültü kelimelerini büyük/küçük harf duyarsız kaldır
+  for (const word of NOISE_WORDS) {
+    const re = new RegExp(`\\s*\\b${word}\\b\\s*`, 'gi');
+    s = s.replace(re, ' ').trim();
+  }
+
+  // Çoklu boşlukları temizle
+  s = s.replace(/\s+/g, ' ').trim();
+
+  // Sonunda virgül, tire, nokta varsa at
+  s = s.replace(/[,.\-–—]+$/, '').trim();
+
+  // Marka zaten başta değilse ve anlamlı bir brand varsa öne ekle
+  if (brand && brand.length > 1 && !s.toLowerCase().startsWith(brand.toLowerCase())) {
+    s = `${brand} ${s}`;
+  }
+
+  // Çok kısa kaldıysa (3 harften az) orijinali ilk 5 kelime al
+  if (s.replace(/\s/g, '').length < 3) {
+    s = name.split(' ').slice(0, 5).join(' ');
+  }
+
+  // Max 44 karakter
+  if (s.length > 44) {
+    s = s.substring(0, 41) + '...';
+  }
+
+  return s;
 }
 
 export default function CategoryPage() {
@@ -215,7 +279,7 @@ export default function CategoryPage() {
                   </div>
 
                   <h3 className="text-sm font-semibold text-gray-200 line-clamp-2 leading-tight mb-2">
-                    {product.name}
+                    {formatName(product.name, product.brand)}
                   </h3>
 
                   {rating > 0 && (
