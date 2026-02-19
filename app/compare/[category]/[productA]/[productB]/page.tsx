@@ -21,64 +21,68 @@ function boolStr(val: any): string {
 
 const CATEGORY_SPECS: Record<string, SpecDef[]> = {
   telefon: [
-    { label: 'İşlemci',       extract: s => s.spec_labels?.['İşlemci'] || s.processor || s.chipset || '—' },
-    { label: 'RAM',           extract: s => s.spec_labels?.['RAM'] || (s.ram_gb ? `${s.ram_gb} GB` : '—'),                higher: true },
-    { label: 'Depolama',      extract: s => s.spec_labels?.['Depolama'] || (s.storage_gb ? `${s.storage_gb} GB` : '—'),   higher: true },
-    { label: 'Ekran',         extract: s => s.spec_labels?.['Ekran'] || s.display || '—' },
-    { label: 'Batarya',       extract: s => s.spec_labels?.['Batarya'] || (s.battery_mah ? `${s.battery_mah} mAh` : '—'), higher: true },
-    { label: 'Şarj Hızı',    extract: s => s.spec_labels?.['Şarj Hızı'] || (s.charging_w ? `${s.charging_w}W` : '—'),    higher: true },
-    { label: 'Arka Kamera',   extract: s => s.spec_labels?.['Arka Kamera'] || s.camera || s.rear_camera || '—' },
-    { label: 'Ön Kamera',     extract: s => s.spec_labels?.['Ön Kamera'] || s.front_camera || '—' },
+    { label: 'İşlemci',         extract: s => s.spec_labels?.['İşlemci'] || s.processor || s.chipset || '—' },
+    { label: 'RAM',             extract: s => s.spec_labels?.['RAM'] || (s.ram_gb ? `${s.ram_gb} GB` : '—'),                                          higher: true },
+    { label: 'Depolama',        extract: s => s.spec_labels?.['Depolama'] || (s.storage_gb ? `${s.storage_gb} GB` : '—'),                             higher: true },
+    { label: 'Ekran (Panel/Hz)',extract: s => [s.spec_labels?.['Ekran'] || s.display_type || '', s.spec_labels?.['Yenileme Hızı'] || (s.refresh_rate ? `${s.refresh_rate}Hz` : '')].filter(Boolean).join(' · ') || '—' },
+    { label: 'Batarya',         extract: s => s.spec_labels?.['Batarya'] || (s.battery_mah ? `${s.battery_mah} mAh` : '—'),                           higher: true },
+    { label: 'Şarj Hızı',      extract: s => s.spec_labels?.['Şarj Hızı'] || (s.charging_w ? `${s.charging_w} W` : '—'),                             higher: true },
+    { label: 'Arka Kamera',     extract: s => s.spec_labels?.['Arka Kamera'] || s.rear_camera || s.camera || '—' },
+    { label: 'Ön Kamera',       extract: s => s.spec_labels?.['Ön Kamera'] || s.front_camera || '—' },
   ],
   laptop: [
-    { label: 'İşlemci',       extract: s => s.spec_labels?.['İşlemci'] || s.processor || s.cpu || '—' },
-    { label: 'GPU',           extract: s => s.spec_labels?.['GPU'] || s.gpu || s.graphics || '—' },
-    { label: 'RAM',           extract: s => s.spec_labels?.['RAM'] || (s.ram_gb ? `${s.ram_gb} GB` : '—'),              higher: true },
-    { label: 'SSD',           extract: s => s.spec_labels?.['SSD'] || (s.storage_gb ? `${s.storage_gb} GB` : '—'),      higher: true },
-    { label: 'Ekran',         extract: s => s.spec_labels?.['Ekran'] || s.display || '—' },
-    { label: 'Parlaklık',     extract: s => s.spec_labels?.['Parlaklık'] || (s.brightness_nits ? `${s.brightness_nits} nits` : '—'), higher: true },
-    { label: 'Batarya (Wh)', extract: s => s.spec_labels?.['Batarya'] || (s.battery_wh ? `${s.battery_wh} Wh` : '—'),  higher: true },
+    { label: 'GPU',              extract: s => s.spec_labels?.['GPU'] || s.gpu || s.graphics || '—' },
+    { label: 'İşlemci',         extract: s => s.spec_labels?.['İşlemci'] || s.processor || s.cpu || '—' },
+    { label: 'RAM',              extract: s => s.spec_labels?.['RAM'] || (s.ram_gb ? `${s.ram_gb} GB` : '—'),                                         higher: true },
+    { label: 'Ekran (Panel/Nits/Hz)', extract: s => [s.spec_labels?.['Ekran'] || s.display_type || '', s.brightness_nits ? `${s.brightness_nits} nits` : '', s.refresh_rate ? `${s.refresh_rate}Hz` : ''].filter(Boolean).join(' · ') || '—' },
+    { label: 'SSD',              extract: s => s.spec_labels?.['SSD'] || s.spec_labels?.['Depolama'] || (s.storage_gb ? `${s.storage_gb} GB` : '—'), higher: true },
   ],
   tablet: [
-    { label: 'İşlemci (SoC)', extract: s => s.spec_labels?.['İşlemci'] || s.processor || s.chipset || '—' },
-    { label: 'RAM',           extract: s => s.spec_labels?.['RAM'] || (s.ram_gb ? `${s.ram_gb} GB` : '—'),              higher: true },
-    { label: 'Depolama',      extract: s => s.spec_labels?.['Depolama'] || (s.storage_gb ? `${s.storage_gb} GB` : '—'), higher: true },
-    { label: 'Ekran',         extract: s => s.spec_labels?.['Ekran'] || s.display || '—' },
-    { label: 'Yenileme Hızı', extract: s => s.spec_labels?.['Yenileme Hızı'] || (s.refresh_rate ? `${s.refresh_rate} Hz` : '—'), higher: true },
-    { label: 'Batarya',       extract: s => s.spec_labels?.['Batarya'] || (s.battery_mah ? `${s.battery_mah} mAh` : '—'), higher: true },
-    { label: 'Kalem Desteği', extract: s => s.spec_labels?.['Kalem Desteği'] || (s.stylus_support != null ? boolStr(s.stylus_support) : '—') },
+    { label: 'İşlemci (SoC)',        extract: s => s.spec_labels?.['İşlemci'] || s.processor || s.chipset || '—' },
+    { label: 'Ekran (Panel/Hz)',     extract: s => [s.spec_labels?.['Ekran'] || s.display_type || '', s.spec_labels?.['Yenileme Hızı'] || (s.refresh_rate ? `${s.refresh_rate}Hz` : '')].filter(Boolean).join(' · ') || '—' },
+    { label: 'RAM',                  extract: s => s.spec_labels?.['RAM'] || (s.ram_gb ? `${s.ram_gb} GB` : '—'),                                     higher: true },
+    { label: 'Batarya',             extract: s => s.spec_labels?.['Batarya'] || (s.battery_mah ? `${s.battery_mah} mAh` : '—'),                       higher: true },
+    { label: 'Depolama',            extract: s => s.spec_labels?.['Depolama'] || (s.storage_gb ? `${s.storage_gb} GB` : '—'),                         higher: true },
+    { label: 'Kalem Desteği',       extract: s => s.spec_labels?.['Kalem Desteği'] || (s.stylus_support != null ? boolStr(s.stylus_support) : '—') },
   ],
   'akilli-saat': [
-    { label: 'Pil Ömrü',        extract: s => s.spec_labels?.['Pil Ömrü'] || (s.battery_days ? `${s.battery_days} gün` : '—'), higher: true },
-    { label: 'İşletim Sistemi', extract: s => s.spec_labels?.['İşletim Sistemi'] || s.os || '—' },
-    { label: 'Ekran',           extract: s => s.spec_labels?.['Ekran'] || s.display_type || '—' },
-    { label: 'Kasa Boyutu',     extract: s => s.spec_labels?.['Kasa Boyutu'] || (s.size_mm ? `${s.size_mm} mm` : '—') },
-    { label: 'Parlaklık',       extract: s => s.spec_labels?.['Parlaklık'] || (s.brightness_nits ? `${s.brightness_nits} nits` : '—'), higher: true },
-    { label: 'Malzeme',         extract: s => s.spec_labels?.['Malzeme'] || s.case_material || '—' },
-    { label: 'ECG',             extract: s => s.spec_labels?.['ECG'] || (s.has_ecg != null ? boolStr(s.has_ecg) : '—') },
+    { label: 'Batarya (Gün)',        extract: s => s.spec_labels?.['Pil Ömrü'] || (s.battery_days ? `${s.battery_days} gün` : '—'),                   higher: true },
+    { label: 'İşletim Sistemi',     extract: s => s.spec_labels?.['İşletim Sistemi'] || s.os || '—' },
+    { label: 'Ekran (Boyut/Nits)',  extract: s => [s.spec_labels?.['Ekran'] || s.display_type || '', s.spec_labels?.['Kasa Boyutu'] || (s.size_mm ? `${s.size_mm}mm` : ''), s.brightness_nits ? `${s.brightness_nits} nits` : ''].filter(Boolean).join(' · ') || '—' },
+    { label: 'Malzeme',             extract: s => s.spec_labels?.['Malzeme'] || s.case_material || '—' },
+    { label: 'ECG',                 extract: s => s.spec_labels?.['ECG'] || (s.has_ecg != null ? boolStr(s.has_ecg) : '—') },
   ],
   kulaklik: [
-    { label: 'ANC',            extract: s => s.spec_labels?.['ANC'] || (s.has_anc != null ? boolStr(s.has_anc) : '—') },
-    { label: 'Codec Desteği',  extract: s => s.spec_labels?.['Codec'] || s.codec || '—' },
-    { label: 'Toplam Batarya', extract: s => s.spec_labels?.['Batarya'] || (s.battery_hours ? `${s.battery_hours} saat` : '—'), higher: true },
-    { label: 'Mikrofon',       extract: s => s.spec_labels?.['Mikrofon'] || s.mic_quality || '—' },
-    { label: 'Multipoint',     extract: s => s.spec_labels?.['Multipoint'] || (s.multipoint != null ? boolStr(s.multipoint) : '—') },
+    { label: 'ANC',                 extract: s => s.spec_labels?.['ANC'] || (s.has_anc != null ? boolStr(s.has_anc) : '—') },
+    { label: 'Codec Desteği',       extract: s => s.spec_labels?.['Codec'] || s.codec || '—' },
+    { label: 'Batarya (Kutu dahil)',extract: s => s.spec_labels?.['Batarya'] || s.spec_labels?.['Pil Ömrü'] || (s.battery_hours ? `${s.battery_hours} saat` : '—'), higher: true },
+    { label: 'Mikrofon',            extract: s => s.spec_labels?.['Mikrofon'] || s.mic_quality || '—' },
+    { label: 'Multipoint',          extract: s => s.spec_labels?.['Multipoint'] || (s.multipoint != null ? boolStr(s.multipoint) : '—') },
   ],
   'robot-supurge': [
-    { label: 'Navigasyon',      extract: s => s.spec_labels?.['Navigasyon'] || s.navigation || '—' },
-    { label: 'Emme Gücü (Pa)', extract: s => s.spec_labels?.['Emme Gücü'] || (s.suction_pa ? `${s.suction_pa} Pa` : '—'), higher: true },
-    { label: 'İstasyon',        extract: s => s.spec_labels?.['İstasyon'] || s.station_features || '—' },
-    { label: 'Mop Teknolojisi', extract: s => s.spec_labels?.['Mop'] || s.mop_type || '—' },
-    { label: 'Engel Tanıma',    extract: s => s.spec_labels?.['Engel Tanıma'] || s.obstacle_avoidance || '—' },
-    { label: 'Batarya',         extract: s => s.spec_labels?.['Batarya'] || (s.battery_min ? `${s.battery_min} dk` : '—'), higher: true },
+    { label: 'Navigasyon (LiDAR/Kamera)', extract: s => s.spec_labels?.['Navigasyon'] || s.navigation || '—' },
+    { label: 'Emme Gücü (Pa)',      extract: s => s.spec_labels?.['Emme Gücü'] || (s.suction_pa ? `${s.suction_pa} Pa` : '—'),                        higher: true },
+    { label: 'İstasyon (Toz/Su/Yıkama)', extract: s => s.spec_labels?.['İstasyon'] || s.station_features || '—' },
+    { label: 'Mop Teknolojisi',     extract: s => s.spec_labels?.['Mop'] || s.mop_type || '—' },
+    { label: 'Engel Tanıma',        extract: s => s.spec_labels?.['Engel Tanıma'] || s.obstacle_avoidance || '—' },
+    { label: 'Batarya',             extract: s => s.spec_labels?.['Batarya'] || (s.battery_min ? `${s.battery_min} dk` : '—'),                        higher: true },
   ],
   televizyon: [
-    { label: 'Panel Tipi',        extract: s => s.spec_labels?.['Panel'] || s.panel_type || '—' },
-    { label: 'Yenileme Hızı',     extract: s => s.spec_labels?.['Yenileme Hızı'] || (s.refresh_rate ? `${s.refresh_rate} Hz` : '—'), higher: true },
-    { label: 'Parlaklık',         extract: s => s.spec_labels?.['Parlaklık'] || (s.brightness_nits ? `${s.brightness_nits} nits` : '—'), higher: true },
-    { label: 'HDR Formatları',    extract: s => s.spec_labels?.['HDR'] || s.hdr_formats || '—' },
-    { label: 'HDMI 2.1',          extract: s => s.spec_labels?.['HDMI 2.1'] || (s.hdmi_21 != null ? boolStr(s.hdmi_21) : '—') },
-    { label: 'İşlemci/Upscaling', extract: s => s.spec_labels?.['İşlemci'] || s.processor || '—' },
+    { label: 'Panel & Arka Aydınlatma', extract: s => [s.spec_labels?.['Panel'] || s.panel_type || '', s.spec_labels?.['Arka Aydınlatma'] || s.backlight || ''].filter(Boolean).join(' · ') || '—' },
+    { label: 'Yenileme Hızı (Hz)',  extract: s => s.spec_labels?.['Yenileme Hızı'] || (s.refresh_rate ? `${s.refresh_rate} Hz` : '—'),                 higher: true },
+    { label: 'İşlemci / Upscaling',extract: s => s.spec_labels?.['İşlemci'] || s.processor || s.upscaling || '—' },
+    { label: 'HDR Formatları',      extract: s => s.spec_labels?.['HDR'] || s.hdr_formats || '—' },
+    { label: 'HDMI 2.1',            extract: s => s.spec_labels?.['HDMI 2.1'] || (s.hdmi_21 != null ? boolStr(s.hdmi_21) : '—') },
+  ],
+  araba: [
+    { label: 'Motor',               extract: s => s.spec_labels?.['Motor'] || s.engine || '—' },
+    { label: 'Yakıt Tipi',         extract: s => s.spec_labels?.['Yakıt Tipi'] || s.fuel_type || '—' },
+    { label: 'Beygir Gücü',        extract: s => s.spec_labels?.['Beygir Gücü'] || (s.hp ? `${s.hp} HP` : '—'),                                       higher: true },
+    { label: 'Tork',               extract: s => s.spec_labels?.['Tork'] || (s.torque_nm ? `${s.torque_nm} Nm` : '—'),                                higher: true },
+    { label: 'Vites',              extract: s => s.spec_labels?.['Vites'] || s.transmission || '—' },
+    { label: '0–100 km/s',        extract: s => s.spec_labels?.['0-100'] || (s.acceleration ? `${s.acceleration} sn` : '—'),                          higher: false },
+    { label: 'Yakıt Tüketimi',    extract: s => s.spec_labels?.['Yakıt Tüketimi'] || (s.fuel_consumption ? `${s.fuel_consumption} L/100km` : '—'),    higher: false },
+    { label: 'Bagaj (L)',          extract: s => s.spec_labels?.['Bagaj'] || (s.trunk_liters ? `${s.trunk_liters} L` : '—'),                           higher: true },
   ],
 };
 
@@ -90,6 +94,7 @@ const SLUG_ALIAS: Record<string, string> = {
   'laptop': 'laptop', 'dizustu': 'laptop',
   'tablet': 'tablet',
   'telefon': 'telefon', 'cep-telefonu': 'telefon',
+  'araba': 'araba', 'otomobil': 'araba', 'ikinci-el': 'araba',
 };
 
 function extractNumeric(val: string): number | null {
@@ -123,21 +128,33 @@ interface Product {
 
 function getRatioScore(product: Product, maxPrice: number): number {
   const specs   = product.specifications ?? {};
-  const overall = Number(specs.overall_score ?? 0);   // 0–10
-  const stars   = Number(specs.stars         ?? 0);   // 0–5
+  const overall = Number(specs.overall_score ?? 0);  // 0–10 arası
+  const stars   = Number(specs.stars         ?? 0);  // 0–5 arası
   const price   = product.price && product.price >= 100 ? product.price : null;
 
-  // Temel skor: overall_score varsa kullan (0-10 → 0-100), yoksa stars (0-5 → 0-100)
-  let baseScore = overall > 0 ? overall * 10 : stars > 0 ? stars * 20 : 0;
+  // 1. Spec skoru: overall_score varsa kullan, yoksa stars
+  let specScore = 0;
+  if (overall > 0)     specScore = overall * 10;       // 0–100
+  else if (stars > 0)  specScore = stars * 20;         // 0–100
 
-  // Fiyat bonusu/malus: fiyat varsa düşük fiyat bonus verir
+  // 2. Fiyat skoru: her zaman hesapla — ucuz ürün avantajlı
+  let priceScore = 50; // spec yoksa nötr başla
   if (price && maxPrice > 100) {
-    const priceRatio  = price / maxPrice;          // 0–1 (0=en ucuz)
-    const priceBonus  = (1 - priceRatio) * 20;     // max +20 puan ucuz ürüne
-    baseScore = Math.min(100, baseScore + priceBonus);
+    // En ucuz = 40 puan, en pahalı = 0 puan
+    priceScore = (1 - (price / maxPrice)) * 40;
   }
 
-  return Math.min(100, Math.max(0, baseScore));
+  // 3. Birleştir
+  let final: number;
+  if (specScore > 0) {
+    // Spec var: %75 spec + %25 fiyat avantajı
+    final = specScore * 0.75 + priceScore * 0.25;
+  } else {
+    // Spec yok (araba gibi): sadece fiyat karşılaştırması
+    final = priceScore;
+  }
+
+  return Math.min(100, Math.max(0, final));
 }
 
 function getPrice(product: Product): number | null {
@@ -326,7 +343,7 @@ export default function ComparisonPage() {
                         wB = vB === 'Var' && vA === 'Yok';
                       }
                     }
-                    return <SpecRow key={def.label} label={def.label} valA={vA} valB={vB} winnerA={wA} winnerB={wB} />;
+                    return <SpecRow key={def.label} label={def.label} valA={vA} valB={vB} winnerA={wA} winnerB={wB} alwaysShow={true} />;
                   })
                 : fallbackKeys.map((key) => (
                     <SpecRow
@@ -414,17 +431,18 @@ function ProductPanel({ product, price, score, isWinner, side }: {
   );
 }
 
-function SpecRow({ label, valA, valB, winnerA, winnerB }: {
-  label: string; valA: string; valB: string; winnerA: boolean; winnerB: boolean;
+function SpecRow({ label, valA, valB, winnerA, winnerB, alwaysShow = false }: {
+  label: string; valA: string; valB: string; winnerA: boolean; winnerB: boolean; alwaysShow?: boolean;
 }) {
-  if (valA === '—' && valB === '—') return null;
+  // İkisi de "—" ise ve alwaysShow değilse gizle (yorum sayısı gibi meta alanlar için)
+  if (!alwaysShow && valA === '—' && valB === '—') return null;
   return (
     <tr className="border-b border-gray-800/30 hover:bg-gray-800/20 transition-colors">
       <td className="p-4 text-gray-400 text-sm font-medium">{label}</td>
-      <td className={`p-4 text-center text-sm font-bold ${winnerA ? 'text-emerald-400 bg-emerald-500/5' : 'text-gray-300'}`}>
+      <td className={`p-4 text-center text-sm font-bold ${winnerA ? 'text-emerald-400 bg-emerald-500/5' : valA === '—' ? 'text-gray-700' : 'text-gray-300'}`}>
         {winnerA && <span className="mr-1">✓</span>}{valA}
       </td>
-      <td className={`p-4 text-center text-sm font-bold ${winnerB ? 'text-blue-400 bg-blue-500/5' : 'text-gray-300'}`}>
+      <td className={`p-4 text-center text-sm font-bold ${winnerB ? 'text-blue-400 bg-blue-500/5' : valB === '—' ? 'text-gray-700' : 'text-gray-300'}`}>
         {winnerB && <span className="mr-1">✓</span>}{valB}
       </td>
     </tr>
