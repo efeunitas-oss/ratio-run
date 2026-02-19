@@ -264,7 +264,7 @@ export default function CategoryPage() {
 
               return (
                 <div key={product.id} onClick={() => toggleSelect(product.id)}
-                  className={`relative cursor-pointer rounded-2xl border p-4 transition-all duration-200
+                  className={`relative cursor-pointer rounded-2xl border transition-all duration-200 flex flex-col
                     ${isSelected
                       ? 'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20 scale-[1.02]'
                       : 'border-gray-800 bg-gray-900/40 hover:border-gray-600 hover:bg-gray-900/60'
@@ -276,31 +276,46 @@ export default function CategoryPage() {
                     </div>
                   )}
 
-                  <div className="aspect-square mb-3 rounded-xl overflow-hidden bg-gray-800 flex items-center justify-center">
+                  {/* Sabit kare görsel alanı — tüm kartlar eşit */}
+                  <div className="w-full" style={{ paddingBottom: '100%', position: 'relative', overflow: 'hidden', borderRadius: '14px 14px 0 0', background: '#111' }}>
                     {product.image_url ? (
-                      <img src={product.image_url} alt={product.name}
-                        className="w-full h-full object-contain p-2" referrerPolicy="no-referrer"
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        referrerPolicy="no-referrer"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          padding: '8px',
+                        }}
                       />
-                    ) : <span className="text-4xl opacity-20">📦</span>}
+                    ) : (
+                      <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', opacity: 0.15 }}>📦</span>
+                    )}
                   </div>
 
-                  <h3 className="text-sm font-semibold text-gray-200 line-clamp-2 leading-tight mb-2">
-                    {formatName(product.name, product.brand)}
-                  </h3>
+                  <div className="p-4 flex flex-col flex-1">
+                    <h3 className="text-sm font-semibold text-gray-200 line-clamp-2 leading-tight mb-2 flex-1">
+                      {formatName(product.name, product.brand)}
+                    </h3>
 
-                  {rating > 0 && (
-                    <div className="flex items-center gap-1 mb-1.5">
-                      <span className="text-amber-400 text-xs">{'★'.repeat(Math.min(Math.round(rating), 5))}</span>
-                      <span className="text-gray-500 text-xs">{rating.toFixed(1)}</span>
+                    {rating > 0 && (
+                      <div className="flex items-center gap-1 mb-1.5">
+                        <span className="text-amber-400 text-xs">{'★'.repeat(Math.min(Math.round(rating), 5))}</span>
+                        <span className="text-gray-500 text-xs">{rating.toFixed(1)}</span>
+                      </div>
+                    )}
+
+                    <div className="text-base font-bold text-white mt-auto">
+                      {price
+                        ? `₺${price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
+                        : <span className="text-gray-500 text-xs">Fiyat güncelleniyor</span>
+                      }
                     </div>
-                  )}
-
-                  <div className="text-base font-bold text-white">
-                    {price
-                      ? `₺${price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
-                      : <span className="text-gray-500 text-xs">Fiyat güncelleniyor</span>
-                    }
                   </div>
                 </div>
               );
