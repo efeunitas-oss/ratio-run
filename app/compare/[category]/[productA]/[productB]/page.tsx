@@ -262,13 +262,14 @@ function ProductPanel({ product, price, score, isWinner, side }: {
           🏆 KAZANAN
         </div>
       )}
-      <div className="aspect-square mb-4 rounded-xl overflow-hidden bg-gray-800 flex items-center justify-center">
+      <div className="w-full mb-4 rounded-xl overflow-hidden bg-gray-800" style={{ position: 'relative', paddingBottom: '100%' }}>
         {product.image_url ? (
           <img src={product.image_url} alt={product.name}
-            className="w-full h-full object-contain p-3" referrerPolicy="no-referrer"
+            referrerPolicy="no-referrer"
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: '12px' }}
           />
-        ) : <span className="text-4xl opacity-20">📦</span>}
+        ) : <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', opacity: 0.2 }}>📦</span>}
       </div>
       <h3 className="font-bold text-gray-100 line-clamp-2 mb-2 text-sm">{product.name}</h3>
       <div className="text-2xl font-black mb-1">
