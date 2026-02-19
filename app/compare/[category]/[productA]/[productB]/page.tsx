@@ -176,56 +176,7 @@ export default function ComparisonPage() {
         </div>
 
         {/* Spec Karşılaştırma */}
-        <div className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden">
-          <div className="p-5 border-b border-gray-800">
-            <h2 className="text-xl font-bold">Teknik Karşılaştırma</h2>
-          </div>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-800/50">
-                <th className="text-left p-4 text-gray-400 text-sm w-1/3">Özellik</th>
-                <th className="text-center p-4 text-emerald-400 text-sm w-1/3">
-                  {productA.name.split(' ').slice(0, 4).join(' ')}
-                </th>
-                <th className="text-center p-4 text-blue-400 text-sm w-1/3">
-                  {productB.name.split(' ').slice(0, 4).join(' ')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <SpecRow label="Fiyat"
-                valA={priceA ? `₺${priceA.toLocaleString('tr-TR')}` : '—'}
-                valB={priceB ? `₺${priceB.toLocaleString('tr-TR')}` : '—'}
-                winnerA={!!priceA && !!priceB && priceA < priceB}
-                winnerB={!!priceA && !!priceB && priceB < priceA}
-              />
-              <SpecRow label="Genel Skor"
-                valA={specsA.overall_score ? `${specsA.overall_score}/10` : '—'}
-                valB={specsB.overall_score ? `${specsB.overall_score}/10` : '—'}
-                winnerA={specsA.overall_score > specsB.overall_score}
-                winnerB={specsB.overall_score > specsA.overall_score}
-              />
-              <SpecRow label="Değerlendirme"
-                valA={specsA.stars ? `★ ${specsA.stars}` : '—'}
-                valB={specsB.stars ? `★ ${specsB.stars}` : '—'}
-                winnerA={specsA.stars > specsB.stars}
-                winnerB={specsB.stars > specsA.stars}
-              />
-              <SpecRow label="Yorum Sayısı"
-                valA={specsA.reviewsCount ? specsA.reviewsCount.toLocaleString('tr-TR') : '—'}
-                valB={specsB.reviewsCount ? specsB.reviewsCount.toLocaleString('tr-TR') : '—'}
-                winnerA={specsA.reviewsCount > specsB.reviewsCount}
-                winnerB={specsB.reviewsCount > specsA.reviewsCount}
-              />
-              <SpecRow label="Ratio Skoru"
-                valA={scoreA.toFixed(1)}
-                valB={scoreB.toFixed(1)}
-                winnerA={scoreA > scoreB}
-                winnerB={scoreB > scoreA}
-              />
-            </tbody>
-          </table>
-        </div>
+        <DynamicSpecTable slug={slug} productA={productA} productB={productB} specsA={specsA} specsB={specsB} scoreA={scoreA} scoreB={scoreB} priceA={priceA} priceB={priceB} />
 
         {/* Linkler */}
         <div className="grid grid-cols-2 gap-4 mt-6">
@@ -292,12 +243,168 @@ function SpecRow({ label, valA, valB, winnerA, winnerB }: {
   return (
     <tr className="border-b border-gray-800/30 hover:bg-gray-800/20 transition-colors">
       <td className="p-4 text-gray-400 text-sm font-medium">{label}</td>
-      <td className={`p-4 text-center font-bold ${winnerA ? 'text-emerald-400' : 'text-gray-300'} ${winnerA ? 'bg-emerald-500/5' : ''}`}>
+      <td className={`p-4 text-center font-bold ${winnerA ? 'text-emerald-400 bg-emerald-500/5' : 'text-gray-300'}`}>
         {winnerA && <span className="mr-1">✓</span>}{valA}
       </td>
-      <td className={`p-4 text-center font-bold ${winnerB ? 'text-blue-400' : 'text-gray-300'} ${winnerB ? 'bg-blue-500/5' : ''}`}>
+      <td className={`p-4 text-center font-bold ${winnerB ? 'text-blue-400 bg-blue-500/5' : 'text-gray-300'}`}>
         {winnerB && <span className="mr-1">✓</span>}{valB}
       </td>
     </tr>
+  );
+}
+
+function ScoreBar({ score, side }: { score: number; side: 'a' | 'b' }) {
+  const pct = Math.min(100, Math.max(0, (score / 10) * 100));
+  const color = side === 'a' ? '#10b981' : '#3b82f6';
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+      <div style={{ width: 80, height: 6, background: '#1f2937', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 3 }} />
+      </div>
+      <span style={{ fontSize: 13, fontWeight: 700, color, minWidth: 28 }}>{score}/10</span>
+    </div>
+  );
+}
+
+interface SpecDef { label: string; key: string; higherIsBetter: boolean; }
+
+const CATEGORY_SPECS: Record<string, SpecDef[]> = {
+  'telefon': [
+    { label: 'İşlemci Skoru',      key: 'performance_score', higherIsBetter: true },
+    { label: 'Kamera Skoru',       key: 'camera_score',      higherIsBetter: true },
+    { label: 'Batarya Skoru',      key: 'battery_score',     higherIsBetter: true },
+    { label: 'Ekran Skoru',        key: 'display_score',     higherIsBetter: true },
+    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
+  ],
+  'laptop': [
+    { label: 'Performans Skoru',   key: 'performance_score', higherIsBetter: true },
+    { label: 'RAM Skoru',          key: 'ram_score',         higherIsBetter: true },
+    { label: 'Ekran Skoru',        key: 'display_score',     higherIsBetter: true },
+    { label: 'Batarya Skoru',      key: 'battery_score',     higherIsBetter: true },
+    { label: 'Depolama Skoru',     key: 'storage_score',     higherIsBetter: true },
+    { label: 'Yapı Kalitesi',      key: 'build_quality',     higherIsBetter: true },
+    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
+  ],
+  'tablet': [
+    { label: 'Performans Skoru',   key: 'performance_score', higherIsBetter: true },
+    { label: 'Ekran Skoru',        key: 'display_score',     higherIsBetter: true },
+    { label: 'Batarya Skoru',      key: 'battery_score',     higherIsBetter: true },
+    { label: 'Depolama Skoru',     key: 'storage_score',     higherIsBetter: true },
+    { label: 'Yapı Kalitesi',      key: 'build_quality',     higherIsBetter: true },
+    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
+  ],
+  'saat': [
+    { label: 'Fitness Takip',      key: 'fitness_tracking',  higherIsBetter: true },
+    { label: 'Batarya Skoru',      key: 'battery_score',     higherIsBetter: true },
+    { label: 'Ekran Skoru',        key: 'display_score',     higherIsBetter: true },
+    { label: 'Sağlık Özellikleri', key: 'health_features',   higherIsBetter: true },
+    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
+  ],
+  'kulaklik': [
+    { label: 'Ses Kalitesi',       key: 'sound_quality',     higherIsBetter: true },
+    { label: 'Gürültü Engelleme',  key: 'noise_cancelling',  higherIsBetter: true },
+    { label: 'Batarya Skoru',      key: 'battery_score',     higherIsBetter: true },
+    { label: 'Konfor Skoru',       key: 'comfort_score',     higherIsBetter: true },
+    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
+  ],
+  'robot-supurge': [
+    { label: 'Emme Gücü Skoru',    key: 'suction_score',     higherIsBetter: true },
+    { label: 'Navigasyon Skoru',   key: 'navigation_score',  higherIsBetter: true },
+    { label: 'Mop Skoru',          key: 'mop_score',         higherIsBetter: true },
+    { label: 'Batarya Skoru',      key: 'battery_score',     higherIsBetter: true },
+    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
+  ],
+  'tv': [
+    { label: 'Görüntü Kalitesi',   key: 'picture_quality',   higherIsBetter: true },
+    { label: 'HDR Desteği',        key: 'hdr_support',       higherIsBetter: true },
+    { label: 'Ekran Boyutu Skoru', key: 'screen_size_score', higherIsBetter: true },
+    { label: 'Akıllı Özellikler',  key: 'smart_features',    higherIsBetter: true },
+    { label: 'Ses Kalitesi',       key: 'sound_quality',     higherIsBetter: true },
+    { label: 'Genel Skor',         key: 'overall_score',     higherIsBetter: true },
+  ],
+};
+
+function DynamicSpecTable({ slug, productA, productB, specsA, specsB, scoreA, scoreB, priceA, priceB }: {
+  slug: string;
+  productA: Product; productB: Product;
+  specsA: Record<string, any>; specsB: Record<string, any>;
+  scoreA: number; scoreB: number;
+  priceA: number | null; priceB: number | null;
+}) {
+  const specs = CATEGORY_SPECS[slug] ?? CATEGORY_SPECS['laptop'];
+  const labelsA = specsA.spec_labels ?? {};
+  const labelsB = specsB.spec_labels ?? {};
+  const extraLabels = Array.from(new Set([...Object.keys(labelsA), ...Object.keys(labelsB)]));
+
+  return (
+    <div className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden">
+      <div className="p-5 border-b border-gray-800">
+        <h2 className="text-xl font-bold">Teknik Karşılaştırma</h2>
+      </div>
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-gray-800/50">
+            <th className="text-left p-4 text-gray-400 text-sm w-1/3">Özellik</th>
+            <th className="text-center p-4 text-emerald-400 text-sm w-1/3">
+              {productA.name.split(' ').slice(0, 3).join(' ')}
+            </th>
+            <th className="text-center p-4 text-blue-400 text-sm w-1/3">
+              {productB.name.split(' ').slice(0, 3).join(' ')}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <SpecRow
+            label="Fiyat"
+            valA={priceA ? `₺${priceA.toLocaleString('tr-TR')}` : '—'}
+            valB={priceB ? `₺${priceB.toLocaleString('tr-TR')}` : '—'}
+            winnerA={!!priceA && !!priceB && priceA < priceB}
+            winnerB={!!priceA && !!priceB && priceB < priceA}
+          />
+          <SpecRow
+            label="Yorum Sayısı"
+            valA={specsA.reviewsCount ? Number(specsA.reviewsCount).toLocaleString('tr-TR') : '—'}
+            valB={specsB.reviewsCount ? Number(specsB.reviewsCount).toLocaleString('tr-TR') : '—'}
+            winnerA={Number(specsA.reviewsCount) > Number(specsB.reviewsCount)}
+            winnerB={Number(specsB.reviewsCount) > Number(specsA.reviewsCount)}
+          />
+          {extraLabels.map((label) => (
+            <SpecRow key={label} label={label}
+              valA={labelsA[label] ?? '—'} valB={labelsB[label] ?? '—'}
+              winnerA={false} winnerB={false}
+            />
+          ))}
+          {specs.map((spec) => {
+            const vA = specsA[spec.key];
+            const vB = specsB[spec.key];
+            if (vA == null && vB == null) return null;
+            const numA = Number(vA ?? 0);
+            const numB = Number(vB ?? 0);
+            const winA = spec.higherIsBetter ? numA > numB : numA < numB;
+            const winB = spec.higherIsBetter ? numB > numA : numB < numA;
+            return (
+              <tr key={spec.key} className="border-b border-gray-800/30 hover:bg-gray-800/20 transition-colors">
+                <td className="p-4 text-gray-400 text-sm font-medium">{spec.label}</td>
+                <td className={`p-4 ${winA ? 'bg-emerald-500/5' : ''}`}>
+                  {vA != null ? <ScoreBar score={numA} side="a" /> : <span className="block text-center text-gray-600">—</span>}
+                </td>
+                <td className={`p-4 ${winB ? 'bg-blue-500/5' : ''}`}>
+                  {vB != null ? <ScoreBar score={numB} side="b" /> : <span className="block text-center text-gray-600">—</span>}
+                </td>
+              </tr>
+            );
+          })}
+          <tr className="border-t-2 border-gray-700 bg-gray-900/30">
+            <td className="p-4 text-white font-bold text-sm">Ratio Skoru</td>
+            <td className={`p-4 ${scoreA > scoreB ? 'bg-emerald-500/10' : ''}`}>
+              <ScoreBar score={parseFloat(scoreA.toFixed(1))} side="a" />
+            </td>
+            <td className={`p-4 ${scoreB > scoreA ? 'bg-blue-500/10' : ''}`}>
+              <ScoreBar score={parseFloat(scoreB.toFixed(1))} side="b" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   );
 }
