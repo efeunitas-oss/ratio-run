@@ -56,13 +56,12 @@ function formatName(name: string, brand: string): string {
 
   let s = name.trim();
 
-  // Amazon mağaza ziyaret pattern'ini at:
+  // Amazon mağaza ziyaret pattern'ini at — tüm tırnak varyantları:
   // "HUAWEI 'u ziyaret edin HUAWEI Band 10" → "HUAWEI Band 10"
-  // "havit 'u ziyaret edin Havit Watch M9030" → "Havit Watch M9030"
-  s = s.replace(/^.+?'\s*[uüiı]\s+ziyaret\s+edin\s+/i, '').trim();
-
-  // "X'u ziyaret edin" başka varyantları
-  s = s.replace(/^.+?'[uüiı]\s+ziyaret\s+edin\s+/i, '').trim();
+  // Düz tırnak ('), eğik tırnak ('), ve tırnaksız varyant hepsi
+  s = s.replace(/^.+?[\u2018\u2019\u0060']\s*[uüiı]\s+ziyaret\s+edin\s+/i, '').trim();
+  // Hâlâ kalırsa ikinci geçiş
+  s = s.replace(/^.+?ziyaret\s+edin\s+/i, '').trim();
 
   // Parantez içini tamamen at: (Samsung Türkiye Garantili) gibi
   s = s.replace(/\s*\([^)]*\)/g, '').trim();
