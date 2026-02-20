@@ -154,7 +154,7 @@ export function ProductCard({
               <svg
                 key={i}
                 className={`w-4 h-4 ${
-                  i < Math.floor(rating) ? 'text-amber-400' : 'text-gray-700'
+                  i < Math.floor(rating) ? 'text-[#D4AF37]' : 'text-gray-700'
                 }`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
@@ -183,7 +183,7 @@ export function ProductCard({
           {ratioScore && (
             <div className="text-right">
               <div className="text-xs text-gray-500 mb-1">Ratio Skoru</div>
-              <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              <div className="text-2xl font-bold bg-gradient-to-r from-[#D4AF37] to-[#C9A227] bg-clip-text text-transparent">
                 {ratioScore.normalized_score.toFixed(1)}
               </div>
             </div>

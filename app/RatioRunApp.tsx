@@ -60,26 +60,17 @@ export default function RatioRunApp({ categories, productsByCategory }: RatioRun
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-zinc-100">
       {/* Header */}
-      <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-xl sticky top-0 z-50">
+      <header className="border-b bg-zinc-950/50 backdrop-blur-xl sticky top-0 z-50" style={{ borderColor: '#C9A22730' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex flex-col gap-4">
             <div>
               <a href="/" className="flex items-center gap-3 w-fit">
-                <img
-                  src="/logo.png"
-                  alt="Ratio.Run"
-                  style={{
-                    height: 40,
-                    width: 'auto',
-                    
-                    
-                  }}
-                />
+                <img src="/logo.png" alt="Ratio.Run" style={{ height: 40, width: 'auto' }} />
                 <h1 className="text-xl sm:text-2xl font-black tracking-tighter leading-none">
-                  ratio<span className="text-amber-400">.run</span>
+                  ratio<span style={{ color: '#D4AF37' }}>.run</span>
                 </h1>
               </a>
-              <p className="text-xs sm:text-sm text-zinc-400 mt-1 pl-1">Duygularla değil, verilerle karar ver.</p>
+              <p className="text-xs sm:text-sm text-zinc-500 mt-1 pl-1">Duygularla değil, verilerle karar ver.</p>
             </div>
 
             {/* Kategori Seçimi */}
@@ -90,9 +81,13 @@ export default function RatioRunApp({ categories, productsByCategory }: RatioRun
                   onClick={() => handleCategoryChange(cat.slug)}
                   className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                     selectedCategory === cat.slug
-                      ? 'bg-amber-500 text-zinc-950 shadow-lg shadow-amber-500/50'
+                      ? 'text-black shadow-lg'
                       : 'bg-zinc-900 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
                   }`}
+                  style={selectedCategory === cat.slug ? {
+                    background: 'linear-gradient(135deg, #D4AF37, #C9A227)',
+                    boxShadow: '0 4px 15px #C9A22745',
+                  } : {}}
                 >
                   {cat.icon} {cat.name}
                 </button>
@@ -107,7 +102,7 @@ export default function RatioRunApp({ categories, productsByCategory }: RatioRun
         <div className="mb-6 flex items-center gap-3">
           <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
             <span className="text-sm text-zinc-400">Toplam Ürün: </span>
-            <span className="text-lg font-bold text-amber-500">{currentProducts.length}</span>
+            <span className="text-lg font-bold text-[#D4AF37]">{currentProducts.length}</span>
           </div>
         </div>
 
@@ -174,12 +169,12 @@ function ProductSelector({
   otherSelectedId: string;
 }) {
   return (
-    <div className="bg-zinc-900 rounded-xl p-4 sm:p-6 border border-zinc-800 hover:border-amber-500/50 transition-all">
-      <label className="block text-xs sm:text-sm font-bold text-amber-500 mb-3 sm:mb-4">{label}</label>
+    <div className="bg-zinc-900 rounded-xl p-4 sm:p-6 border border-zinc-800 hover:border-[#C9A227]/50 transition-all">
+      <label className="block text-xs sm:text-sm font-bold text-[#D4AF37] mb-3 sm:mb-4">{label}</label>
       <select
         value={selectedId}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-zinc-800 text-zinc-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-zinc-700 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
+        className="w-full bg-zinc-800 text-zinc-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-zinc-700 focus:border-[#D4AF37] focus:outline-none focus:ring-2 focus:ring-[#C9A227]/20 transition-all cursor-pointer"
       >
         <option value="">Seçiniz...</option>
         {products.map((product) => (
@@ -201,19 +196,19 @@ function ComparisonView({ comparison }: { comparison: ComparisonResult }) {
   return (
     <div className="space-y-6">
       {/* Winner Card */}
-      <div className="bg-gradient-to-br from-yellow-500/20 via-amber-500/10 to-yellow-500/20 rounded-2xl p-6 sm:p-8 border-2 border-yellow-500 shadow-lg shadow-yellow-500/50 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#C9A227]/20 via-[#D4AF37]/10 to-[#C9A227]/20 rounded-2xl p-6 sm:p-8 border-2 border-[#C9A227] shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10 text-9xl">🏆</div>
         <div className="flex items-center gap-3 mb-4 relative z-10">
           <span className="text-4xl animate-bounce">👑</span>
-          <h2 className="text-2xl font-black text-yellow-400">KAZANAN SEÇİM</h2>
+          <h2 className="text-2xl font-black text-[#D4AF37]">KAZANAN SEÇİM</h2>
         </div>
         <h3 className="text-3xl font-black text-zinc-100 mb-4 relative z-10">{winnerName}</h3>
-        <div className="bg-zinc-900/80 backdrop-blur-sm rounded-lg p-4 mb-4 border border-yellow-500/20 relative z-10">
+        <div className="bg-zinc-900/80 backdrop-blur-sm rounded-lg p-4 mb-4 border border-[#C9A227]/20 relative z-10">
           <p className="text-zinc-300 font-medium">"{comparison.verdict}"</p>
         </div>
         <div className="text-right relative z-10">
-          <div className="text-6xl font-black text-yellow-400">{winnerAnalysis.finalScore.toFixed(1)}</div>
-          <div className="text-sm text-yellow-400/70 font-bold tracking-widest">RATIO PUANI</div>
+          <div className="text-6xl font-black text-[#D4AF37]">{winnerAnalysis.finalScore.toFixed(1)}</div>
+          <div className="text-sm text-[#D4AF37]/70 font-bold tracking-widest">RATIO PUANI</div>
         </div>
       </div>
 
@@ -244,12 +239,12 @@ function ScoreCard({ analysis, isWinner }: { analysis: VehicleAnalysis | VacuumA
 
   return (
     <div className={`bg-zinc-900 rounded-xl p-6 border-2 transition-all duration-300 ${
-      isWinner ? 'border-yellow-500 ring-4 ring-yellow-500/30 transform scale-[1.02]' : 'border-zinc-800 opacity-90'
+      isWinner ? 'border-[#C9A227] ring-4 ring-[#C9A227]/25 transform scale-[1.02]' : 'border-zinc-800 opacity-90'
     }`}>
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-xl font-bold text-white max-w-[70%]">{name}</h3>
         {isWinner && (
-          <div className="bg-yellow-500 text-zinc-950 text-xs font-bold px-3 py-1 rounded-full animate-pulse">
+          <div className="bg-[#D4AF37] text-black text-xs font-bold px-3 py-1 rounded-full animate-pulse">
             KAZANAN
           </div>
         )}
@@ -260,11 +255,11 @@ function ScoreCard({ analysis, isWinner }: { analysis: VehicleAnalysis | VacuumA
           <div key={key}>
             <div className="flex justify-between mb-1">
               <span className="text-xs text-zinc-400 uppercase tracking-wider">{key}</span>
-              <span className="text-xs font-bold text-amber-500">{(value as number).toFixed(0)}</span>
+              <span className="text-xs font-bold text-[#D4AF37]">{(value as number).toFixed(0)}</span>
             </div>
             <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-amber-600 to-yellow-400 rounded-full" 
+                className="h-full bg-gradient-to-r from-[#C9A227] to-[#D4AF37] rounded-full" 
                 style={{ width: `${value}%` }} 
               />
             </div>
@@ -275,7 +270,7 @@ function ScoreCard({ analysis, isWinner }: { analysis: VehicleAnalysis | VacuumA
       <div className="border-t border-zinc-800 pt-4 mb-4">
         <div className="flex justify-between items-center">
           <span className="text-sm font-bold text-zinc-400">Genel Skor</span>
-          <span className={`text-3xl font-black ${isWinner ? 'text-yellow-400' : 'text-zinc-500'}`}>
+          <span className={`text-3xl font-black ${isWinner ? 'text-[#D4AF37]' : 'text-zinc-500'}`}>
             {analysis.finalScore.toFixed(1)}
           </span>
         </div>

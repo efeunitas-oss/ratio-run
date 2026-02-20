@@ -78,7 +78,7 @@ export function TechSpecsTable({
       {/* Başlık */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-100 mb-2">Teknik Özellikler</h2>
-        <div className="h-1 w-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
+        <div className="h-1 w-20 bg-gradient-to-r from-[#C9A227] to-[#D4AF37] rounded-full" />
       </div>
 
       {/* Mobil: Kart Düzeni */}
@@ -112,12 +112,12 @@ export function TechSpecsTable({
                 {/* Ürün B */}
                 <div className={`flex items-center justify-between p-3 rounded-lg ${
                   comparison.winner === 'b'
-                    ? 'bg-blue-500/10 border border-blue-500/30'
+                    ? 'bg-[#C9A227]/10 border border-[#C9A227]/30'
                     : 'bg-gray-800/30'
                 }`}>
                   <span className="text-xs text-gray-500">{shortName(productB)}</span>
                   <span className={`text-lg font-bold ${
-                    comparison.winner === 'b' ? 'text-blue-400' : 'text-gray-300'
+                    comparison.winner === 'b' ? 'text-[#D4AF37]' : 'text-gray-300'
                   }`}>
                     {formatValue(valueB, column.format, column.unit)}
                   </span>
@@ -146,10 +146,10 @@ export function TechSpecsTable({
               </span>
             </div>
             <div className={`flex items-center justify-between p-3 rounded-lg ${
-              priceB < priceA ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-gray-800/30'
+              priceB < priceA ? 'bg-[#C9A227]/10 border border-[#C9A227]/30' : 'bg-gray-800/30'
             }`}>
               <span className="text-xs text-gray-500">{shortName(productB)}</span>
-              <span className={`text-lg font-bold ${priceB < priceA ? 'text-blue-400' : 'text-gray-300'}`}>
+              <span className={`text-lg font-bold ${priceB < priceA ? 'text-[#D4AF37]' : 'text-gray-300'}`}>
                 ₺{priceB.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
               </span>
             </div>
@@ -166,7 +166,7 @@ export function TechSpecsTable({
               <th className="text-center p-4 text-sm font-semibold text-emerald-400 w-1/3">
                 {shortName(productA, 4)}
               </th>
-              <th className="text-center p-4 text-sm font-semibold text-blue-400 w-1/3">
+              <th className="text-center p-4 text-sm font-semibold text-[#D4AF37] w-1/3">
                 {shortName(productB, 4)}
               </th>
             </tr>
@@ -187,7 +187,7 @@ export function TechSpecsTable({
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${
-                        column.priority === 'high' ? 'bg-blue-500' : 'bg-gray-600'
+                        column.priority === 'high' ? 'bg-[#C9A227]' : 'bg-gray-600'
                       }`} />
                       <span className="text-gray-300 font-medium">{column.label}</span>
                     </div>
@@ -208,15 +208,15 @@ export function TechSpecsTable({
                     </div>
                   </td>
 
-                  <td className={`p-4 text-center ${comparison.winner === 'b' ? 'bg-blue-500/5' : ''}`}>
+                  <td className={`p-4 text-center ${comparison.winner === 'b' ? 'bg-[#C9A227]/5' : ''}`}>
                     <div className="flex items-center justify-center gap-2">
                       {comparison.winner === 'b' && (
-                        <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-5 h-5 text-[#D4AF37]" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       )}
                       <span className={`text-lg font-bold ${
-                        comparison.winner === 'b' ? 'text-blue-400' : 'text-gray-300'
+                        comparison.winner === 'b' ? 'text-[#D4AF37]' : 'text-gray-300'
                       }`}>
                         {formatValue(valueB, column.format, column.unit)}
                       </span>
@@ -230,7 +230,7 @@ export function TechSpecsTable({
             <tr className="border-b border-gray-800/30 hover:bg-gray-800/20">
               <td className="p-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  <div className="w-2 h-2 rounded-full bg-[#C9A227]" />
                   <span className="text-gray-300 font-medium">Fiyat</span>
                 </div>
               </td>
@@ -239,8 +239,8 @@ export function TechSpecsTable({
                   ₺{priceA.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                 </span>
               </td>
-              <td className={`p-4 text-center ${priceB < priceA ? 'bg-blue-500/5' : ''}`}>
-                <span className={`text-lg font-bold ${priceB < priceA ? 'text-blue-400' : 'text-gray-300'}`}>
+              <td className={`p-4 text-center ${priceB < priceA ? 'bg-[#C9A227]/5' : ''}`}>
+                <span className={`text-lg font-bold ${priceB < priceA ? 'text-[#D4AF37]' : 'text-gray-300'}`}>
                   ₺{priceB.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                 </span>
               </td>
@@ -252,7 +252,7 @@ export function TechSpecsTable({
       {/* Açıklama */}
       <div className="mt-4 flex items-center gap-4 text-xs text-gray-500">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-blue-500" />
+          <div className="w-2 h-2 rounded-full bg-[#C9A227]" />
           <span>Yüksek öncelik</span>
         </div>
         <div className="flex items-center gap-2">

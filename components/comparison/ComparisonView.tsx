@@ -82,10 +82,10 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
               <div className="relative">
                 <div className="absolute inset-0 animate-ping">
-                  <div className="h-full w-full rounded-full bg-gradient-to-r from-emerald-500 to-blue-500 opacity-30" />
+                  <div className="h-full w-full rounded-full bg-gradient-to-r from-emerald-500 to-[#C9A227] opacity-30" />
                 </div>
                 <div className="relative backdrop-blur-xl bg-gray-900/80 border-2 border-gray-700 rounded-full w-24 h-24 flex items-center justify-center shadow-2xl">
-                  <span className="text-3xl font-black bg-gradient-to-br from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+                  <span className="text-3xl font-black bg-gradient-to-br from-emerald-400 to-[#D4AF37] bg-clip-text text-transparent">
                     VS
                   </span>
                 </div>
@@ -122,7 +122,7 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
           <div className="backdrop-blur-xl bg-gradient-to-br from-gray-900/60 to-gray-900/40 border border-gray-800/50 rounded-2xl p-8 shadow-2xl">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border border-emerald-500/30 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-[#C9A227]/20 border border-emerald-500/30 flex items-center justify-center">
                   <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -191,10 +191,10 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
 
                 {/* Ürün B */}
                 <div>
-                  <h3 className="text-lg font-semibold text-blue-400 mb-4">
+                  <h3 className="text-lg font-semibold text-[#D4AF37] mb-4">
                     {shortName(comparison.product_b.name)}
                   </h3>
-                  <ScoreBreakdown scores={comparison.ratio_b.breakdown.individual_scores} color="blue" />
+                  <ScoreBreakdown scores={comparison.ratio_b.breakdown.individual_scores} color="gold" />
                   {comparison.ratio_b.breakdown.explanations?.length > 0 && (
                     <ExplanationList explanations={comparison.ratio_b.breakdown.explanations} />
                   )}
@@ -215,11 +215,11 @@ function ScoreBreakdown({
   color,
 }: {
   scores: Record<string, number>;
-  color: 'emerald' | 'blue';
+  color: 'emerald' | 'gold';
 }) {
   const barColor = color === 'emerald'
     ? 'from-emerald-500 to-emerald-400'
-    : 'from-blue-500 to-blue-400';
+    : 'from-[#C9A227] to-[#D4AF37]';
 
   return (
     <div className="space-y-3 mb-4">
