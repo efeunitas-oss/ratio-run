@@ -2,6 +2,9 @@
 // Next.js 15 — veri sunucuda hazırlanıyor
 
 import { createClient } from '@supabase/supabase-js';
+
+// Ana sayfa 5 dakika önbelleklenir
+export const revalidate = 300;
 import HomeClient from './HomeClient';
 
 const CATEGORIES = [

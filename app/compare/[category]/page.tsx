@@ -3,6 +3,9 @@
 // Veri sunucuda çekiliyor, kullanıcıya hazır HTML gidiyor
 
 import { createClient } from '@supabase/supabase-js';
+
+// Sayfa 5 dakika önbelleklenir — her kullanıcıya anında HTML gider
+export const revalidate = 300;
 import { Suspense } from 'react';
 import CategoryClient from './CategoryClient';
 
