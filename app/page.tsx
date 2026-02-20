@@ -62,7 +62,7 @@ export default async function Home() {
             ratio<span style={{ color: GOLD_BRIGHT }}>.run</span>
           </span>
         </a>
-        <span style={{ fontSize: 13, fontFamily: 'monospace', color: GOLD_BRIGHT, letterSpacing: '2px', textTransform: 'uppercase' }}>
+        <span style={{ fontSize: 11, fontFamily: 'monospace', color: GOLD_BRIGHT, letterSpacing: '1px', textTransform: 'uppercase', display: 'none' }} className="md:block">
           DON&apos;T BUY WITH EMOTIONS.
         </span>
       </nav>
@@ -106,7 +106,7 @@ export default async function Home() {
         </form>
 
         {/* Kategoriler */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
           {CATEGORIES.map((cat) => (
             <Link key={cat.id} href={`/compare/${cat.link}`} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
