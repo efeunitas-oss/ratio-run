@@ -78,13 +78,9 @@ export default function RatioRunApp({ categories, productsByCategory }: RatioRun
                   onClick={() => handleCategoryChange(cat.slug)}
                   className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                     selectedCategory === cat.slug
-                      ? 'text-black shadow-lg'
+                      ? 'bg-[#C9A227] text-zinc-950 shadow-lg shadow-amber-500/50'
                       : 'bg-zinc-900 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
                   }`}
-                  style={selectedCategory === cat.slug ? {
-                    background: 'linear-gradient(135deg, #D4AF37, #C9A227)',
-                    boxShadow: '0 4px 14px #C9A22745',
-                  } : {}}
                 >
                   {cat.icon} {cat.name}
                 </button>
@@ -171,7 +167,7 @@ function ProductSelector({
       <select
         value={selectedId}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-zinc-800 text-zinc-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-zinc-700 focus:border-[#D4AF37] focus:outline-none focus:ring-2 focus:ring-[#C9A227]/20 transition-all cursor-pointer"
+        className="w-full bg-zinc-800 text-zinc-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-zinc-700 focus:border-[#C9A227] focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
       >
         <option value="">Seçiniz...</option>
         {products.map((product) => (
@@ -193,7 +189,7 @@ function ComparisonView({ comparison }: { comparison: ComparisonResult }) {
   return (
     <div className="space-y-6">
       {/* Winner Card */}
-      <div className="bg-gradient-to-br from-[#C9A227]/15 via-[#D4AF37]/10 to-[#C9A227]/15 rounded-2xl p-6 sm:p-8 border-2 border-[#C9A227] relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#C9A227]/15 via-[#C9A227]/10 to-[#C9A227]/15 rounded-2xl p-6 sm:p-8 border-2 border-[#C9A227] shadow-lg shadow-[#C9A227]/30 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10 text-9xl">🏆</div>
         <div className="flex items-center gap-3 mb-4 relative z-10">
           <span className="text-4xl animate-bounce">👑</span>
@@ -241,7 +237,7 @@ function ScoreCard({ analysis, isWinner }: { analysis: VehicleAnalysis | VacuumA
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-xl font-bold text-white max-w-[70%]">{name}</h3>
         {isWinner && (
-          <div className="bg-[#D4AF37] text-black text-xs font-bold px-3 py-1 rounded-full animate-pulse">
+          <div className="bg-[#D4AF37] text-zinc-950 text-xs font-bold px-3 py-1 rounded-full animate-pulse">
             KAZANAN
           </div>
         )}
@@ -275,13 +271,13 @@ function ScoreCard({ analysis, isWinner }: { analysis: VehicleAnalysis | VacuumA
 
       <div className="space-y-3">
         {strengths.length > 0 && (
-          <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-            <div className="text-xs font-bold text-emerald-400 mb-2 flex items-center gap-1">
+          <div className="p-3 bg-[#C9A227]/10 rounded-lg border border-[#C9A227]/30">
+            <div className="text-xs font-bold text-[#D4AF37] mb-2 flex items-center gap-1">
               <span>✅</span> AVANTAJLAR
             </div>
             <ul className="space-y-1">
               {strengths.slice(0, 3).map((s, i) => (
-                <li key={i} className="text-xs text-emerald-300/80 line-clamp-1">• {s}</li>
+                <li key={i} className="text-xs text-[#D4AF37]/80 line-clamp-1">• {s}</li>
               ))}
             </ul>
           </div>

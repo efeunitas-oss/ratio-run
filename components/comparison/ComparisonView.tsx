@@ -1,13 +1,18 @@
 'use client';
 
+// ============================================================================
+// RATIO.RUN - COMPARISON VIEW v2
+// Düzeltmeler:
+//   • product.title → product.name
+//   • .title.split() null crash'i giderildi
+//   • Türkçe encoding düzeltildi
+// ============================================================================
+
 import { RatioComparisonResult } from '@/lib/types';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { TechSpecsTable } from '@/components/ui/TechSpecsTable';
 import { extractBrand, getSpecConfig } from '@/lib/spec-config';
 import { useEffect, useState } from 'react';
-
-const GOLD        = '#C9A227';
-const GOLD_BRIGHT = '#D4AF37';
 
 interface ComparisonViewProps {
   comparison: RatioComparisonResult;
@@ -17,6 +22,7 @@ interface ComparisonViewProps {
 export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps) {
   const [mounted, setMounted] = useState(false);
 
+  // ── Marka tespiti: name kullan, title değil ───────────────────────────────
   const brandA = extractBrand(comparison.product_a.name);
   const brandB = extractBrand(comparison.product_b.name);
   const config = getSpecConfig(categorySlug);
@@ -26,15 +32,17 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
     glow: 'rgba(16, 185, 129, 0.3)',
     accent: '#FFFFFF',
   };
-  // B ürünü için marka rengi yoksa altın kullan
   const colorB = config.brand_colors[brandB] || {
-    primary: GOLD,
-    glow: `${GOLD}4D`,
+    primary: '#3B82F6',
+    glow: 'rgba(59, 130, 246, 0.3)',
     accent: '#FFFFFF',
   };
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
+  // ── Kısa başlık yardımcısı — null-safe ───────────────────────────────────
   const shortName = (name: string | null | undefined, wordCount = 5) => {
     if (!name) return 'Ürün';
     return name.split(' ').slice(0, wordCount).join(' ');
@@ -42,14 +50,18 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
-      {/* Arka plan gradyanları */}
+      {/* Animasyonlu arka plan gradyanları */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div
-          className={`absolute top-0 left-0 w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 transition-all duration-1000 ${mounted ? 'scale-100' : 'scale-0'}`}
+          className={`absolute top-0 left-0 w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 transition-all duration-1000 ${
+            mounted ? 'scale-100' : 'scale-0'
+          }`}
           style={{ background: `radial-gradient(circle, ${colorA.primary}, transparent 70%)` }}
         />
         <div
-          className={`absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 transition-all duration-1000 delay-300 ${mounted ? 'scale-100' : 'scale-0'}`}
+          className={`absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 transition-all duration-1000 delay-300 ${
+            mounted ? 'scale-100' : 'scale-0'
+          }`}
           style={{ background: `radial-gradient(circle, ${colorB.primary}, transparent 70%)` }}
         />
       </div>
@@ -70,21 +82,10 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
               <div className="relative">
                 <div className="absolute inset-0 animate-ping">
-                  <div
-                    className="h-full w-full rounded-full opacity-30"
-                    style={{ background: `linear-gradient(135deg, #10B981, ${GOLD})` }}
-                  />
+                  <div className="h-full w-full rounded-full bg-gradient-to-r from-[#C9A227] to-[#D4AF37] opacity-30" />
                 </div>
                 <div className="relative backdrop-blur-xl bg-gray-900/80 border-2 border-gray-700 rounded-full w-24 h-24 flex items-center justify-center shadow-2xl">
-                  <span
-                    className="text-3xl font-black"
-                    style={{
-                      background: `linear-gradient(135deg, #34D399, ${GOLD_BRIGHT})`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                    }}
-                  >
+                  <span className="text-3xl font-black bg-gradient-to-br from-[#D4AF37] to-[#C9A227] bg-clip-text text-transparent">
                     VS
                   </span>
                 </div>
@@ -102,6 +103,7 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
                   isCrushingVictory={comparison.is_crushing_victory && comparison.winner === 'a'}
                 />
               </div>
+
               <div className={`transition-all duration-700 delay-200 ${mounted ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
                 <ProductCard
                   product={comparison.product_b}
@@ -120,32 +122,37 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
           <div className="backdrop-blur-xl bg-gradient-to-br from-gray-900/60 to-gray-900/40 border border-gray-800/50 rounded-2xl p-8 shadow-2xl">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0">
-                <div
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center border"
-                  style={{ background: `${GOLD}18`, borderColor: `${GOLD}40` }}
-                >
-                  <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#C9A227]/15 to-[#C9A227]/5 border border-[#C9A227]/40 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
+
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-gray-100 mb-3">Karar Analizi</h2>
-                <p className="text-gray-300 text-lg leading-relaxed mb-4">{comparison.recommendation}</p>
+                <p className="text-gray-300 text-lg leading-relaxed mb-4">
+                  {comparison.recommendation}
+                </p>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                   <div className="backdrop-blur-sm bg-gray-800/30 rounded-xl p-4 border border-gray-700/50">
                     <div className="text-sm text-gray-500 mb-1">Fark Yüzdesi</div>
-                    <div className="text-2xl font-bold text-emerald-400">
+                    <div className="text-2xl font-bold text-[#D4AF37]">
                       %{comparison.advantage_percentage.toFixed(1)}
                     </div>
                   </div>
                   <div className="backdrop-blur-sm bg-gray-800/30 rounded-xl p-4 border border-gray-700/50">
                     <div className="text-sm text-gray-500 mb-1">Ürün A Ratio</div>
-                    <div className="text-2xl font-bold text-gray-100">{comparison.ratio_a.normalized_score.toFixed(1)}</div>
+                    <div className="text-2xl font-bold text-gray-100">
+                      {comparison.ratio_a.normalized_score.toFixed(1)}
+                    </div>
                   </div>
                   <div className="backdrop-blur-sm bg-gray-800/30 rounded-xl p-4 border border-gray-700/50">
                     <div className="text-sm text-gray-500 mb-1">Ürün B Ratio</div>
-                    <div className="text-2xl font-bold text-gray-100">{comparison.ratio_b.normalized_score.toFixed(1)}</div>
+                    <div className="text-2xl font-bold text-gray-100">
+                      {comparison.ratio_b.normalized_score.toFixed(1)}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -172,17 +179,19 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Ürün A */}
                 <div>
-                  <h3 className="text-lg font-semibold text-emerald-400 mb-4">
+                  <h3 className="text-lg font-semibold text-[#D4AF37] mb-4">
                     {shortName(comparison.product_a.name)}
                   </h3>
-                  <ScoreBreakdown scores={comparison.ratio_a.breakdown.individual_scores} color="emerald" />
+                  <ScoreBreakdown scores={comparison.ratio_a.breakdown.individual_scores} color="gold" />
+                  {/* "Neden bu puanı aldı?" açıklamaları */}
                   {comparison.ratio_a.breakdown.explanations?.length > 0 && (
                     <ExplanationList explanations={comparison.ratio_a.breakdown.explanations} />
                   )}
                 </div>
+
                 {/* Ürün B */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-4" style={{ color: GOLD_BRIGHT }}>
+                  <h3 className="text-lg font-semibold text-[#D4AF37] mb-4">
                     {shortName(comparison.product_b.name)}
                   </h3>
                   <ScoreBreakdown scores={comparison.ratio_b.breakdown.individual_scores} color="gold" />
@@ -206,25 +215,27 @@ function ScoreBreakdown({
   color,
 }: {
   scores: Record<string, number>;
-  color: 'emerald' | 'gold';
+  color: 'gold';
 }) {
-  const isGold = color === 'gold';
+  const barColor = 'from-[#C9A227] to-[#D4AF37]';
+
   return (
     <div className="space-y-3 mb-4">
       {Object.entries(scores).map(([key, value]) => (
         <div key={key} className="flex items-center justify-between">
-          <span className="text-gray-400 capitalize text-sm">{key.replace(/_/g, ' ')}</span>
+          <span className="text-gray-400 capitalize text-sm">
+            {key.replace(/_/g, ' ')}
+          </span>
           <div className="flex items-center gap-3">
             <div className="w-32 h-2 bg-gray-800 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full ${isGold ? '' : 'bg-gradient-to-r from-emerald-500 to-emerald-400'}`}
-                style={{
-                  width: `${Math.min(value, 100)}%`,
-                  ...(isGold ? { background: `linear-gradient(90deg, #C9A227, #D4AF37)` } : {}),
-                }}
+                className={`h-full bg-gradient-to-r ${barColor} rounded-full`}
+                style={{ width: `${Math.min(value, 100)}%` }}
               />
             </div>
-            <span className="text-gray-300 font-mono w-12 text-right text-sm">{value.toFixed(1)}</span>
+            <span className="text-gray-300 font-mono w-12 text-right text-sm">
+              {value.toFixed(1)}
+            </span>
           </div>
         </div>
       ))}
@@ -235,11 +246,13 @@ function ScoreBreakdown({
 function ExplanationList({ explanations }: { explanations: string[] }) {
   return (
     <div className="mt-4 p-3 bg-gray-800/40 rounded-xl border border-gray-700/30">
-      <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Neden bu puanı aldı?</div>
+      <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+        Neden bu puanı aldı?
+      </div>
       <ul className="space-y-1">
         {explanations.map((exp, i) => (
           <li key={i} className="text-xs text-gray-400 flex items-start gap-1.5">
-            <span className="text-emerald-500 mt-0.5">›</span>
+            <span className="text-[#C9A227] mt-0.5">›</span>
             {exp}
           </li>
         ))}
