@@ -1,19 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 
-// ── Renk sabitleri ─────────────────────────────────────────────────────────
 const GOLD        = '#C9A227';
 const GOLD_BRIGHT = '#D4AF37';
+const PAGE_SIZE   = 48; // İlk yüklemede 48 ürün, sonra daha fazla
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://srypulfxbckherkmrjgs.supabase.co';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyeXB1bGZ4YmNraGVya21yamdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNTczMDcsImV4cCI6MjA4NjczMzMwN30.gEYVh5tjSrO3sgc5rsnYgVrIy6YdK3I5qU5S6FwkX-I';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const SLUG_MAP: Record<string, string> = { araba: 'otomobil' };
+
+// Sadece gerekli alanlar — specifications JSON'u çekme, çok ağır
+const SELECT_FIELDS = 'id,name,brand,price,image_url,source_url,specifications->stars,specifications->listPrice';
 
 interface Product {
   id: string;
@@ -22,14 +25,13 @@ interface Product {
   price: number | null;
   image_url: string | null;
   source_url: string;
-  specifications: Record<string, any> | null;
+  stars?: number;
+  listPrice?: number;
 }
 
-function getPrice(product: Product): number | null {
-  if (product.price && product.price >= 100) return product.price;
-  const s = product.specifications ?? {};
-  if (s.price && Number(s.price) >= 100) return Number(s.price);
-  if (s.listPrice && Number(s.listPrice) >= 100) return Number(s.listPrice);
+function getPrice(p: Product): number | null {
+  if (p.price && p.price >= 100) return p.price;
+  if (p.listPrice && Number(p.listPrice) >= 100) return Number(p.listPrice);
   return null;
 }
 
@@ -76,63 +78,107 @@ export default function CategoryPage() {
   const slug         = params?.category as string ?? '';
   const searchQuery  = searchParams?.get('search') ?? '';
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [catName,  setCatName]  = useState('');
-  const [loading,  setLoading]  = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [products,   setProducts]   = useState<Product[]>([]);
+  const [catName,    setCatName]    = useState('');
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading,    setLoading]    = useState(true);
+  const [loadingMore,setLoadingMore]= useState(false);
+  const [notFound,   setNotFound]   = useState(false);
+  const [selected,   setSelected]   = useState<string[]>([]);
+  const [catId,      setCatId]      = useState<string | null>(null);
+  const [offset,     setOffset]     = useState(0);
 
-  useEffect(() => { if (slug) fetchProducts(); }, [slug, searchQuery]);
+  useEffect(() => {
+    if (slug) {
+      setProducts([]);
+      setOffset(0);
+      setSelected([]);
+      fetchProducts(0, true);
+    }
+  }, [slug, searchQuery]);
 
-  async function fetchProducts() {
-    setLoading(true);
-    setNotFound(false);
+  async function fetchProducts(currentOffset: number, isFirst: boolean) {
+    if (isFirst) setLoading(true);
+    else setLoadingMore(true);
+
     try {
       if (slug === 'all') {
+        if (isFirst) setCatName(searchQuery ? `"${searchQuery}" için sonuçlar` : 'Tüm Ürünler');
+        let q = supabase
+          .from('products')
+          .select('id,name,brand,price,image_url,source_url,specifications->stars,specifications->listPrice', { count: 'exact' })
+          .eq('is_active', true)
+          .range(currentOffset, currentOffset + PAGE_SIZE - 1);
+
         if (searchQuery) {
-          setCatName(`"${searchQuery}" için sonuçlar`);
-          const { data } = await supabase.from('products').select('*')
-            .or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%,model.ilike.%${searchQuery}%`)
-            .eq('is_active', true).order('price', { ascending: true }).limit(200);
-          setProducts((data as Product[]) ?? []);
+          q = q.or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%`);
         } else {
-          setCatName('Tüm Ürünler');
-          const { data } = await supabase.from('products').select('*')
-            .eq('is_active', true).order('created_at', { ascending: false }).limit(200);
-          setProducts((data as Product[]) ?? []);
+          q = q.order('created_at', { ascending: false });
         }
+
+        const { data, count } = await q;
+        if (isFirst) {
+          setProducts((data as Product[]) ?? []);
+          setTotalCount(count ?? 0);
+        } else {
+          setProducts(prev => [...prev, ...((data as Product[]) ?? [])]);
+        }
+        setOffset(currentOffset + PAGE_SIZE);
         setLoading(false);
+        setLoadingMore(false);
         return;
       }
 
+      // Kategori — ilk yüklemede kategori bilgisini de al
       const dbSlug = SLUG_MAP[slug.toLowerCase()] ?? slug.toLowerCase();
-      const { data: category } = await supabase
-        .from('categories').select('id, name').eq('slug', dbSlug).maybeSingle();
-      if (!category) { setNotFound(true); setLoading(false); return; }
-      setCatName(category.name);
+      let resolvedCatId = catId;
 
-      let query = supabase.from('products').select('*')
-        .eq('category_id', category.id).eq('is_active', true)
-        .order('price', { ascending: true }).limit(200);
-
-      if (searchQuery) {
-        query = supabase.from('products').select('*')
-          .eq('category_id', category.id).eq('is_active', true)
-          .or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%`).limit(200);
+      if (isFirst || !resolvedCatId) {
+        const { data: category } = await supabase
+          .from('categories').select('id, name').eq('slug', dbSlug).maybeSingle();
+        if (!category) { setNotFound(true); setLoading(false); return; }
+        setCatName(category.name);
+        setCatId(category.id);
+        resolvedCatId = category.id;
       }
 
-      const { data } = await query;
-      setProducts((data as Product[]) ?? []);
+      let q = supabase
+        .from('products')
+        .select('id,name,brand,price,image_url,source_url,specifications->stars,specifications->listPrice', { count: 'exact' })
+        .eq('category_id', resolvedCatId)
+        .eq('is_active', true)
+        .order('price', { ascending: true, nullsFirst: false })
+        .range(currentOffset, currentOffset + PAGE_SIZE - 1);
+
+      if (searchQuery) {
+        q = supabase
+          .from('products')
+          .select('id,name,brand,price,image_url,source_url,specifications->stars,specifications->listPrice', { count: 'exact' })
+          .eq('category_id', resolvedCatId)
+          .eq('is_active', true)
+          .or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%`)
+          .range(currentOffset, currentOffset + PAGE_SIZE - 1);
+      }
+
+      const { data, count } = await q;
+      if (isFirst) {
+        setProducts((data as Product[]) ?? []);
+        setTotalCount(count ?? 0);
+      } else {
+        setProducts(prev => [...prev, ...((data as Product[]) ?? [])]);
+      }
+      setOffset(currentOffset + PAGE_SIZE);
     } catch (err) {
       console.error('[CategoryPage]', err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }
 
   function toggleSelect(id: string) {
-    setSelected((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
+    setSelected(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id);
       if (prev.length >= 2) return [prev[1], id];
       return [...prev, id];
     });
@@ -144,18 +190,16 @@ export default function CategoryPage() {
     }
   }
 
-  // ── Not Found ─────────────────────────────────────────────────────────────
+  const hasMore = products.length < totalCount;
+
   if (notFound) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4 px-4 text-center">
         <div className="text-6xl">🔍</div>
         <h1 className="text-2xl font-bold">Kategori bulunamadı</h1>
         <p className="text-gray-400">"{slug}" kategorisi veritabanında mevcut değil.</p>
-        <Link
-          href="/"
-          className="mt-4 px-6 py-3 rounded-xl font-bold transition-all text-black"
-          style={{ background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})` }}
-        >
+        <Link href="/" className="mt-4 px-6 py-3 rounded-xl font-bold transition-all text-white"
+          style={{ background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})` }}>
           Ana Sayfaya Dön
         </Link>
       </div>
@@ -165,55 +209,57 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen bg-black text-white">
 
-      {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <nav
-        className="border-b px-6 py-4 flex items-center justify-between sticky top-0 bg-black/80 backdrop-blur z-50"
-        style={{ borderColor: `${GOLD}30` }}
-      >
+      {/* Nav */}
+      <nav className="border-b px-6 py-4 flex items-center justify-between sticky top-0 bg-black/80 backdrop-blur z-50"
+        style={{ borderColor: `${GOLD}30` }}>
         <Link href="/">
           <img src="/logo.png" alt="Ratio.Run" style={{ height: 32, width: 'auto' }} />
         </Link>
         <span className="text-sm text-gray-400 font-medium">{catName}</span>
       </nav>
 
-      {/* ── Karşılaştır Floating Butonu ──────────────────────────────────── */}
+      {/* Karşılaştır Butonu */}
       {selected.length === 2 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-          <button
-            onClick={handleCompare}
+          <button onClick={handleCompare}
             className="px-8 py-4 font-bold rounded-2xl shadow-2xl transition-all text-lg flex items-center gap-3 text-white"
-            style={{
-              background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`,
-              boxShadow: `0 8px 32px ${GOLD}50`,
-            }}
-          >
+            style={{ background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`, boxShadow: `0 8px 32px ${GOLD}50` }}>
             ⚡ Karşılaştır
-            <span className="text-sm opacity-70">(2 ürün seçildi)</span>
+            <span className="text-sm opacity-80">(2 ürün seçildi)</span>
           </button>
         </div>
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
 
-        {/* ── Başlık ───────────────────────────────────────────────────────── */}
+        {/* Başlık */}
         <div className="mb-8">
-          <h1 className="text-4xl font-black mb-2">{catName}</h1>
+          <h1 className="text-4xl font-black mb-2">{catName || '...'}</h1>
           <p className="text-gray-400">
-            {loading ? '...' : `${products.length} ürün`}
-            {selected.length < 2 && !loading && products.length > 0 && (
-              <span style={{ color: GOLD }}> • Karşılaştırmak için 2 ürün seç</span>
+            {loading ? (
+              <span className="inline-block w-20 h-4 bg-gray-800 rounded animate-pulse" />
+            ) : (
+              <>
+                {totalCount} ürün
+                {selected.length < 2 && products.length > 0 && (
+                  <span style={{ color: GOLD }}> • Karşılaştırmak için 2 ürün seç</span>
+                )}
+              </>
             )}
           </p>
         </div>
 
-        {/* ── Loading Skeleton ─────────────────────────────────────────────── */}
+        {/* Loading Skeleton */}
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-gray-900/40 border border-gray-800 rounded-2xl p-4 animate-pulse">
-                <div className="aspect-square bg-gray-800 rounded-xl mb-4" />
-                <div className="h-4 bg-gray-800 rounded mb-2" />
-                <div className="h-4 bg-gray-800 rounded w-2/3" />
+              <div key={i} className="bg-gray-900/40 border border-gray-800 rounded-2xl overflow-hidden animate-pulse">
+                <div className="aspect-square bg-gray-800" />
+                <div className="p-4 space-y-2">
+                  <div className="h-4 bg-gray-800 rounded w-full" />
+                  <div className="h-4 bg-gray-800 rounded w-2/3" />
+                  <div className="h-4 bg-gray-800 rounded w-1/2 mt-3" />
+                </div>
               </div>
             ))}
           </div>
@@ -225,95 +271,105 @@ export default function CategoryPage() {
           </div>
 
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.map((product) => {
-              const isSelected = selected.includes(product.id);
-              const selIndex   = selected.indexOf(product.id) + 1; // 1 veya 2
-              const price      = getPrice(product);
-              const specs      = product.specifications ?? {};
-              const rating     = typeof specs.stars === 'number' ? specs.stars : 0;
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {products.map((product) => {
+                const isSelected = selected.includes(product.id);
+                const selIndex   = selected.indexOf(product.id) + 1;
+                const price      = getPrice(product);
+                const rating     = typeof product.stars === 'number' ? product.stars : 0;
 
-              return (
-                <div
-                  key={product.id}
-                  onClick={() => toggleSelect(product.id)}
-                  className="relative cursor-pointer rounded-2xl border transition-all duration-200 flex flex-col"
-                  style={isSelected ? {
-                    borderColor: GOLD,
-                    background:  `${GOLD}10`,
-                    boxShadow:   `0 0 20px ${GOLD}25`,
-                    transform:   'scale(1.02)',
-                  } : {
-                    borderColor: 'rgb(31 41 55)',
-                    background:  'rgba(17,24,39,0.4)',
-                  }}
-                  onMouseEnter={e => {
-                    if (!isSelected) (e.currentTarget as HTMLElement).style.borderColor = `${GOLD}60`;
-                  }}
-                  onMouseLeave={e => {
-                    if (!isSelected) (e.currentTarget as HTMLElement).style.borderColor = 'rgb(31 41 55)';
-                  }}
-                >
-                  {/* ── Seçim rozeti (1 / 2) ─────────────────────────────── */}
-                  {isSelected && (
-                    <div
-                      className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black z-10 text-black"
-                      style={{ background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})` }}
-                    >
-                      {selIndex}
-                    </div>
-                  )}
-
-                  {/* ── Kare görsel ─────────────────────────────────────── */}
+                return (
                   <div
-                    className="w-full rounded-t-2xl overflow-hidden"
-                    style={{ paddingBottom: '100%', position: 'relative', background: '#0d0d0d' }}
+                    key={product.id}
+                    onClick={() => toggleSelect(product.id)}
+                    className="relative cursor-pointer rounded-2xl border transition-all duration-150 flex flex-col"
+                    style={isSelected ? {
+                      borderColor: GOLD,
+                      background:  `${GOLD}10`,
+                      boxShadow:   `0 0 20px ${GOLD}25`,
+                      transform:   'scale(1.02)',
+                    } : {
+                      borderColor: 'rgb(31 41 55)',
+                      background:  'rgba(17,24,39,0.4)',
+                    }}
                   >
-                    {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        referrerPolicy="no-referrer"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        style={{
-                          position: 'absolute', inset: 0,
-                          width: '100%', height: '100%',
-                          objectFit: 'contain', padding: '8px',
-                        }}
-                      />
-                    ) : (
-                      <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', opacity: 0.15 }}>📦</span>
-                    )}
-                  </div>
-
-                  {/* ── İçerik ──────────────────────────────────────────── */}
-                  <div className="p-4 flex flex-col flex-1">
-                    <h3 className="text-sm font-semibold text-gray-200 line-clamp-2 leading-tight mb-2 flex-1">
-                      {formatName(product.name, product.brand)}
-                    </h3>
-
-                    {/* Yıldız */}
-                    {rating > 0 && (
-                      <div className="flex items-center gap-1 mb-1.5">
-                        <span className="text-xs" style={{ color: GOLD_BRIGHT }}>
-                          {'★'.repeat(Math.min(Math.round(rating), 5))}
-                        </span>
-                        <span className="text-gray-500 text-xs">{rating.toFixed(1)}</span>
+                    {/* Seçim rozeti */}
+                    {isSelected && (
+                      <div className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black z-10 text-black"
+                        style={{ background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})` }}>
+                        {selIndex}
                       </div>
                     )}
 
-                    {/* Fiyat */}
-                    <div className="text-base font-bold text-white mt-auto">
-                      {price
-                        ? `₺${price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
-                        : <span className="text-gray-500 text-xs">Fiyat güncelleniyor</span>
-                      }
+                    {/* Görsel — lazy load */}
+                    <div className="w-full rounded-t-2xl overflow-hidden bg-[#0d0d0d]"
+                      style={{ paddingBottom: '100%', position: 'relative' }}>
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          loading="lazy"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }}
+                        />
+                      ) : (
+                        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', opacity: 0.1 }}>📦</span>
+                      )}
+                    </div>
+
+                    {/* İçerik */}
+                    <div className="p-4 flex flex-col flex-1">
+                      <h3 className="text-sm font-semibold text-gray-200 line-clamp-2 leading-tight mb-2 flex-1">
+                        {formatName(product.name, product.brand)}
+                      </h3>
+                      {rating > 0 && (
+                        <div className="flex items-center gap-1 mb-1.5">
+                          <span className="text-xs" style={{ color: GOLD_BRIGHT }}>
+                            {'★'.repeat(Math.min(Math.round(rating), 5))}
+                          </span>
+                          <span className="text-gray-500 text-xs">{rating.toFixed(1)}</span>
+                        </div>
+                      )}
+                      <div className="text-base font-bold text-white mt-auto">
+                        {price
+                          ? `₺${price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
+                          : <span className="text-gray-500 text-xs">Fiyat güncelleniyor</span>
+                        }
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+
+            {/* Daha Fazla Yükle */}
+            {hasMore && (
+              <div className="flex justify-center mt-10">
+                <button
+                  onClick={() => fetchProducts(offset, false)}
+                  disabled={loadingMore}
+                  className="px-8 py-3 rounded-xl font-bold border transition-all text-white"
+                  style={{
+                    borderColor: `${GOLD}60`,
+                    background: loadingMore ? `${GOLD}10` : 'transparent',
+                  }}
+                >
+                  {loadingMore ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-gray-600 rounded-full animate-spin"
+                        style={{ borderTopColor: GOLD }} />
+                      Yükleniyor...
+                    </span>
+                  ) : (
+                    `Daha Fazla Göster (${totalCount - products.length} ürün kaldı)`
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
