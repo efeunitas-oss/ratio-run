@@ -98,7 +98,7 @@ export function TechSpecsTable({
                 {/* Ürün A */}
                 <div className={`flex items-center justify-between p-3 rounded-lg ${
                   comparison.winner === 'a'
-                    ? 'bg-[#C9A227]/10 border border-[#C9A227]/40'
+                    ? `bg-[#C9A227]/10 border border-[#C9A227]/40`
                     : 'bg-gray-800/30'
                 }`}>
                   <span className="text-xs text-gray-500">{shortName(productA)}</span>
@@ -112,7 +112,7 @@ export function TechSpecsTable({
                 {/* Ürün B */}
                 <div className={`flex items-center justify-between p-3 rounded-lg ${
                   comparison.winner === 'b'
-                    ? 'bg-[#C9A227]/10 border border-[#C9A227]/40'
+                    ? `bg-[#C9A227]/10 border border-[#C9A227]/40`
                     : 'bg-gray-800/30'
                 }`}>
                   <span className="text-xs text-gray-500">{shortName(productB)}</span>
@@ -138,7 +138,7 @@ export function TechSpecsTable({
           <div className="text-sm font-semibold text-gray-400 mb-3">Fiyat</div>
           <div className="space-y-2">
             <div className={`flex items-center justify-between p-3 rounded-lg ${
-              priceA < priceB ? 'bg-[#C9A227]/10 border border-[#C9A227]/40' : 'bg-gray-800/30'
+              priceA < priceB ? `bg-[#C9A227]/10 border border-[#C9A227]/40` : 'bg-gray-800/30'
             }`}>
               <span className="text-xs text-gray-500">{shortName(productA)}</span>
               <span className={`text-lg font-bold ${priceA < priceB ? 'text-[#D4AF37]' : 'text-gray-300'}`}>
@@ -146,7 +146,7 @@ export function TechSpecsTable({
               </span>
             </div>
             <div className={`flex items-center justify-between p-3 rounded-lg ${
-              priceB < priceA ? 'bg-[#C9A227]/10 border border-[#C9A227]/40' : 'bg-gray-800/30'
+              priceB < priceA ? `bg-[#C9A227]/10 border border-[#C9A227]/40` : 'bg-gray-800/30'
             }`}>
               <span className="text-xs text-gray-500">{shortName(productB)}</span>
               <span className={`text-lg font-bold ${priceB < priceA ? 'text-[#D4AF37]' : 'text-gray-300'}`}>
@@ -163,10 +163,10 @@ export function TechSpecsTable({
           <thead>
             <tr className="border-b border-gray-800/50">
               <th className="text-left p-4 text-sm font-semibold text-gray-400 w-1/3">Özellik</th>
-              <th className="text-center p-4 text-sm font-semibold text-[#D4AF37] w-1/3">
+              <th className="text-center p-4 text-sm font-semibold w-1/3" style={{ color: "#D4AF37" }}>
                 {shortName(productA, 4)}
               </th>
-              <th className="text-center p-4 text-sm font-semibold text-[#D4AF37] w-1/3">
+              <th className="text-center p-4 text-sm font-semibold w-1/3" style={{ color: "#D4AF37" }}>
                 {shortName(productB, 4)}
               </th>
             </tr>
@@ -196,7 +196,7 @@ export function TechSpecsTable({
                   <td className={`p-4 text-center ${comparison.winner === 'a' ? 'bg-[#C9A227]/5' : ''}`}>
                     <div className="flex items-center justify-center gap-2">
                       {comparison.winner === 'a' && (
-                        <svg className="w-5 h-5 text-[#C9A227]" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-5 h-5 text-[#D4AF37]" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       )}
@@ -211,7 +211,7 @@ export function TechSpecsTable({
                   <td className={`p-4 text-center ${comparison.winner === 'b' ? 'bg-[#C9A227]/5' : ''}`}>
                     <div className="flex items-center justify-center gap-2">
                       {comparison.winner === 'b' && (
-                        <svg className="w-5 h-5 text-[#C9A227]" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-5 h-5 text-[#D4AF37]" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       )}

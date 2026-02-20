@@ -259,7 +259,7 @@ export default function ComparisonPage() {
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           <div
             className="absolute top-0 left-0 w-[500px] h-[500px] rounded-full blur-[120px]"
-            style={{ background: 'rgba(16,185,129,0.06)' }}
+            style={{ background: `${GOLD}08` }}
           />
           <div
             className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px]"
@@ -278,7 +278,7 @@ export default function ComparisonPage() {
               <span
                 className="text-xl font-black"
                 style={{
-                  background: `linear-gradient(135deg, #34D399, ${GOLD_BRIGHT})`,
+                  background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -308,7 +308,7 @@ export default function ComparisonPage() {
               <div className="grid grid-cols-3 gap-4 mt-5">
                 <div className="bg-gray-800/50 rounded-xl p-4 text-center">
                   <div className="text-xs text-gray-500 mb-1">Fark</div>
-                  <div className="text-2xl font-bold text-emerald-400">%{diff.toFixed(1)}</div>
+                  <div className="text-2xl font-bold" style={{ color: GOLD_BRIGHT }}>%{diff.toFixed(1)}</div>
                 </div>
                 <div className="bg-gray-800/50 rounded-xl p-4 text-center">
                   <div className="text-xs text-gray-500 mb-1">Ürün A Ratio</div>
@@ -332,7 +332,7 @@ export default function ComparisonPage() {
             <thead>
               <tr className="border-b border-gray-800/50 bg-gray-900/30">
                 <th className="text-left p-4 text-gray-400 text-sm w-1/3">Özellik</th>
-                <th className="text-center p-4 text-emerald-400 text-sm w-1/3">
+                <th className="text-center p-4 text-sm w-1/3" style={{ color: GOLD_BRIGHT }}>
                   {productA.name.split(' ').slice(0, 3).join(' ')}
                 </th>
                 <th className="text-center p-4 text-sm w-1/3" style={{ color: GOLD_BRIGHT }}>
@@ -400,7 +400,7 @@ export default function ComparisonPage() {
               href={productA.source_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block text-center py-3 bg-gray-900 border border-gray-700 rounded-xl text-sm font-medium transition-all hover:border-emerald-500"
+              className="block text-center py-3 bg-gray-900 border border-gray-700 rounded-xl text-sm font-medium transition-all"  onMouseEnter={e => (e.currentTarget.style.borderColor = GOLD_BRIGHT)} onMouseLeave={e => (e.currentTarget.style.borderColor = "")}
             >
               {productA.name.split(' ').slice(0, 3).join(' ')} → Satın Al
             </a>
@@ -434,7 +434,7 @@ function ProductPanel({ product, price, score, isWinner, side }: {
       className="bg-gray-900/40 border rounded-2xl p-5 transition-all"
       style={isWinner
         ? isA
-          ? { borderColor: 'rgba(16,185,129,0.5)', boxShadow: '0 0 40px rgba(16,185,129,0.08)' }
+          ? { borderColor: `${GOLD}80`, boxShadow: `0 0 40px ${GOLD}18` }
           : { borderColor: `${GOLD}80`,            boxShadow: `0 0 40px ${GOLD}14` }
         : { borderColor: 'rgb(31,41,55)' }
       }
@@ -445,7 +445,7 @@ function ProductPanel({ product, price, score, isWinner, side }: {
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border"
             style={isA
-              ? { background: 'rgba(16,185,129,0.15)', color: '#34D399',   borderColor: 'rgba(16,185,129,0.3)' }
+              ? { background: `${GOLD}20`, color: GOLD_BRIGHT, borderColor: `${GOLD}50` }
               : { background: `${GOLD}20`,             color: GOLD_BRIGHT, borderColor: `${GOLD}50` }
             }
           >
@@ -478,10 +478,10 @@ function ProductPanel({ product, price, score, isWinner, side }: {
         }
       </div>
 
-      {/* Skor — A: emerald, B: altın */}
+      {/* Skor */}
       <div
         className="text-3xl font-black"
-        style={{ color: isA ? '#34D399' : GOLD_BRIGHT }}
+        style={{ color: GOLD_BRIGHT }}
       >
         {score.toFixed(1)}<span className="text-sm text-gray-500 font-normal"> / 100</span>
       </div>
@@ -499,10 +499,11 @@ function SpecRow({ label, valA, valB, winnerA, winnerB, alwaysShow = false }: {
     <tr className="border-b border-gray-800/30 hover:bg-gray-800/20 transition-colors">
       <td className="p-4 text-gray-400 text-sm font-medium">{label}</td>
 
-      {/* Ürün A — emerald */}
-      <td className={`p-4 text-center text-sm font-bold ${
-        winnerA ? 'text-emerald-400 bg-emerald-500/5' : valA === '—' ? 'text-gray-700' : 'text-gray-300'
-      }`}>
+      {/* Ürün A */}
+      <td
+        className="p-4 text-center text-sm font-bold"
+        style={{ color: winnerA ? GOLD_BRIGHT : valA === '—' ? '#374151' : '#D1D5DB', background: winnerA ? `${GOLD}0D` : undefined }}
+      >
         {winnerA && <span className="mr-1">✓</span>}{valA}
       </td>
 
