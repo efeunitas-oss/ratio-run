@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,10 +9,8 @@ const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase        = createClient(supabaseUrl, supabaseAnonKey);
 
-// ── Logo altınından çekilen gerçek hex ───────────────────────────────────────
-const GOLD        = '#C9A227';
-const GOLD_BRIGHT = '#D4AF37';
-const GOLD_DIM    = '#6B5410';
+const GOLD        = "#C9A227";
+const GOLD_BRIGHT = "#D4AF37";
 
 const CATEGORIES = [
   { id: "laptop",        label: "Laptop",       icon: "💻", link: "laptop"        },
@@ -26,9 +24,9 @@ const CATEGORIES = [
 ];
 
 export default function Home() {
-  const [counts, setCounts]       = useState<Record<string, number>>({});
+  const [counts, setCounts]         = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading]     = useState(true);
+  const [loading, setLoading]       = useState(true);
   const router = useRouter();
 
   useEffect(() => { fetchCounts(); }, []);
@@ -47,8 +45,8 @@ export default function Home() {
       const dbIdToMenuId: Record<string, string> = {};
       CATEGORIES.forEach((cat) => {
         const slug = cat.id === "araba" ? "otomobil" : cat.id;
-        if (slugToId[slug])    dbIdToMenuId[slugToId[slug]]    = cat.id;
-        if (slugToId[cat.id])  dbIdToMenuId[slugToId[cat.id]]  = cat.id;
+        if (slugToId[slug])   dbIdToMenuId[slugToId[slug]]   = cat.id;
+        if (slugToId[cat.id]) dbIdToMenuId[slugToId[cat.id]] = cat.id;
       });
 
       const stats: Record<string, number> = {};
@@ -64,7 +62,7 @@ export default function Home() {
     }
   }
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const term = searchTerm.trim();
     if (term) router.push(`/compare/all?search=${encodeURIComponent(term)}`);
@@ -73,7 +71,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-black text-white font-sans">
 
-      {/* Nav */}
+      {/* ── Nav ──────────────────────────────────────────────────────── */}
       <nav
         className="border-b px-6 py-4 flex justify-between items-center bg-black/60 backdrop-blur fixed w-full z-50"
         style={{ borderColor: `${GOLD}35` }}
@@ -84,12 +82,15 @@ export default function Home() {
             ratio<span style={{ color: GOLD_BRIGHT }}>.run</span>
           </span>
         </a>
-        <div className="text-sm font-mono hidden md:block uppercase tracking-widest" style={{ color: GOLD_DIM }}>
-          Don&apos;t buy with emotions.
+        <div
+          className="text-sm font-mono hidden md:block uppercase tracking-widest"
+          style={{ color: GOLD_BRIGHT }}
+        >
+          DON&apos;T BUY WITH EMOTIONS.
         </div>
       </nav>
 
-      {/* Hero */}
+      {/* ── Hero ─────────────────────────────────────────────────────── */}
       <div className="relative pt-40 pb-20 px-6 flex flex-col items-center text-center max-w-6xl mx-auto">
 
         {/* Altın ambient glow */}
@@ -99,57 +100,61 @@ export default function Home() {
         />
 
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
-          Veriye Dayalı <br />
-          <span style={{
-            background: `linear-gradient(135deg, ${GOLD_BRIGHT} 0%, #EDD060 50%, ${GOLD} 100%)`,
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}>
-            Karar Ver.
+          Senin Yerine <br />
+          <span
+            style={{
+              background: `linear-gradient(135deg, ${GOLD_BRIGHT} 0%, #EDD060 50%, ${GOLD} 100%)`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            Biz Hesapladık.
           </span>
         </h1>
 
-        {/* Arama */}
+        {/* ── Arama ──────────────────────────────────────────────────── */}
         <form onSubmit={handleSearch} className="w-full max-w-2xl relative mb-20">
           <input
             type="text"
             placeholder="Model veya marka ara..."
             className="w-full bg-gray-900/50 border border-gray-800 text-white px-8 py-5 rounded-2xl outline-none transition-all text-lg"
-            onFocus={e  => (e.currentTarget.style.borderColor = GOLD)}
-            onBlur={e   => (e.currentTarget.style.borderColor = "")}
+            style={{}}
+            onFocus={(e)  => { e.currentTarget.style.borderColor = GOLD; }}
+            onBlur={(e)   => { e.currentTarget.style.borderColor = ""; }}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <button
             type="submit"
-            className="absolute right-3 top-3 bottom-3 px-6 rounded-xl font-bold transition-all text-black"
+            className="absolute right-3 top-3 bottom-3 px-6 rounded-xl font-bold text-black transition-all"
             style={{ background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})` }}
           >
             Ara
           </button>
         </form>
 
-        {/* Kategori Kartları */}
+        {/* ── Kategori Kartları ────────────────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
           {CATEGORIES.map((cat) => (
             <Link
               key={cat.id}
               href={`/compare/${cat.link}`}
-              className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6 transition-all flex flex-col items-center gap-3"
-              onMouseEnter={e => (e.currentTarget.style.borderColor = `${GOLD}70`)}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = "")}
+              className="block bg-gray-900/40 border border-gray-800 rounded-2xl p-6 transition-all duration-200 flex flex-col items-center gap-3"
+              onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = `${GOLD}70`; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgb(31 41 55)"; }}
             >
               <span className="text-4xl">{cat.icon}</span>
               <div>
                 <h3 className="font-bold text-gray-200">{cat.label}</h3>
-                <p className="text-xs font-mono mt-1" style={{ color: GOLD_DIM }}>
+                <p className="text-xs font-mono mt-1" style={{ color: GOLD_BRIGHT }}>
                   {loading ? "..." : `${counts[cat.id] ?? 0} Model`}
                 </p>
               </div>
             </Link>
           ))}
         </div>
+
       </div>
     </main>
   );
