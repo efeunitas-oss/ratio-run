@@ -181,7 +181,7 @@ export default function CategoryPage() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
           <button
             onClick={handleCompare}
-            className="px-8 py-4 font-bold rounded-2xl shadow-2xl transition-all text-lg flex items-center gap-3 text-black"
+            className="px-8 py-4 font-bold rounded-2xl shadow-2xl transition-all text-lg flex items-center gap-3 text-white"
             style={{
               background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`,
               boxShadow: `0 8px 32px ${GOLD}50`,
