@@ -87,7 +87,7 @@ export default function Home() {
           className="text-sm font-mono hidden md:block uppercase tracking-widest"
           style={{ color: GOLD_BRIGHT }}
         >
-          Senin Yerine, Biz Hesapladık.
+          DON&apos;T BUY WITH EMOTIONS.
         </div>
       </nav>
 
@@ -101,7 +101,7 @@ export default function Home() {
         />
 
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
-          Senin Yerine, <br />
+          Senin Yerine <br />
           <span
             style={{
               background: `linear-gradient(135deg, ${GOLD_BRIGHT} 0%, #EDD060 50%, ${GOLD} 100%)`,
