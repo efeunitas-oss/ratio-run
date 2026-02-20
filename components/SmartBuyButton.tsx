@@ -91,7 +91,7 @@ export default function SmartBuyButton({ product }: SmartBuyButtonProps) {
             >
               <span className="text-zinc-300 font-bold uppercase text-sm">{link.provider}</span>
               <div className="flex items-center gap-3">
-                {link.price && <span className="text-amber-400 font-bold">{link.price}</span>}
+                {link.price && <span className="text-[#D4AF37] font-bold">{link.price}</span>}
                 <ExternalLink className="w-4 h-4 text-zinc-500" />
               </div>
             </a>

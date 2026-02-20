@@ -6,11 +6,15 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 
+// ── Renk sabitleri ─────────────────────────────────────────────────────────
+const GOLD        = '#C9A227';
+const GOLD_BRIGHT = '#D4AF37';
+
 // ─── Kategori bazlı spec tanımları ───────────────────────────────────────────
 interface SpecDef {
   label: string;
   extract: (s: Record<string, any>) => string;
-  higher?: boolean; // true = büyük değer kazanır, false = küçük, undefined = karşılaştırma yok
+  higher?: boolean;
 }
 
 function boolStr(val: any): string {
@@ -102,16 +106,9 @@ function extractNumeric(val: string): number | null {
   const m = val.match(/[\d.]+/);
   return m ? parseFloat(m[0]) : null;
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  'https://srypulfxbckherkmrjgs.supabase.co';
-
-const supabaseKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyeXB1bGZ4YmNraGVya21yamdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNTczMDcsImV4cCI6MjA4NjczMzMwN30.gEYVh5tjSrO3sgc5rsnYgVrIy6YdK3I5qU5S6FwkX-I';
-
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://srypulfxbckherkmrjgs.supabase.co';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyeXB1bGZ4YmNraGVya21yamdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNTczMDcsImV4cCI6MjA4NjczMzMwN30.gEYVh5tjSrO3sgc5rsnYgVrIy6YdK3I5qU5S6FwkX-I';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface Product {
@@ -128,37 +125,29 @@ interface Product {
 
 function getRatioScore(product: Product, maxPrice: number): number {
   const specs   = product.specifications ?? {};
-  const overall = Number(specs.overall_score ?? 0);  // 0–10 arası
-  const stars   = Number(specs.stars         ?? 0);  // 0–5 arası
+  const overall = Number(specs.overall_score ?? 0);
+  const stars   = Number(specs.stars         ?? 0);
   const price   = product.price && product.price >= 100 ? product.price : null;
 
-  // 1. Spec skoru: overall_score varsa kullan, yoksa stars
   let specScore = 0;
-  if (overall > 0)     specScore = overall * 10;       // 0–100
-  else if (stars > 0)  specScore = stars * 20;         // 0–100
+  if (overall > 0)    specScore = overall * 10;
+  else if (stars > 0) specScore = stars * 20;
 
-  // 2. Fiyat skoru: her zaman hesapla — ucuz ürün avantajlı
-  let priceScore = 50; // spec yoksa nötr başla
+  let priceScore = 50;
   if (price && maxPrice > 100) {
-    // En ucuz = 40 puan, en pahalı = 0 puan
     priceScore = (1 - (price / maxPrice)) * 40;
   }
 
-  // 3. Birleştir
   let final: number;
   if (specScore > 0) {
-    // Spec var: %75 spec + %25 fiyat avantajı
     final = specScore * 0.75 + priceScore * 0.25;
   } else {
-    // Spec yok (araba gibi): sadece fiyat karşılaştırması
     final = priceScore;
   }
-
   return Math.min(100, Math.max(0, final));
 }
 
 function getPrice(product: Product): number | null {
-  // 100 TL altı yanlış parse edilmiş veri — gösterme
   if (product.price && product.price >= 100) return product.price;
   const specs = product.specifications ?? {};
   if (specs.price && Number(specs.price) >= 100) return Number(specs.price);
@@ -198,20 +187,29 @@ export default function ComparisonPage() {
     }
   }
 
+  // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin" />
+        <div
+          className="w-12 h-12 border-4 border-gray-700 rounded-full animate-spin"
+          style={{ borderTopColor: GOLD }}
+        />
       </div>
     );
   }
 
+  // ── Hata ─────────────────────────────────────────────────────────────────
   if (!productA || !productB) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
         <div className="text-5xl">⚠️</div>
         <h1 className="text-2xl font-bold">Ürünler yüklenemedi</h1>
-        <Link href={`/compare/${slug}`} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-all">
+        <Link
+          href={`/compare/${slug}`}
+          className="px-6 py-3 rounded-xl font-bold transition-all text-black"
+          style={{ background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})` }}
+        >
           Geri Dön
         </Link>
       </div>
@@ -232,11 +230,9 @@ export default function ComparisonPage() {
     ? 'Bu iki ürün neredeyse eşit performans/fiyat oranına sahip.'
     : `${winner === 'a' ? productA.name : productB.name}, rakibine göre %${diff.toFixed(1)} daha iyi bir değer sunuyor.`;
 
-  // Kategori spec tanımları
   const catKey   = SLUG_ALIAS[slug.toLowerCase()] ?? slug.toLowerCase();
   const specDefs = CATEGORY_SPECS[catKey] ?? null;
 
-  // Fallback: her iki üründeki spec_labels birleşimi
   const fallbackKeys = Array.from(new Set([
     ...Object.keys(specsA.spec_labels ?? {}),
     ...Object.keys(specsB.spec_labels ?? {}),
@@ -244,8 +240,12 @@ export default function ComparisonPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      {/* Nav */}
-      <nav className="border-b border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 bg-gray-950/90 backdrop-blur z-50">
+
+      {/* ── Nav ─────────────────────────────────────────────────────────── */}
+      <nav
+        className="border-b px-6 py-4 flex items-center justify-between sticky top-0 bg-gray-950/90 backdrop-blur z-50"
+        style={{ borderColor: `${GOLD}30` }}
+      >
         <Link href="/">
           <img src="/logo.png" alt="Ratio.Run" style={{ height: 32, width: 'auto' }} />
         </Link>
@@ -254,35 +254,52 @@ export default function ComparisonPage() {
         </Link>
       </nav>
 
-      {/* Arka plan ışıkları */}
+      {/* ── Arka plan ışıkları ───────────────────────────────────────────── */}
       {mounted && (
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-emerald-600/8 rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-600/8 rounded-full blur-[120px]" />
+          <div
+            className="absolute top-0 left-0 w-[500px] h-[500px] rounded-full blur-[120px]"
+            style={{ background: 'rgba(16,185,129,0.06)' }}
+          />
+          <div
+            className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px]"
+            style={{ background: `${GOLD}0F` }}
+          />
         </div>
       )}
 
       <div className="relative max-w-6xl mx-auto px-4 py-10">
 
-        {/* VS Header */}
+        {/* ── VS Header ───────────────────────────────────────────────────── */}
         <div className="relative grid grid-cols-2 gap-8 mb-12 items-start">
           {/* VS Rozeti */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
             <div className="bg-gray-900 border-2 border-gray-700 rounded-full w-16 h-16 flex items-center justify-center shadow-2xl">
-              <span className="text-xl font-black bg-gradient-to-br from-emerald-400 to-blue-400 bg-clip-text text-transparent">VS</span>
+              <span
+                className="text-xl font-black"
+                style={{
+                  background: `linear-gradient(135deg, #34D399, ${GOLD_BRIGHT})`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                VS
+              </span>
             </div>
           </div>
 
-          {/* Ürün A */}
           <ProductPanel product={productA} price={priceA} score={scoreA} isWinner={winner === 'a'} side="a" />
-          {/* Ürün B */}
           <ProductPanel product={productB} price={priceB} score={scoreB} isWinner={winner === 'b'} side="b" />
         </div>
 
-        {/* Karar Kartı */}
+        {/* ── Karar Kartı ─────────────────────────────────────────────────── */}
         <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 mb-8">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border"
+              style={{ background: `${GOLD}18`, borderColor: `${GOLD}40` }}
+            >
               <span className="text-xl">⚖️</span>
             </div>
             <div>
@@ -306,7 +323,7 @@ export default function ComparisonPage() {
           </div>
         </div>
 
-        {/* Teknik Karşılaştırma — kategori bazlı dinamik tablo */}
+        {/* ── Teknik Karşılaştırma Tablosu ────────────────────────────────── */}
         <div className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden">
           <div className="p-5 border-b border-gray-800">
             <h2 className="text-xl font-bold">Teknik Karşılaştırma</h2>
@@ -315,8 +332,12 @@ export default function ComparisonPage() {
             <thead>
               <tr className="border-b border-gray-800/50 bg-gray-900/30">
                 <th className="text-left p-4 text-gray-400 text-sm w-1/3">Özellik</th>
-                <th className="text-center p-4 text-emerald-400 text-sm w-1/3">{productA.name.split(' ').slice(0, 3).join(' ')}</th>
-                <th className="text-center p-4 text-blue-400 text-sm w-1/3">{productB.name.split(' ').slice(0, 3).join(' ')}</th>
+                <th className="text-center p-4 text-emerald-400 text-sm w-1/3">
+                  {productA.name.split(' ').slice(0, 3).join(' ')}
+                </th>
+                <th className="text-center p-4 text-sm w-1/3" style={{ color: GOLD_BRIGHT }}>
+                  {productB.name.split(' ').slice(0, 3).join(' ')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -372,17 +393,27 @@ export default function ComparisonPage() {
           </table>
         </div>
 
-        {/* Linkler */}
+        {/* ── Satın Al Linkleri ────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 gap-4 mt-6">
           {productA.source_url && (
-            <a href={productA.source_url} target="_blank" rel="noopener noreferrer"
-              className="block text-center py-3 bg-gray-900 border border-gray-700 hover:border-emerald-500 rounded-xl text-sm font-medium transition-all">
+            <a
+              href={productA.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-center py-3 bg-gray-900 border border-gray-700 rounded-xl text-sm font-medium transition-all hover:border-emerald-500"
+            >
               {productA.name.split(' ').slice(0, 3).join(' ')} → Satın Al
             </a>
           )}
           {productB.source_url && (
-            <a href={productB.source_url} target="_blank" rel="noopener noreferrer"
-              className="block text-center py-3 bg-gray-900 border border-gray-700 hover:border-blue-500 rounded-xl text-sm font-medium transition-all">
+            <a
+              href={productB.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-center py-3 bg-gray-900 border border-gray-700 rounded-xl text-sm font-medium transition-all"
+              onMouseEnter={e => (e.currentTarget.style.borderColor = GOLD)}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = '')}
+            >
               {productB.name.split(' ').slice(0, 3).join(' ')} → Satın Al
             </a>
           )}
@@ -392,57 +423,97 @@ export default function ComparisonPage() {
   );
 }
 
+// ─── ProductPanel ─────────────────────────────────────────────────────────────
 function ProductPanel({ product, price, score, isWinner, side }: {
   product: Product; price: number | null; score: number; isWinner: boolean; side: 'a' | 'b';
 }) {
-  const borderColor = isWinner
-    ? side === 'a' ? 'border-emerald-500/50 shadow-emerald-500/10 shadow-2xl' : 'border-blue-500/50 shadow-blue-500/10 shadow-2xl'
-    : 'border-gray-800';
+  const isA = side === 'a';
 
   return (
-    <div className={`bg-gray-900/40 border rounded-2xl p-5 transition-all ${borderColor}`}>
-      {/* Her iki kart da aynı yükseklikte rozet alanı — kazanan yoksa şeffaf */}
+    <div
+      className="bg-gray-900/40 border rounded-2xl p-5 transition-all"
+      style={isWinner
+        ? isA
+          ? { borderColor: 'rgba(16,185,129,0.5)', boxShadow: '0 0 40px rgba(16,185,129,0.08)' }
+          : { borderColor: `${GOLD}80`,            boxShadow: `0 0 40px ${GOLD}14` }
+        : { borderColor: 'rgb(31,41,55)' }
+      }
+    >
+      {/* Kazanan rozeti — sabit yükseklik hizalama */}
       <div className="mb-3 h-7">
         {isWinner && (
-          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold
-            ${side === 'a' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'}`}>
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border"
+            style={isA
+              ? { background: 'rgba(16,185,129,0.15)', color: '#34D399',   borderColor: 'rgba(16,185,129,0.3)' }
+              : { background: `${GOLD}20`,             color: GOLD_BRIGHT, borderColor: `${GOLD}50` }
+            }
+          >
             🏆 KAZANAN
           </div>
         )}
       </div>
 
+      {/* Görsel */}
       <div className="w-full mb-4 rounded-xl overflow-hidden bg-gray-800" style={{ position: 'relative', paddingBottom: '100%' }}>
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name}
+          <img
+            src={product.image_url}
+            alt={product.name}
             referrerPolicy="no-referrer"
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: '12px' }}
           />
-        ) : <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', opacity: 0.2 }}>📦</span>}
+        ) : (
+          <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', opacity: 0.2 }}>📦</span>
+        )}
       </div>
+
       <h3 className="font-bold text-gray-100 line-clamp-2 mb-2 text-sm">{product.name}</h3>
+
       <div className="text-2xl font-black mb-1">
-        {price ? `₺${price.toLocaleString('tr-TR')}` : <span className="text-gray-500 text-base">Fiyat yok</span>}
+        {price
+          ? `₺${price.toLocaleString('tr-TR')}`
+          : <span className="text-gray-500 text-base">Fiyat yok</span>
+        }
       </div>
-      <div className={`text-3xl font-black ${side === 'a' ? 'text-emerald-400' : 'text-blue-400'}`}>
+
+      {/* Skor — A: emerald, B: altın */}
+      <div
+        className="text-3xl font-black"
+        style={{ color: isA ? '#34D399' : GOLD_BRIGHT }}
+      >
         {score.toFixed(1)}<span className="text-sm text-gray-500 font-normal"> / 100</span>
       </div>
     </div>
   );
 }
 
+// ─── SpecRow ──────────────────────────────────────────────────────────────────
 function SpecRow({ label, valA, valB, winnerA, winnerB, alwaysShow = false }: {
   label: string; valA: string; valB: string; winnerA: boolean; winnerB: boolean; alwaysShow?: boolean;
 }) {
-  // İkisi de "—" ise ve alwaysShow değilse gizle (yorum sayısı gibi meta alanlar için)
   if (!alwaysShow && valA === '—' && valB === '—') return null;
+
   return (
     <tr className="border-b border-gray-800/30 hover:bg-gray-800/20 transition-colors">
       <td className="p-4 text-gray-400 text-sm font-medium">{label}</td>
-      <td className={`p-4 text-center text-sm font-bold ${winnerA ? 'text-emerald-400 bg-emerald-500/5' : valA === '—' ? 'text-gray-700' : 'text-gray-300'}`}>
+
+      {/* Ürün A — emerald */}
+      <td className={`p-4 text-center text-sm font-bold ${
+        winnerA ? 'text-emerald-400 bg-emerald-500/5' : valA === '—' ? 'text-gray-700' : 'text-gray-300'
+      }`}>
         {winnerA && <span className="mr-1">✓</span>}{valA}
       </td>
-      <td className={`p-4 text-center text-sm font-bold ${winnerB ? 'text-blue-400 bg-blue-500/5' : valB === '—' ? 'text-gray-700' : 'text-gray-300'}`}>
+
+      {/* Ürün B — altın */}
+      <td
+        className="p-4 text-center text-sm font-bold"
+        style={{
+          color:      winnerB ? GOLD_BRIGHT : valB === '—' ? '#374151' : '#D1D5DB',
+          background: winnerB ? `${GOLD}0D` : undefined,
+        }}
+      >
         {winnerB && <span className="mr-1">✓</span>}{valB}
       </td>
     </tr>

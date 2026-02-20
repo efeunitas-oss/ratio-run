@@ -60,17 +60,14 @@ export default function RatioRunApp({ categories, productsByCategory }: RatioRun
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-zinc-100">
       {/* Header */}
-      <header className="border-b bg-zinc-950/50 backdrop-blur-xl sticky top-0 z-50" style={{ borderColor: '#C9A22730' }}>
+      <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex flex-col gap-4">
             <div>
-              <a href="/" className="flex items-center gap-3 w-fit">
-                <img src="/logo.png" alt="Ratio.Run" style={{ height: 40, width: 'auto' }} />
-                <h1 className="text-xl sm:text-2xl font-black tracking-tighter leading-none">
-                  ratio<span style={{ color: '#D4AF37' }}>.run</span>
-                </h1>
-              </a>
-              <p className="text-xs sm:text-sm text-zinc-500 mt-1 pl-1">Duygularla değil, verilerle karar ver.</p>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tighter">
+                <img src="/logo.png" alt="Ratio.Run" style={{ height: 36, width: 'auto' }} />
+              </h1>
+              <p className="text-xs sm:text-sm text-zinc-400 mt-1">Duygularla değil, verilerle karar ver.</p>
             </div>
 
             {/* Kategori Seçimi */}
@@ -86,7 +83,7 @@ export default function RatioRunApp({ categories, productsByCategory }: RatioRun
                   }`}
                   style={selectedCategory === cat.slug ? {
                     background: 'linear-gradient(135deg, #D4AF37, #C9A227)',
-                    boxShadow: '0 4px 15px #C9A22745',
+                    boxShadow: '0 4px 14px #C9A22745',
                   } : {}}
                 >
                   {cat.icon} {cat.name}
@@ -196,7 +193,7 @@ function ComparisonView({ comparison }: { comparison: ComparisonResult }) {
   return (
     <div className="space-y-6">
       {/* Winner Card */}
-      <div className="bg-gradient-to-br from-[#C9A227]/20 via-[#D4AF37]/10 to-[#C9A227]/20 rounded-2xl p-6 sm:p-8 border-2 border-[#C9A227] shadow-lg relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#C9A227]/15 via-[#D4AF37]/10 to-[#C9A227]/15 rounded-2xl p-6 sm:p-8 border-2 border-[#C9A227] relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10 text-9xl">🏆</div>
         <div className="flex items-center gap-3 mb-4 relative z-10">
           <span className="text-4xl animate-bounce">👑</span>

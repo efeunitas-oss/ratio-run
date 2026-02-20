@@ -1,19 +1,13 @@
 'use client';
 
-// ============================================================================
-// RATIO.RUN - PRODUCT CARD v2
-// Düzeltmeler:
-//   • product.title → product.name (DB şemasıyla uyumlu)
-//   • rating/reviews → specifications.stars / specifications.reviewsCount
-//   • Türkçe encoding düzeltildi
-//   • Null crash'leri giderildi
-// ============================================================================
-
 import { Product, RatioScore } from '@/lib/types';
 import { getValueBadge } from '@/lib/ratio-engine';
 import { extractBrand, getSpecConfig } from '@/lib/spec-config';
 import { useImageLoader, getFallbackIconDataUrl } from '@/lib/image-handler';
 import { useState } from 'react';
+
+const GOLD        = '#C9A227';
+const GOLD_BRIGHT = '#D4AF37';
 
 interface ProductCardProps {
   product: Product;
@@ -37,28 +31,20 @@ export function ProductCard({
   const { status, optimizedUrl } = useImageLoader(product.image_url ?? '');
   const [imageError, setImageError] = useState(false);
 
-  // ── Ürün adı: DB'de 'name' kolonu, 'title' değil ──────────────────────────
   const productName = product.name ?? 'İsimsiz Ürün';
-
-  // ── Marka: name'den çıkar ─────────────────────────────────────────────────
-  const brand = extractBrand(productName);
-  const config = getSpecConfig(categorySlug);
-  const brandColor = config.brand_colors[brand] || {
+  const brand       = extractBrand(productName);
+  const config      = getSpecConfig(categorySlug);
+  const brandColor  = config.brand_colors[brand] || {
     primary: '#4B5563',
     glow: 'rgba(75, 85, 99, 0.3)',
     accent: '#9CA3AF',
   };
 
-  // ── Rating: DB'de doğrudan kolon yok, specifications içinde ──────────────
-  const specs = product.specifications ?? {};
-  const rating: number = typeof specs.stars === 'number' ? specs.stars : 0;
-  const reviewsCount: number =
-    typeof specs.reviewsCount === 'number' ? specs.reviewsCount : 0;
-
-  // ── Para birimi sembolü ───────────────────────────────────────────────────
-  const currencySymbol = product.currency === 'USD' ? '$' : '₺';
-
-  const valueBadge = ratioScore ? getValueBadge(ratioScore.normalized_score) : null;
+  const specs        = product.specifications ?? {};
+  const rating: number       = typeof specs.stars === 'number' ? specs.stars : 0;
+  const reviewsCount: number = typeof specs.reviewsCount === 'number' ? specs.reviewsCount : 0;
+  const currencySymbol       = product.currency === 'USD' ? '$' : '₺';
+  const valueBadge           = ratioScore ? getValueBadge(ratioScore.normalized_score) : null;
 
   return (
     <div
@@ -80,13 +66,11 @@ export function ProductCard({
           : undefined,
       }}
     >
-      {/* Brand Glow Background */}
+      {/* Brand Glow */}
       {isWinner && (
         <div
           className="absolute inset-0 opacity-10 blur-3xl"
-          style={{
-            background: `radial-gradient(circle at 50% 50%, ${brandColor.primary}, transparent 70%)`,
-          }}
+          style={{ background: `radial-gradient(circle at 50% 50%, ${brandColor.primary}, transparent 70%)` }}
         />
       )}
 
@@ -120,7 +104,6 @@ export function ProductCard({
               <div className="w-12 h-12 border-4 border-gray-700 border-t-gray-500 rounded-full animate-spin" />
             </div>
           )}
-
           {status === 'loaded' && !imageError ? (
             <img
               src={optimizedUrl}
@@ -131,31 +114,25 @@ export function ProductCard({
             />
           ) : status === 'error' || imageError ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <img
-                src={getFallbackIconDataUrl()}
-                alt="Ürün görseli"
-                className="w-24 h-24 opacity-30"
-              />
+              <img src={getFallbackIconDataUrl()} alt="Ürün görseli" className="w-24 h-24 opacity-30" />
             </div>
           ) : null}
-
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         </div>
 
-        {/* Ürün Adı — line-clamp ile taşmayı önle */}
+        {/* Ürün Adı */}
         <h3 className="text-lg font-semibold text-gray-100 mb-3 line-clamp-2 leading-tight">
           {productName}
         </h3>
 
-        {/* Değerlendirme */}
+        {/* Yıldız Değerlendirme */}
         <div className="flex items-center gap-2 mb-4">
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
               <svg
                 key={i}
-                className={`w-4 h-4 ${
-                  i < Math.floor(rating) ? 'text-[#D4AF37]' : 'text-gray-700'
-                }`}
+                className="w-4 h-4"
+                style={{ color: i < Math.floor(rating) ? GOLD_BRIGHT : '#374151' }}
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -173,17 +150,21 @@ export function ProductCard({
           <div>
             <div className="text-3xl font-bold text-gray-100">
               {currencySymbol}
-              {(product.price ?? 0).toLocaleString('tr-TR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {(product.price ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
-
           {ratioScore && (
             <div className="text-right">
               <div className="text-xs text-gray-500 mb-1">Ratio Skoru</div>
-              <div className="text-2xl font-bold bg-gradient-to-r from-[#D4AF37] to-[#C9A227] bg-clip-text text-transparent">
+              <div
+                className="text-2xl font-bold"
+                style={{
+                  background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
                 {ratioScore.normalized_score.toFixed(1)}
               </div>
             </div>
@@ -192,13 +173,7 @@ export function ProductCard({
 
         {/* Değer Rozeti */}
         {valueBadge && (
-          <div
-            className={`
-              inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold tracking-wider
-              ${valueBadge.bgColor} ${valueBadge.color}
-              border border-current/20
-            `}
-          >
+          <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold tracking-wider ${valueBadge.bgColor} ${valueBadge.color} border border-current/20`}>
             {valueBadge.text}
           </div>
         )}
@@ -208,9 +183,7 @@ export function ProductCard({
       <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
         <div
           className="absolute inset-0 rounded-2xl"
-          style={{
-            background: `linear-gradient(135deg, ${brandColor.glow} 0%, transparent 50%, ${brandColor.glow} 100%)`,
-          }}
+          style={{ background: `linear-gradient(135deg, ${brandColor.glow} 0%, transparent 50%, ${brandColor.glow} 100%)` }}
         />
       </div>
     </div>
