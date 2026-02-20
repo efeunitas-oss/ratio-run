@@ -1,4 +1,4 @@
-// app/HomeClient.tsx — CLIENT COMPONENT (sadece arama interaktif)
+// app/HomeClient.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -8,14 +8,8 @@ import { useRouter } from 'next/navigation';
 const GOLD        = '#C9A227';
 const GOLD_BRIGHT = '#D4AF37';
 
-interface Category {
-  id: string; label: string; icon: string; link: string; dbSlug: string;
-}
-
-interface Props {
-  categories: Category[];
-  counts: Record<string, number>;
-}
+interface Category { id: string; label: string; icon: string; link: string; }
+interface Props { categories: Category[]; counts: Record<string, number>; }
 
 export default function HomeClient({ categories, counts }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,8 +23,6 @@ export default function HomeClient({ categories, counts }: Props) {
 
   return (
     <main className="min-h-screen bg-black text-white font-sans">
-
-      {/* Nav */}
       <nav className="border-b px-6 py-4 flex justify-between items-center bg-black/60 backdrop-blur fixed w-full z-50"
         style={{ borderColor: `${GOLD}35` }}>
         <a href="/" className="flex items-center gap-3">
@@ -45,7 +37,6 @@ export default function HomeClient({ categories, counts }: Props) {
         </div>
       </nav>
 
-      {/* Hero */}
       <div className="relative pt-40 pb-20 px-6 flex flex-col items-center text-center max-w-6xl mx-auto">
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-[150px] -z-10"
           style={{ background: `${GOLD}12` }} />
@@ -54,33 +45,25 @@ export default function HomeClient({ categories, counts }: Props) {
           Senin Yerine <br />
           <span style={{
             background: `linear-gradient(135deg, ${GOLD_BRIGHT} 0%, #EDD060 50%, ${GOLD} 100%)`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
           }}>
             Biz Hesapladık.
           </span>
         </h1>
 
-        {/* Arama */}
         <form onSubmit={handleSearch} className="w-full max-w-2xl relative mb-20">
-          <input
-            type="text"
-            placeholder="Model veya marka ara..."
+          <input type="text" placeholder="Model veya marka ara..."
             className="w-full bg-gray-900/50 border border-gray-800 text-white px-8 py-5 rounded-2xl outline-none transition-all text-lg"
-            onFocus={(e)  => { e.currentTarget.style.borderColor = GOLD; }}
-            onBlur={(e)   => { e.currentTarget.style.borderColor = ''; }}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+            onFocus={(e) => { e.currentTarget.style.borderColor = GOLD; }}
+            onBlur={(e)  => { e.currentTarget.style.borderColor = ''; }}
+            value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           <button type="submit"
-            className="absolute right-3 top-3 bottom-3 px-6 rounded-xl font-bold text-black transition-all"
+            className="absolute right-3 top-3 bottom-3 px-6 rounded-xl font-bold text-black"
             style={{ background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})` }}>
             Ara
           </button>
         </form>
 
-        {/* Kategori Kartları — sayılar sunucudan geliyor, anında görünüyor */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
           {categories.map((cat) => (
             <Link key={cat.id} href={`/compare/${cat.link}`}
