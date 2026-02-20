@@ -95,8 +95,8 @@ export default function Home() {
             style={{
               height: 40,
               width: 'auto',
-              mixBlendMode: 'screen',
-              filter: 'brightness(1.15) saturate(1.1)',
+              
+              
             }}
           />
           <span className="text-2xl font-black tracking-tighter">

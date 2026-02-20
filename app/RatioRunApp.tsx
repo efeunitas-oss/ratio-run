@@ -71,8 +71,8 @@ export default function RatioRunApp({ categories, productsByCategory }: RatioRun
                   style={{
                     height: 40,
                     width: 'auto',
-                    mixBlendMode: 'screen',
-                    filter: 'brightness(1.15) saturate(1.1)',
+                    
+                    
                   }}
                 />
                 <h1 className="text-xl sm:text-2xl font-black tracking-tighter leading-none">
