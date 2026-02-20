@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // Ana sayfa 5 dakika önbelleklenir
 export const revalidate = 300;
+export const runtime = 'edge';
 import HomeClient from './HomeClient';
 
 const CATEGORIES = [
