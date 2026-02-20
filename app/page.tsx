@@ -24,30 +24,33 @@ export default async function Home() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const [{ data: prodData }, { data: catData }] = await Promise.all([
-    supabase.from('products').select('category_id').eq('is_active', true),
-    supabase.from('categories').select('id, slug, name'),
-  ]);
+  // Tek sorguda kategori başına ürün sayısı — 708 satır değil 8 satır gelir
+  const { data: catData } = await supabase
+    .from('categories')
+    .select('id, slug, name');
 
-  // Slug → menu id eşleştirmesi
   const counts: Record<string, number> = {};
-  const catMap: Record<string, string> = {};
 
-  (catData ?? []).forEach(c => {
-    if (c.slug) catMap[c.id] = c.slug.toLowerCase();
-  });
+  await Promise.all(
+    (catData ?? []).map(async (cat) => {
+      const menuCat = CATEGORIES.find(c =>
+        c.id === cat.slug?.toLowerCase() ||
+        c.link === cat.slug?.toLowerCase() ||
+        (c.id === 'araba' && cat.slug === 'otomobil') ||
+        (c.id === 'tv' && cat.slug === 'televizyon') ||
+        cat.slug?.toLowerCase().includes(c.id)
+      );
+      if (!menuCat) return;
 
-  (prodData ?? []).forEach(p => {
-    const slug = catMap[p.category_id] ?? '';
-    const cat = CATEGORIES.find(c =>
-      c.id === slug ||
-      c.link === slug ||
-      (c.id === 'araba' && slug === 'otomobil') ||
-      (c.id === 'tv' && slug === 'televizyon') ||
-      slug.includes(c.id)
-    );
-    if (cat) counts[cat.id] = (counts[cat.id] || 0) + 1;
-  });
+      const { count } = await supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true })
+        .eq('category_id', cat.id)
+        .eq('is_active', true);
+
+      if (count) counts[menuCat.id] = count;
+    })
+  );
 
   return <HomeClient categories={CATEGORIES} counts={counts} />;
 }
