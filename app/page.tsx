@@ -85,24 +85,36 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-blue-500 font-sans">
+    <main className="min-h-screen bg-black text-white selection:bg-amber-500 font-sans">
       {/* Nav */}
-      <nav className="border-b border-gray-800 p-6 flex justify-between items-center bg-black/50 backdrop-blur fixed w-full z-50">
-        <div className="text-2xl font-black tracking-tighter">
-          RATIO<span className="text-blue-500">.RUN</span>
-        </div>
-        <div className="text-sm text-gray-400 font-mono hidden md:block uppercase tracking-widest">
+      <nav className="border-b border-amber-900/30 px-6 py-4 flex justify-between items-center bg-black/60 backdrop-blur fixed w-full z-50">
+        <a href="/" className="flex items-center gap-3">
+          <img
+            src="/logo.png"
+            alt="Ratio.Run"
+            style={{
+              height: 40,
+              width: 'auto',
+              mixBlendMode: 'screen',
+              filter: 'brightness(1.15) saturate(1.1)',
+            }}
+          />
+          <span className="text-2xl font-black tracking-tighter">
+            ratio<span className="text-amber-400">.run</span>
+          </span>
+        </a>
+        <div className="text-sm text-amber-900/80 font-mono hidden md:block uppercase tracking-widest">
           Don&apos;t buy with emotions.
         </div>
       </nav>
 
       {/* Hero */}
       <div className="relative pt-40 pb-20 px-6 flex flex-col items-center text-center max-w-6xl mx-auto">
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] -z-10" />
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[120px] -z-10" />
 
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
           Veriye Dayalı <br />
-          <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-amber-300 to-yellow-500 bg-clip-text text-transparent">
             Karar Ver.
           </span>
         </h1>
@@ -115,13 +127,13 @@ export default function Home() {
           <input
             type="text"
             placeholder="Model veya marka ara..."
-            className="w-full bg-gray-900/50 border border-gray-800 text-white px-8 py-5 rounded-2xl outline-none focus:border-blue-500 transition-all text-lg"
+            className="w-full bg-gray-900/50 border border-gray-800 text-white px-8 py-5 rounded-2xl outline-none focus:border-amber-500 transition-all text-lg"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <button
             type="submit"
-            className="absolute right-3 top-3 bottom-3 bg-blue-600 hover:bg-blue-500 text-white px-6 rounded-xl font-bold transition-all"
+            className="absolute right-3 top-3 bottom-3 bg-amber-500 hover:bg-amber-400 text-black px-6 rounded-xl font-bold transition-all"
           >
             Ara
           </button>
@@ -133,7 +145,7 @@ export default function Home() {
             <Link
               key={cat.id}
               href={`/compare/${cat.link}`}
-              className="group bg-gray-900/40 border border-gray-800 hover:border-blue-500/50 rounded-2xl p-6 transition-all flex flex-col items-center gap-3"
+              className="group bg-gray-900/40 border border-gray-800 hover:border-amber-500/50 rounded-2xl p-6 transition-all flex flex-col items-center gap-3"
             >
               <span className="text-4xl">{cat.icon}</span>
               <div>

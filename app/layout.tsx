@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "RATIO.RUN - Matematiksel Karar Motoru",
   description: "E-ticaret ürünlerini duygusal değil matematiksel olarak karşılaştır.",
   icons: {
-    icon: "/logo.png",
+    icon: "/favicon.png",
     apple: "/logo.png",
   },
   openGraph: {
