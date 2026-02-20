@@ -27,7 +27,6 @@ export default function Home() {
   const [counts, setCounts]         = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading]       = useState(true);
-  const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => { fetchCounts(); }, []);
@@ -141,22 +140,16 @@ export default function Home() {
             <Link
               key={cat.id}
               href={`/compare/${cat.link}`}
+              className="block bg-gray-900/40 border border-gray-800 rounded-2xl p-6 transition-all duration-200 flex flex-col items-center gap-3"
+              onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = `${GOLD}70`; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgb(31 41 55)"; }}
             >
-              <div
-                className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6 transition-all duration-200 flex flex-col items-center gap-3 cursor-pointer"
-                style={{
-                  borderColor: hoveredCat === cat.id ? `${GOLD}70` : "",
-                }}
-                onMouseEnter={() => setHoveredCat(cat.id)}
-                onMouseLeave={() => setHoveredCat(null)}
-              >
-                <span className="text-4xl">{cat.icon}</span>
-                <div>
-                  <h3 className="font-bold text-gray-200">{cat.label}</h3>
-                  <p className="text-xs font-mono mt-1" style={{ color: GOLD_BRIGHT }}>
-                    {loading ? "..." : `${counts[cat.id] ?? 0} Model`}
-                  </p>
-                </div>
+              <span className="text-4xl">{cat.icon}</span>
+              <div>
+                <h3 className="font-bold text-gray-200">{cat.label}</h3>
+                <p className="text-xs font-mono mt-1" style={{ color: GOLD_BRIGHT }}>
+                  {loading ? "..." : `${counts[cat.id] ?? 0} Model`}
+                </p>
               </div>
             </Link>
           ))}
