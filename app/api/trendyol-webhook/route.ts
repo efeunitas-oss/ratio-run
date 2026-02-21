@@ -20,6 +20,7 @@ interface TrendyolProduct {
   listPrice?: number | string;
   images?: string[];
   image?: string;
+  imageUrl?: string;
   url?: string;
   link?: string;
   productUrl?: string;
@@ -99,6 +100,7 @@ function getProductUrl(item: TrendyolProduct): string {
 }
 
 function getImage(item: TrendyolProduct): string | null {
+  if (item.imageUrl) return item.imageUrl;
   if (item.images && item.images.length > 0) return item.images[0];
   return item.image || null;
 }
