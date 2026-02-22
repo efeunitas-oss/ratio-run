@@ -148,19 +148,9 @@ export default function CategoryClient({ category, initialProducts, categorySlug
             ratio<span style={{ color: GOLD_BRIGHT }}>.run</span>
           </span>
         </a>
+
         {selected.length > 0 && !comparison && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 13, color: '#9ca3af' }}>{selected.length}/2 seçildi</span>
-            {selected.length === 2 && (
-              <button onClick={handleCompare} style={{
-                padding: '10px 22px', borderRadius: 10, fontWeight: 700, fontSize: 14,
-                background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`,
-                color: '#000', border: 'none', cursor: 'pointer',
-              }}>
-                Karşılaştır →
-              </button>
-            )}
-          </div>
+          <span style={{ fontSize: 13, color: '#9ca3af' }}>{selected.length}/2 seçildi</span>
         )}
         {comparison && (
           <button onClick={handleRestart} style={{
@@ -220,15 +210,7 @@ export default function CategoryClient({ category, initialProducts, categorySlug
                     <button onClick={() => toggleSelect(p)} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: 0, fontSize: 14 }}>✕</button>
                   </span>
                 ))}
-                {selected.length === 2 && (
-                  <button onClick={handleCompare} style={{
-                    marginLeft: 'auto', padding: '8px 20px', borderRadius: 9, fontWeight: 700, fontSize: 13,
-                    background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`,
-                    color: '#000', border: 'none', cursor: 'pointer',
-                  }}>
-                    Karşılaştır →
-                  </button>
-                )}
+
               </div>
             )}
 
@@ -338,6 +320,26 @@ export default function CategoryClient({ category, initialProducts, categorySlug
                   color: loading ? '#9ca3af' : '#000', border: 'none', cursor: loading ? 'default' : 'pointer',
                 }}>
                   {loading ? 'Yükleniyor...' : 'Daha Fazla Göster'}
+                </button>
+              </div>
+            )}
+
+            {/* Fixed bottom orta buton */}
+            {selected.length === 2 && (
+              <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 99 }}>
+                <button
+                  onClick={handleCompare}
+                  style={{
+                    padding: '14px 36px', borderRadius: 16, fontWeight: 800, fontSize: 16,
+                    background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`,
+                    color: '#000', border: 'none', cursor: 'pointer',
+                    boxShadow: `0 8px 32px ${GOLD}60`,
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  ⚡ Karşılaştır
+                  <span style={{ fontSize: 13, opacity: 0.75, fontWeight: 600 }}>(2 ürün seçildi)</span>
                 </button>
               </div>
             )}
