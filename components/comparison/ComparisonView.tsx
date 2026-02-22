@@ -105,10 +105,10 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
 
         {/* Karar Analizi */}
         <div style={{ marginBottom: 24 }}>
-          <div className="backdrop-blur-xl bg-gradient-to-br from-gray-900/60 to-gray-900/40 border border-gray-800/50 rounded-2xl p-8 shadow-2xl">
+          <div className="backdrop-blur-xl bg-gradient-to-br from-gray-900/60 to-gray-900/40 border border-gray-800/50 rounded-2xl p-4 shadow-2xl">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#C9A227]/15 to-[#C9A227]/5 border border-[#C9A227]/40 flex items-center justify-center">
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <svg className="w-8 h-8 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -116,12 +116,12 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
               </div>
 
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-100 mb-3">Karar Analizi</h2>
-                <p className="text-gray-300 text-lg leading-relaxed mb-4">
+                <h2 style={{ fontSize: 16, fontWeight: 800, color: "#f3f4f6", margin: "0 0 6px" }}>Karar Analizi</h2>
+                <p className="text-gray-300 text-sm leading-relaxed mb-3">
                   {comparison.recommendation}
                 </p>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 20 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 16 }}>
                   <div className="backdrop-blur-sm bg-gray-800/30 rounded-xl p-4 border border-gray-700/50">
                     <div className="text-sm text-gray-500 mb-1">Fark Yüzdesi</div>
                     <div className="text-2xl font-bold text-[#D4AF37]">

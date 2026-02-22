@@ -1,7 +1,7 @@
 // app/compare/all/page.tsx
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { compareProducts } from '@/lib/ratio-engine';
@@ -37,7 +37,7 @@ interface Product {
   avg_price?: number | null;
 }
 
-export default function AllPage() {
+function AllPageInner() {
   const searchParams = useSearchParams();
   const [query, setQuery]         = useState('');
   const [results, setResults]     = useState<Product[]>([]);
@@ -298,5 +298,13 @@ export default function AllPage() {
 
       <style>{`@keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }`}</style>
     </main>
+  );
+}
+
+export default function AllPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#000' }} />}>
+      <AllPageInner />
+    </Suspense>
   );
 }
