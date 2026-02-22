@@ -66,26 +66,20 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
         />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-6">
-        {/* Başlık */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-black mb-2 bg-gradient-to-r from-gray-100 via-gray-300 to-gray-100 bg-clip-text text-transparent">
-            Ratio.Run
-          </h1>
-          <p className="text-gray-500 text-sm">Akıllı Karar Mekanizması</p>
-        </div>
+      <div className="relative z-10 container mx-auto px-3 py-4">
+
 
         {/* VS Alanı */}
         <div className="mb-6">
           <div className="relative">
             {/* VS Rozeti */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 20 }}>
               <div className="relative">
                 <div className="absolute inset-0 animate-ping">
                   <div className="h-full w-full rounded-full bg-gradient-to-r from-[#C9A227] to-[#D4AF37] opacity-30" />
                 </div>
                 <div className="relative backdrop-blur-xl bg-gray-900/80 border-2 border-gray-700 rounded-full w-16 h-16 flex items-center justify-center shadow-2xl">
-                  <span className="text-xl font-black bg-gradient-to-br from-[#D4AF37] to-[#C9A227] bg-clip-text text-transparent">
+                  <span style={{ fontSize: 14, fontWeight: 900, color: "#D4AF37" }}>
                     VS
                   </span>
                 </div>
@@ -93,7 +87,7 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
             </div>
 
             {/* Ürün Kartları */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div className={`transition-all duration-700 ${mounted ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}>
                 <ProductCard
                   product={comparison.product_a}
