@@ -218,7 +218,7 @@ export default function CategoryClient({ category, initialProducts, categorySlug
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(185px, 1fr))', gap: 12 }}>
               {filtered.map(product => {
                 const price = product.avg_price || product.price;
-                const score = product.specifications?.overall_score ?? null;
+
                 const stars = product.specifications?.stars || 0;
                 const sel   = isSelected(product);
 
@@ -260,16 +260,6 @@ export default function CategoryClient({ category, initialProducts, categorySlug
                         />
                       ) : (
                         <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, opacity: 0.08 }}>📦</span>
-                      )}
-                      {score !== null && (
-                        <div style={{
-                          position: 'absolute', top: 8, right: 8,
-                          background: score >= 8 ? '#15803d' : score >= 6 ? '#92400e' : '#374151',
-                          color: '#fff', borderRadius: 8, padding: '2px 7px',
-                          fontSize: 11, fontWeight: 700,
-                        }}>
-                          {score}/10
-                        </div>
                       )}
                     </div>
 

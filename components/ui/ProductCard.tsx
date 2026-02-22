@@ -71,12 +71,12 @@ export function ProductCard({
         hover:bg-gray-900/60 hover:border-gray-700/50
         hover:scale-[1.02] hover:shadow-2xl
         ${onClick ? 'cursor-pointer' : ''}
-        ${isWinner ? 'ring-2 ring-[#C9A227]/50 shadow-[#C9A227]/10 shadow-2xl' : ''}
+        ${isWinner ? 'ring-4 ring-[#C9A227] shadow-2xl' : ''}
         ${className}
       `}
       style={{
         boxShadow: isWinner
-          ? `0 0 40px ${brandColor.glow}, 0 20px 60px rgba(0,0,0,0.4)`
+          ? `0 0 60px rgba(201,162,39,0.5), 0 0 0 2px #C9A227, 0 20px 60px rgba(0,0,0,0.5)`
           : undefined,
       }}
     >
@@ -112,9 +112,9 @@ export function ProductCard({
       )}
 
       {/* Content */}
-      <div className="relative p-4">
+      <div className="relative p-6">
         {/* Görsel */}
-        <div className="relative mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-gray-800/50 to-gray-900/50" style={{ height: 200 }}>
+        <div className="relative aspect-square mb-6 rounded-xl overflow-hidden bg-gradient-to-br from-gray-800/50 to-gray-900/50">
           {status === 'loading' && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-12 h-12 border-4 border-gray-700 border-t-gray-500 rounded-full animate-spin" />
@@ -143,7 +143,7 @@ export function ProductCard({
         </div>
 
         {/* Ürün Adı — line-clamp ile taşmayı önle */}
-        <h3 className="text-sm font-semibold text-gray-100 mb-2 line-clamp-2 leading-tight">
+        <h3 className="text-lg font-semibold text-gray-100 mb-3 line-clamp-2 leading-tight">
           {productName}
         </h3>
 
@@ -171,7 +171,7 @@ export function ProductCard({
         {/* Fiyat & Ratio Skoru */}
         <div className="flex items-end justify-between mb-4">
           <div>
-            <div className="text-xl font-bold text-gray-100">
+            <div className="text-3xl font-bold text-gray-100">
               {currencySymbol}
               {(product.price ?? 0).toLocaleString('tr-TR', {
                 minimumFractionDigits: 2,
@@ -202,6 +202,30 @@ export function ProductCard({
             {valueBadge.text}
           </div>
         )}
+
+        {/* Satın Al Butonu */}
+        {(() => {
+          const pAny = product as any;
+          const url = Array.isArray(pAny.sources) && pAny.sources.length > 0
+            ? pAny.sources[0].url
+            : pAny.source_url ?? null;
+          if (!url) return null;
+          return (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              onClick={e => e.stopPropagation()}
+              className="mt-4 block w-full text-center py-2.5 rounded-xl text-xs font-bold transition-all"
+              style={isWinner
+                ? { background: 'linear-gradient(135deg, #D4AF37, #C9A227)', color: '#000' }
+                : { background: 'rgba(255,255,255,0.05)', color: '#C9A227', border: '1px solid rgba(201,162,39,0.3)' }
+              }
+            >
+              {isWinner ? '🛒 Satın Al →' : 'Fiyata Bak →'}
+            </a>
+          );
+        })()}
       </div>
 
       {/* Hover Kenarlık Efekti */}
