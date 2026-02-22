@@ -22,9 +22,13 @@ import Image from 'next/image';
 
 // ─── Tipler ──────────────────────────────────────────────────────────────────
 interface CategoryClientProps {
-  products: Product[];
-  categorySlug: string;
-  categoryName: string;
+  // page.tsx'in farklı versiyonlarıyla uyumlu
+  products?: Product[];
+  initialProducts?: Product[];
+  categorySlug?: string;
+  slug?: string;
+  categoryName?: string;
+  category?: { id: string; name: string; slug: string };
 }
 
 // ─── Para birimi formatlayıcı ─────────────────────────────────────────────────
@@ -411,10 +415,17 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
 
 // ─── ANA BİLEŞEN ─────────────────────────────────────────────────────────────
 export default function CategoryClient({
-  products,
-  categorySlug,
-  categoryName,
+  products: productsProp,
+  initialProducts,
+  categorySlug: categorySlugProp,
+  slug,
+  categoryName: categoryNameProp,
+  category,
 }: CategoryClientProps) {
+  // Hangi prop formatı kullanılıyorsa normalize et
+  const products: Product[] = productsProp ?? initialProducts ?? [];
+  const categorySlug: string = categorySlugProp ?? slug ?? category?.slug ?? '';
+  const categoryName: string = categoryNameProp ?? category?.name ?? categorySlug;
   const searchParams = useSearchParams();
   const router = useRouter();
 
