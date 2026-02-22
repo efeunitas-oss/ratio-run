@@ -1,7 +1,8 @@
 // app/compare/[category]/CategoryClient.tsx
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { compareProducts } from '@/lib/ratio-engine';
 import { ComparisonView } from '@/components/comparison/ComparisonView';
@@ -54,6 +55,8 @@ function formatName(name: string, brand: string): string {
 }
 
 export default function CategoryClient({ category, initialProducts, categorySlug }: Props) {
+  const searchParams = useSearchParams();
+
   const [products, setProducts]       = useState<Product[]>(initialProducts);
   const [selected, setSelected]       = useState<Product[]>([]);
   const [comparison, setComparison]   = useState<any>(null);
@@ -68,7 +71,14 @@ export default function CategoryClient({ category, initialProducts, categorySlug
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  // Ürün seçimi
+  // Global aramadan ?productA= gelince otomatik seç
+  useEffect(() => {
+    const pAid = searchParams.get('productA');
+    if (!pAid) return;
+    const found = products.find(p => p.id === pAid);
+    if (found) setSelected([found]);
+  }, [searchParams, products]);
+
   const toggleSelect = useCallback((product: Product) => {
     setComparison(null);
     setSelected(prev => {
@@ -79,7 +89,6 @@ export default function CategoryClient({ category, initialProducts, categorySlug
     });
   }, []);
 
-  // Karşılaştır butonu
   const handleCompare = useCallback(() => {
     if (selected.length !== 2) return;
     const result = compareProducts(selected[0] as any, selected[1] as any, categorySlug);
@@ -89,7 +98,6 @@ export default function CategoryClient({ category, initialProducts, categorySlug
     }, 100);
   }, [selected, categorySlug]);
 
-  // Daha fazla yükle
   const loadMore = useCallback(async () => {
     if (loading) return;
     setLoading(true);
@@ -109,7 +117,6 @@ export default function CategoryClient({ category, initialProducts, categorySlug
     setLoading(false);
   }, [loading, page, category.id]);
 
-  // Filtrele + sırala
   const filtered = products
     .filter(p => {
       if (!search) return true;
@@ -139,21 +146,15 @@ export default function CategoryClient({ category, initialProducts, categorySlug
             ratio<span style={{ color: GOLD_BRIGHT }}>.run</span>
           </span>
         </a>
-        {/* Karşılaştır butonu */}
         {selected.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 13, color: '#9ca3af' }}>
-              {selected.length}/2 seçildi
-            </span>
+            <span style={{ fontSize: 13, color: '#9ca3af' }}>{selected.length}/2 seçildi</span>
             {selected.length === 2 && (
-              <button
-                onClick={handleCompare}
-                style={{
-                  padding: '10px 22px', borderRadius: 10, fontWeight: 700, fontSize: 14,
-                  background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`,
-                  color: '#000', border: 'none', cursor: 'pointer',
-                }}
-              >
+              <button onClick={handleCompare} style={{
+                padding: '10px 22px', borderRadius: 10, fontWeight: 700, fontSize: 14,
+                background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`,
+                color: '#000', border: 'none', cursor: 'pointer',
+              }}>
                 Karşılaştır →
               </button>
             )}
@@ -249,7 +250,6 @@ export default function CategoryClient({ category, initialProducts, categorySlug
                 onMouseEnter={e => { if (!sel) (e.currentTarget as HTMLDivElement).style.borderColor = `${GOLD}60`; }}
                 onMouseLeave={e => { if (!sel) (e.currentTarget as HTMLDivElement).style.borderColor = '#1F2937'; }}
               >
-                {/* Seçildi rozeti */}
                 {sel && (
                   <div style={{
                     position: 'absolute', top: 8, left: 8, zIndex: 10,
@@ -260,7 +260,6 @@ export default function CategoryClient({ category, initialProducts, categorySlug
                   </div>
                 )}
 
-                {/* Görsel */}
                 <div style={{ background: '#0d0d0d', position: 'relative', paddingBottom: '80%' }}>
                   {product.image_url ? (
                     <img
@@ -285,7 +284,6 @@ export default function CategoryClient({ category, initialProducts, categorySlug
                   )}
                 </div>
 
-                {/* Bilgi */}
                 <div style={{ padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
                   <p style={{ fontSize: 12, fontWeight: 600, color: '#e5e7eb', lineHeight: 1.4, margin: 0 }}>
                     {formatName(product.name, product.brand)}
@@ -325,7 +323,6 @@ export default function CategoryClient({ category, initialProducts, categorySlug
           })}
         </div>
 
-        {/* Daha fazla */}
         {hasMore && (
           <div style={{ textAlign: 'center', marginTop: 32 }}>
             <button onClick={loadMore} disabled={loading} style={{
@@ -345,7 +342,6 @@ export default function CategoryClient({ category, initialProducts, categorySlug
           </div>
         )}
 
-        {/* Karşılaştırma Sonucu */}
         {comparison && (
           <div id="comparison-result" style={{ marginTop: 48 }}>
             <ComparisonView comparison={comparison} categorySlug={categorySlug} />
