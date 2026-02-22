@@ -158,14 +158,14 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
         {/* Detaylı Puan Dağılımı */}
         <div style={{ marginTop: 32 }}>
           <details className="backdrop-blur-xl bg-gray-900/40 border border-gray-800/50 rounded-2xl overflow-hidden">
-            <summary className="cursor-pointer p-6 hover:bg-gray-800/30 transition-colors">
-              <span className="text-xl font-bold text-gray-100">Detaylı Puan Dağılımı</span>
+            <summary style={{ cursor: "pointer", padding: "12px 16px" }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#f3f4f6" }}>Detaylı Puan Dağılımı</span>
             </summary>
-            <div className="p-6 border-t border-gray-800/50">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+            <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(55,65,81,0.3)" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {/* Ürün A */}
                 <div>
-                  <h3 className="text-lg font-semibold text-[#D4AF37] mb-4">
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: "#D4AF37", marginBottom: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {shortName(comparison.product_a.name)}
                   </h3>
                   <ScoreBreakdown scores={comparison.ratio_a.breakdown.individual_scores} color="gold" />
@@ -177,7 +177,7 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
 
                 {/* Ürün B */}
                 <div>
-                  <h3 className="text-lg font-semibold text-[#D4AF37] mb-4">
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: "#D4AF37", marginBottom: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {shortName(comparison.product_b.name)}
                   </h3>
                   <ScoreBreakdown scores={comparison.ratio_b.breakdown.individual_scores} color="gold" />
@@ -206,20 +206,20 @@ function ScoreBreakdown({
   const barColor = 'from-[#C9A227] to-[#D4AF37]';
 
   return (
-    <div className="space-y-3 mb-4">
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
       {Object.entries(scores).map(([key, value]) => (
-        <div key={key} className="flex items-center justify-between">
-          <span className="text-gray-400 capitalize text-sm">
+        <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+          <span style={{ fontSize: 10, color: "#6b7280", textTransform: "capitalize", whiteSpace: "nowrap", minWidth: 0 }}>
             {key.replace(/_/g, ' ')}
           </span>
-          <div className="flex items-center gap-3">
-            <div className="w-32 h-2 bg-gray-800 rounded-full overflow-hidden">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 0 }}>
+            <div style={{ flex: 1, height: 6, background: "#1f2937", borderRadius: 4, overflow: "hidden", minWidth: 0 }}>
               <div
                 className={`h-full bg-gradient-to-r ${barColor} rounded-full`}
                 style={{ width: `${Math.min(value, 100)}%` }}
               />
             </div>
-            <span className="text-gray-300 font-mono w-12 text-right text-sm">
+            <span style={{ fontSize: 11, color: "#d1d5db", fontFamily: "monospace", textAlign: "right", flexShrink: 0 }}>
               {value.toFixed(1)}
             </span>
           </div>
