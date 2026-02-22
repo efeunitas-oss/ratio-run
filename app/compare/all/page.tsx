@@ -1,181 +1,223 @@
-// app/compare/all/page.tsx — Global arama sayfası
+'use client';
+
+// ============================================================================
+// RATIO.RUN — GLOBAL ARAMA SAYFASI
+// Dosya: app/compare/all/page.tsx
+//
+// DEĞİŞİKLİK:
+//   • Ürüne tıklayınca artık kategori sayfasına körce gitmiyor
+//   • → /compare/[category]?productA=[id] ile gidiyor
+//   • CategoryClient bu param'ı görünce ürünü otomatik seçiyor
+//   • Böylece kullanıcı direkt "2. ürünü seç" adımında başlıyor
+// ============================================================================
+
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 
-export const revalidate = 0;
+// ─── Slug eşleştirici ────────────────────────────────────────────────────────
+const DB_SLUG_TO_URL: Record<string, string> = {
+  'telefon':       'telefon',
+  'laptop':        'laptop',
+  'tablet':        'tablet',
+  'saat':          'saat',
+  'kulaklik':      'kulaklik',
+  'robot-supurge': 'robot-supurge',
+  'tv':            'tv',
+  'otomobil':      'araba',
+};
 
-const GOLD        = '#C9A227';
-const GOLD_BRIGHT = '#D4AF37';
-
-const NOISE_WORDS = [
-  'Android Akıllı Telefon','Akıllı Telefon','Cep Telefonu',
-  'Akıllı Saat','Spor Saati','Dizüstü Bilgisayar','Bilgisayar',
-  'Laptop','Notebook','Robot Süpürge','Kablosuz Kulaklık',
-  'Akıllı TV','Smart TV','Televizyon','Tablet Bilgisayar',
-  'Türkiye Garantili','TR Garantili','Türkiye Garanti',
-  'Siyah','Beyaz','Gri','Mavi','Kırmızı','Altın','Gümüş',
-];
-
-function formatName(name: string, brand: string): string {
-  if (!name) return brand || 'Ürün';
-  let s = name.trim();
-  s = s.split(',')[0].trim();
-  s = s.split(' | ')[0].trim();
-  for (const word of NOISE_WORDS) {
-    s = s.replace(new RegExp(`\\s*\\b${word}\\b\\s*`, 'gi'), ' ').trim();
-  }
-  s = s.replace(/\s+/g, ' ').replace(/[,.\-–—]+$/, '').trim();
-  if (brand?.length > 1 && !s.toLowerCase().startsWith(brand.toLowerCase())) {
-    s = `${brand} ${s}`;
-  }
-  return s.length > 50 ? s.substring(0, 47) + '...' : s;
-}
-
-type Props = { searchParams: Promise<{ search?: string }> };
-
-export default async function SearchPage({ searchParams }: Props) {
-  const { search: q = '' } = await searchParams;
-  const searchQuery = q.trim();
+// ─── Server: arama yap ───────────────────────────────────────────────────────
+async function searchProducts(query: string) {
+  if (!query || query.length < 2) return [];
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 
-  let products: any[] = [];
-  if (searchQuery.length > 1) {
-    const { data } = await supabase
-      .from('products')
-      .select('id, name, brand, price, avg_price, image_url, source_url, specifications, categories(slug)')
-      .eq('is_active', true)
-      .or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%`)
-      .order('price', { ascending: true, nullsFirst: false })
-      .limit(96);
-    products = data || [];
-  }
+  const { data: products, error } = await supabase
+    .from('products')
+    .select('id, name, brand, price, currency, image_url, source_name, category_id')
+    .or(`name.ilike.%${query}%,brand.ilike.%${query}%,model.ilike.%${query}%`)
+    .eq('is_active', true)
+    .order('price', { ascending: true })
+    .limit(40);
+
+  if (error || !products) return [];
+
+  // category_id → slug için categories çek
+  const catIds = [...new Set(products.map((p: any) => p.category_id))];
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('id, slug')
+    .in('id', catIds);
+
+  const idToSlug: Record<string, string> = {};
+  (categories ?? []).forEach((c: any) => {
+    idToSlug[c.id] = DB_SLUG_TO_URL[c.slug] ?? c.slug;
+  });
+
+  return products.map((p: any) => ({
+    ...p,
+    categorySlug: idToSlug[p.category_id] ?? 'all',
+  }));
+}
+
+// ─── Sayfa (Server Component) ─────────────────────────────────────────────────
+export default async function AllPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string }>;
+}) {
+  const { search } = await searchParams;
+  const query = search?.trim() ?? '';
+  const results = query ? await searchProducts(query) : [];
 
   return (
-    <main style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-
+    <main className="min-h-screen bg-black text-white">
       {/* Nav */}
-      <nav style={{ borderBottom: `1px solid ${GOLD}35`, padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(12px)', zIndex: 50 }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/logo.png" alt="Ratio.Run" style={{ height: 36, width: 'auto' }} />
-          <span style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>
-            ratio<span style={{ color: GOLD_BRIGHT }}>.run</span>
-          </span>
-        </a>
+      <nav className="border-b border-[#C9A227]/15 px-6 py-4 sticky top-0 z-50 bg-black/90 backdrop-blur">
+        <Link
+          href="/"
+          className="text-xl font-black tracking-tighter"
+        >
+          RATIO<span style={{ color: '#C9A227' }}>.RUN</span>
+        </Link>
       </nav>
 
-      <div style={{ maxWidth: 1152, margin: '0 auto', padding: '32px 20px' }}>
-
+      <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Arama kutusu */}
-        <form action="/compare/all" method="GET" style={{ marginBottom: 32, position: 'relative', maxWidth: 600 }}>
-          <input
-            type="text"
-            name="search"
-            defaultValue={searchQuery}
-            placeholder="Model veya marka ara..."
-            autoFocus
-            style={{
-              width: '100%', boxSizing: 'border-box',
-              background: 'rgba(17,24,39,0.6)', border: `1px solid ${GOLD}60`,
-              color: '#fff', padding: '16px 120px 16px 20px',
-              borderRadius: 14, fontSize: 16, outline: 'none',
-            }}
-          />
-          <button type="submit" style={{
-            position: 'absolute', right: 8, top: 8, bottom: 8,
-            padding: '0 20px', borderRadius: 10, fontWeight: 700,
-            background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`,
-            color: '#000', border: 'none', cursor: 'pointer',
-          }}>
-            Ara
-          </button>
+        <form action="/compare/all" method="GET" className="mb-8">
+          <div className="relative max-w-2xl">
+            <input
+              name="search"
+              type="text"
+              defaultValue={query}
+              placeholder="Marka veya model ara... (örn: Samsung S25, Asus Vivobook)"
+              autoFocus
+              className="w-full bg-[#0D0D0D] border text-white px-5 py-4 pr-28 rounded-2xl text-sm outline-none transition-all"
+              style={{ borderColor: query ? '#C9A22760' : '#1a1a1a' }}
+            />
+            <button
+              type="submit"
+              className="absolute right-2 top-2 bottom-2 px-5 rounded-xl font-bold text-black text-sm"
+              style={{ background: 'linear-gradient(135deg, #C9A227, #D4AF37)' }}
+            >
+              Ara
+            </button>
+          </div>
         </form>
 
-        {/* Başlık */}
-        {searchQuery && (
-          <div style={{ marginBottom: 24 }}>
-            <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>
-              &ldquo;{searchQuery}&rdquo; için sonuçlar
-            </h1>
-            <p style={{ color: '#9ca3af', fontSize: 14 }}>
-              {products.length} ürün bulundu
+        {/* Sonuçlar */}
+        {query ? (
+          <>
+            <p className="text-sm text-gray-600 mb-6 font-mono">
+              "{query}" için <span className="text-white">{results.length}</span> ürün bulundu
             </p>
-          </div>
-        )}
 
-        {/* Sonuç yok */}
-        {searchQuery && products.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '80px 0' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Sonuç bulunamadı</h2>
-            <p style={{ color: '#9ca3af' }}>&ldquo;{searchQuery}&rdquo; için ürün bulunamadı</p>
-            <a href="/" style={{ display: 'inline-block', marginTop: 24, padding: '12px 28px', borderRadius: 12, fontWeight: 700, background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`, color: '#000', textDecoration: 'none' }}>
-              Ana Sayfaya Dön
-            </a>
-          </div>
-        )}
+            {results.length === 0 ? (
+              <div className="text-center py-20 text-gray-700">
+                <p className="text-lg mb-2">Sonuç bulunamadı</p>
+                <p className="text-sm">Farklı bir marka veya model adı dene</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {results.map((product: any) => (
+                  // Link: /compare/[category]?productA=[id]
+                  // CategoryClient bu param'ı görünce ürünü otomatik seçer
+                  <Link
+                    key={product.id}
+                    href={`/compare/${product.categorySlug}?productA=${product.id}`}
+                    className="group bg-[#0D0D0D] rounded-xl overflow-hidden transition-all hover:scale-[1.02]"
+                    style={{ border: '1px solid #1a1a1a' }}
+                  >
+                    {/* Görsel */}
+                    <div className="aspect-square bg-black flex items-center justify-center overflow-hidden p-3">
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <span className="text-3xl opacity-10">📦</span>
+                      )}
+                    </div>
 
-        {/* Arama yapılmadı */}
-        {!searchQuery && (
-          <div style={{ textAlign: 'center', padding: '80px 0' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-            <h2 style={{ fontSize: 20, fontWeight: 700 }}>Ne aramak istiyorsunuz?</h2>
-            <p style={{ color: '#9ca3af', marginTop: 8 }}>Marka veya model adı yazın</p>
-          </div>
-        )}
+                    {/* İçerik */}
+                    <div className="p-3">
+                      {/* Kategori etiketi */}
+                      <span
+                        className="text-xs font-mono uppercase tracking-wider"
+                        style={{ color: '#C9A22770' }}
+                      >
+                        {product.categorySlug}
+                      </span>
 
-        {/* Ürün Grid */}
-        {products.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
-            {products.map((product) => {
-              const price = product.avg_price || product.price;
-              const rating = product.specifications?.stars || 0;
-              const catSlug = (product.categories as any)?.slug || '';
+                      {/* İsim */}
+                      <p className="text-white text-xs font-medium leading-tight line-clamp-2 mt-1 mb-2">
+                        {product.name}
+                      </p>
 
-              return (
+                      {/* Fiyat */}
+                      <p className="font-bold text-sm" style={{ color: '#C9A227' }}>
+                        {product.price
+                          ? new Intl.NumberFormat('tr-TR', {
+                              style: 'currency',
+                              currency: product.currency === 'TRY' ? 'TRY' : 'USD',
+                              maximumFractionDigits: 2,
+                            }).format(product.price)
+                          : '—'
+                        }
+                      </p>
+
+                      {/* CTA */}
+                      <div
+                        className="mt-2 w-full text-center py-1.5 rounded-lg text-xs font-bold transition-all"
+                        style={{ background: '#C9A22715', color: '#C9A227', border: '1px solid #C9A22730' }}
+                      >
+                        Karşılaştırmaya Ekle →
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          // Boş durum — kategori linkleri göster
+          <div className="text-center py-20">
+            <p className="text-gray-600 text-sm mb-8 font-mono uppercase tracking-widest">
+              Kategori seç veya model ara
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {[
+                { slug: 'telefon', label: 'Akıllı Telefon', icon: '📱' },
+                { slug: 'laptop',  label: 'Laptop',          icon: '💻' },
+                { slug: 'tablet',  label: 'Tablet',           icon: '📲' },
+                { slug: 'saat',    label: 'Akıllı Saat',     icon: '⌚' },
+                { slug: 'kulaklik',label: 'Kulaklık',        icon: '🎧' },
+                { slug: 'robot-supurge', label: 'Robot Süpürge', icon: '🤖' },
+                { slug: 'tv',      label: 'TV',               icon: '📺' },
+                { slug: 'araba',   label: 'Otomobil',         icon: '🚗' },
+              ].map((cat) => (
                 <Link
-                  key={product.id}
-                  href={`/compare/${catSlug}`}
+                  key={cat.slug}
+                  href={`/compare/${cat.slug}`}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
                   style={{
-                    display: 'flex', flexDirection: 'column',
-                    background: 'rgba(17,24,39,0.5)', border: '1px solid #1F2937',
-                    borderRadius: 16, overflow: 'hidden', textDecoration: 'none',
-                    transition: 'border-color 0.15s',
+                    background: '#0D0D0D',
+                    border: '1px solid #1a1a1a',
+                    color: '#888',
                   }}
                 >
-                  <div style={{ background: '#0d0d0d', position: 'relative', paddingBottom: '85%' }}>
-                    {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        loading="lazy"
-                        referrerPolicy="no-referrer"
-                        onError={undefined}
-                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: 8 }}
-                      />
-                    ) : (
-                      <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, opacity: 0.1 }}>📦</span>
-                    )}
-                  </div>
-                  <div style={{ padding: 12, flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={{ fontSize: 12, fontWeight: 600, color: '#e5e7eb', lineHeight: 1.4, margin: 0 }}>
-                      {formatName(product.name, product.brand)}
-                    </p>
-                    {rating > 0 && (
-                      <span style={{ fontSize: 11, color: GOLD_BRIGHT }}>
-                        {'★'.repeat(Math.min(Math.round(rating), 5))} {rating.toFixed(1)}
-                      </span>
-                    )}
-                    <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', margin: 0, marginTop: 'auto' }}>
-                      {price ? `₺${price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` : <span style={{ color: '#6b7280', fontSize: 11 }}>Fiyat güncelleniyor</span>}
-                    </p>
-                  </div>
+                  <span>{cat.icon}</span>
+                  {cat.label}
                 </Link>
-              );
-            })}
+              ))}
+            </div>
           </div>
         )}
       </div>
