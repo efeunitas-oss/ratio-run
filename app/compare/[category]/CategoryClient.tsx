@@ -1,7 +1,7 @@
 // app/compare/[category]/CategoryClient.tsx
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { compareProducts } from '@/lib/ratio-engine';
@@ -55,7 +55,8 @@ function formatName(name: string, brand: string): string {
 }
 
 export default function CategoryClient({ category, initialProducts, categorySlug }: Props) {
-  const searchParams = useSearchParams();
+  const searchParams   = useSearchParams();
+  const comparisonRef  = useRef<HTMLDivElement>(null);
 
   const [products, setProducts]       = useState<Product[]>(initialProducts);
   const [selected, setSelected]       = useState<Product[]>([]);
@@ -64,7 +65,6 @@ export default function CategoryClient({ category, initialProducts, categorySlug
   const [search, setSearch]           = useState('');
   const [page, setPage]               = useState(1);
   const [hasMore, setHasMore]         = useState(initialProducts.length === 48);
-  const [sortBy, setSortBy]           = useState<'price' | 'rating' | 'score'>('price');
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -93,9 +93,10 @@ export default function CategoryClient({ category, initialProducts, categorySlug
     if (selected.length !== 2) return;
     const result = compareProducts(selected[0] as any, selected[1] as any, categorySlug);
     setComparison(result);
+    // Grid'in üstüne scroll — aşağıya değil
     setTimeout(() => {
-      document.getElementById('comparison-result')?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+      comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   }, [selected, categorySlug]);
 
   const loadMore = useCallback(async () => {
@@ -117,6 +118,7 @@ export default function CategoryClient({ category, initialProducts, categorySlug
     setLoading(false);
   }, [loading, page, category.id]);
 
+  // Fiyata göre sırala (default, buton yok)
   const filtered = products
     .filter(p => {
       if (!search) return true;
@@ -124,13 +126,9 @@ export default function CategoryClient({ category, initialProducts, categorySlug
       return p.name?.toLowerCase().includes(q) || p.brand?.toLowerCase().includes(q);
     })
     .sort((a, b) => {
-      if (sortBy === 'price') {
-        const pa = a.avg_price || a.price || 999999;
-        const pb = b.avg_price || b.price || 999999;
-        return pa - pb;
-      }
-      if (sortBy === 'rating') return (b.specifications?.stars || 0) - (a.specifications?.stars || 0);
-      return (b.specifications?.overall_score || 0) - (a.specifications?.overall_score || 0);
+      const pa = a.avg_price || a.price || 999999;
+      const pb = b.avg_price || b.price || 999999;
+      return pa - pb;
     });
 
   const isSelected = (p: Product) => !!selected.find(s => s.id === p.id);
@@ -164,7 +162,7 @@ export default function CategoryClient({ category, initialProducts, categorySlug
 
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 16px' }}>
 
-        {/* Başlık + Filtreler */}
+        {/* Başlık + Arama (Fiyat/Puan/Ratio butonları kaldırıldı) */}
         <div style={{ marginBottom: 24, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0 }}>{category.name}</h1>
@@ -172,29 +170,17 @@ export default function CategoryClient({ category, initialProducts, categorySlug
               {filtered.length} ürün · <span style={{ color: GOLD_BRIGHT }}>2 ürün seç, karşılaştır</span>
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input
-              type="text"
-              placeholder="Bu kategoride ara..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{
-                background: '#111827', border: `1px solid ${GOLD}50`,
-                color: '#fff', padding: '9px 14px', borderRadius: 10,
-                fontSize: 13, outline: 'none', width: 210,
-              }}
-            />
-            {(['price', 'rating', 'score'] as const).map(s => (
-              <button key={s} onClick={() => setSortBy(s)} style={{
-                padding: '9px 14px', borderRadius: 10, fontSize: 12, fontWeight: 600,
-                cursor: 'pointer', border: 'none',
-                background: sortBy === s ? `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})` : '#111827',
-                color: sortBy === s ? '#000' : '#9ca3af',
-              }}>
-                {s === 'price' ? 'Fiyat' : s === 'rating' ? 'Puan' : 'Ratio'}
-              </button>
-            ))}
-          </div>
+          <input
+            type="text"
+            placeholder="Bu kategoride ara..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              background: '#111827', border: `1px solid ${GOLD}50`,
+              color: '#fff', padding: '9px 14px', borderRadius: 10,
+              fontSize: 13, outline: 'none', width: 240,
+            }}
+          />
         </div>
 
         {/* Seçili ürünler bar */}
@@ -225,6 +211,15 @@ export default function CategoryClient({ category, initialProducts, categorySlug
             )}
           </div>
         )}
+
+        {/* Karşılaştırma sonucu — grid'in üstünde açılır */}
+        <div ref={comparisonRef}>
+          {comparison && (
+            <div style={{ marginBottom: 32 }}>
+              <ComparisonView comparison={comparison} categorySlug={categorySlug} />
+            </div>
+          )}
+        </div>
 
         {/* Ürün Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(185px, 1fr))', gap: 12 }}>
@@ -339,12 +334,6 @@ export default function CategoryClient({ category, initialProducts, categorySlug
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#6b7280' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
             <p>&ldquo;{search}&rdquo; için sonuç bulunamadı</p>
-          </div>
-        )}
-
-        {comparison && (
-          <div id="comparison-result" style={{ marginTop: 48 }}>
-            <ComparisonView comparison={comparison} categorySlug={categorySlug} />
           </div>
         )}
       </div>
