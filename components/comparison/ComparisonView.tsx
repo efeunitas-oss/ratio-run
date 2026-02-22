@@ -68,7 +68,7 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
             <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 20 }}>
               <div className="relative">
 
-                <div className="relative backdrop-blur-xl bg-gray-900/80 border-2 border-gray-700 rounded-full w-16 h-16 flex items-center justify-center shadow-2xl">
+                <div style={{ background: "rgba(17,24,39,0.95)", border: "1px solid #4b5563", borderRadius: "50%", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <span style={{ fontSize: 10, fontWeight: 900, color: "#D4AF37" }}>
                     VS
                   </span>
@@ -119,22 +119,22 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
                   {comparison.recommendation}
                 </p>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 16 }}>
-                  <div className="backdrop-blur-sm bg-gray-800/30 rounded-xl p-4 border border-gray-700/50">
-                    <div className="text-sm text-gray-500 mb-1">Fark Yüzdesi</div>
-                    <div className="text-2xl font-bold text-[#D4AF37]">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginTop: 12, maxWidth: "85%", marginLeft: "auto", marginRight: "auto" }}>
+                  <div style={{ background: "rgba(55,65,81,0.25)", borderRadius: 10, padding: "8px 10px", border: "1px solid rgba(75,85,99,0.4)", textAlign: "center" }}>
+                    <div style={{ fontSize: 9, color: "#6b7280", marginBottom: 3, lineHeight: 1.2 }}>Fark Yüzdesi</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#D4AF37" }}>
                       %{comparison.advantage_percentage.toFixed(1)}
                     </div>
                   </div>
-                  <div className="backdrop-blur-sm bg-gray-800/30 rounded-xl p-4 border border-gray-700/50">
-                    <div className="text-sm text-gray-500 mb-1">Ürün A Ratio</div>
-                    <div className="text-2xl font-bold text-gray-100">
+                  <div style={{ background: "rgba(55,65,81,0.25)", borderRadius: 10, padding: "8px 10px", border: "1px solid rgba(75,85,99,0.4)", textAlign: "center" }}>
+                    <div style={{ fontSize: 9, color: "#6b7280", marginBottom: 3, lineHeight: 1.2 }}>Ürün A Ratio</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#f3f4f6" }}>
                       {comparison.ratio_a.normalized_score.toFixed(1)}
                     </div>
                   </div>
-                  <div className="backdrop-blur-sm bg-gray-800/30 rounded-xl p-4 border border-gray-700/50">
-                    <div className="text-sm text-gray-500 mb-1">Ürün B Ratio</div>
-                    <div className="text-2xl font-bold text-gray-100">
+                  <div style={{ background: "rgba(55,65,81,0.25)", borderRadius: 10, padding: "8px 10px", border: "1px solid rgba(75,85,99,0.4)", textAlign: "center" }}>
+                    <div style={{ fontSize: 9, color: "#6b7280", marginBottom: 3, lineHeight: 1.2 }}>Ürün B Ratio</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#f3f4f6" }}>
                       {comparison.ratio_b.normalized_score.toFixed(1)}
                     </div>
                   </div>
