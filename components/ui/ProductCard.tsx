@@ -60,6 +60,7 @@ export function ProductCard({
         cursor: onClick ? 'pointer' : 'default',
         display: 'flex',
         flexDirection: 'column',
+        height: '100%',
       }}
     >
       {/* Kazanan rozeti */}

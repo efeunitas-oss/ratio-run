@@ -12,7 +12,7 @@ import { RatioComparisonResult } from '@/lib/types';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { TechSpecsTable } from '@/components/ui/TechSpecsTable';
 import { extractBrand, getSpecConfig } from '@/lib/spec-config';
-import { useEffect, useState } from 'react';
+
 
 interface ComparisonViewProps {
   comparison: RatioComparisonResult;
@@ -20,7 +20,6 @@ interface ComparisonViewProps {
 }
 
 export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps) {
-  const [mounted, setMounted] = useState(false);
 
   // ── Marka tespiti: name kullan, title değil ───────────────────────────────
   const brandA = extractBrand(comparison.product_a.name);
@@ -38,9 +37,6 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
     accent: '#FFFFFF',
   };
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // ── Kısa başlık yardımcısı — null-safe ───────────────────────────────────
   const shortName = (name: string | null | undefined, wordCount = 5) => {
@@ -53,15 +49,11 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
       {/* Animasyonlu arka plan gradyanları */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div
-          className={`absolute top-0 left-0 w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 transition-all duration-1000 ${
-            mounted ? 'scale-100' : 'scale-0'
-          }`}
+          className="absolute top-0 left-0 w-[600px] h-[600px] rounded-full blur-[120px] opacity-20"
           style={{ background: `radial-gradient(circle, ${colorA.primary}, transparent 70%)` }}
         />
         <div
-          className={`absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 transition-all duration-1000 delay-300 ${
-            mounted ? 'scale-100' : 'scale-0'
-          }`}
+          className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-[120px] opacity-20"
           style={{ background: `radial-gradient(circle, ${colorB.primary}, transparent 70%)` }}
         />
       </div>
@@ -87,8 +79,8 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
             </div>
 
             {/* Ürün Kartları */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div className={`transition-all duration-700 ${mounted ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "stretch" }}>
+              <div>
                 <ProductCard
                   product={comparison.product_a}
                   ratioScore={comparison.ratio_a}
@@ -98,7 +90,7 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
                 />
               </div>
 
-              <div className={`transition-all duration-700 delay-200 ${mounted ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
+              <div>
                 <ProductCard
                   product={comparison.product_b}
                   ratioScore={comparison.ratio_b}
@@ -112,7 +104,7 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
         </div>
 
         {/* Karar Analizi */}
-        <div className={`mb-6 transition-all duration-700 delay-500 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+        <div style={{ marginBottom: 24 }}>
           <div className="backdrop-blur-xl bg-gradient-to-br from-gray-900/60 to-gray-900/40 border border-gray-800/50 rounded-2xl p-8 shadow-2xl">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0">
@@ -129,7 +121,7 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
                   {comparison.recommendation}
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 20 }}>
                   <div className="backdrop-blur-sm bg-gray-800/30 rounded-xl p-4 border border-gray-700/50">
                     <div className="text-sm text-gray-500 mb-1">Fark Yüzdesi</div>
                     <div className="text-2xl font-bold text-[#D4AF37]">
@@ -155,7 +147,7 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
         </div>
 
         {/* Teknik Özellikler Tablosu */}
-        <div className={`transition-all duration-700 delay-700 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+        <div>
           <TechSpecsTable
             productA={comparison.product_a}
             productB={comparison.product_b}
@@ -164,13 +156,13 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
         </div>
 
         {/* Detaylı Puan Dağılımı */}
-        <div className={`mt-12 transition-all duration-700 delay-900 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+        <div style={{ marginTop: 32 }}>
           <details className="backdrop-blur-xl bg-gray-900/40 border border-gray-800/50 rounded-2xl overflow-hidden">
             <summary className="cursor-pointer p-6 hover:bg-gray-800/30 transition-colors">
               <span className="text-xl font-bold text-gray-100">Detaylı Puan Dağılımı</span>
             </summary>
             <div className="p-6 border-t border-gray-800/50">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
                 {/* Ürün A */}
                 <div>
                   <h3 className="text-lg font-semibold text-[#D4AF37] mb-4">
