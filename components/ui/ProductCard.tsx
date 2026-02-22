@@ -112,9 +112,9 @@ export function ProductCard({
       )}
 
       {/* Content */}
-      <div className="relative p-6">
+      <div className="relative p-4">
         {/* Görsel */}
-        <div className="relative aspect-square mb-6 rounded-xl overflow-hidden bg-gradient-to-br from-gray-800/50 to-gray-900/50">
+        <div className="relative mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-gray-800/50 to-gray-900/50" style={{ height: 200 }}>
           {status === 'loading' && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-12 h-12 border-4 border-gray-700 border-t-gray-500 rounded-full animate-spin" />
@@ -143,7 +143,7 @@ export function ProductCard({
         </div>
 
         {/* Ürün Adı — line-clamp ile taşmayı önle */}
-        <h3 className="text-lg font-semibold text-gray-100 mb-3 line-clamp-2 leading-tight">
+        <h3 className="text-sm font-semibold text-gray-100 mb-2 line-clamp-2 leading-tight">
           {productName}
         </h3>
 
@@ -171,7 +171,7 @@ export function ProductCard({
         {/* Fiyat & Ratio Skoru */}
         <div className="flex items-end justify-between mb-4">
           <div>
-            <div className="text-3xl font-bold text-gray-100">
+            <div className="text-xl font-bold text-gray-100">
               {currencySymbol}
               {(product.price ?? 0).toLocaleString('tr-TR', {
                 minimumFractionDigits: 2,
