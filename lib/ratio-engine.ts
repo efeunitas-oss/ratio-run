@@ -140,7 +140,7 @@ export function compareProducts(
   let winner: 'a' | 'b' | 'tie';
   let advantagePercentage = 0;
 
-  if (diff < 2) {
+  if (diff < 0.5) {
     winner = 'tie';
   } else if (ratioA.normalized_score > ratioB.normalized_score) {
     winner = 'a';

@@ -1,20 +1,14 @@
+// app/compare/all/page.tsx
 'use client';
 
-// ============================================================================
-// RATIO.RUN — GLOBAL ARAMA SAYFASI
-// Dosya: app/compare/all/page.tsx
-//
-// DEĞİŞİKLİK:
-//   • Ürüne tıklayınca artık kategori sayfasına körce gitmiyor
-//   • → /compare/[category]?productA=[id] ile gidiyor
-//   • CategoryClient bu param'ı görünce ürünü otomatik seçiyor
-//   • Böylece kullanıcı direkt "2. ürünü seç" adımında başlıyor
-// ============================================================================
-
+import { useState, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import Link from 'next/link';
+import { compareProducts } from '@/lib/ratio-engine';
+import { ComparisonView } from '@/components/comparison/ComparisonView';
 
-// ─── Slug eşleştirici ────────────────────────────────────────────────────────
+const GOLD        = '#C9A227';
+const GOLD_BRIGHT = '#D4AF37';
+
 const DB_SLUG_TO_URL: Record<string, string> = {
   'telefon':       'telefon',
   'laptop':        'laptop',
@@ -26,201 +20,276 @@ const DB_SLUG_TO_URL: Record<string, string> = {
   'otomobil':      'araba',
 };
 
-// ─── Server: arama yap ───────────────────────────────────────────────────────
-async function searchProducts(query: string) {
-  if (!query || query.length < 2) return [];
+interface Product {
+  id: string;
+  name: string;
+  brand: string;
+  price: number | null;
+  currency: string;
+  image_url: string | null;
+  source_name: string;
+  category_id: string;
+  categorySlug?: string;
+  specifications?: Record<string, any>;
+  sources?: any[];
+  source_url?: string;
+  avg_price?: number | null;
+}
+
+export default function AllPage() {
+  const [query, setQuery]         = useState('');
+  const [results, setResults]     = useState<Product[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selected, setSelected]   = useState<Product[]>([]);
+  const [comparison, setComparison] = useState<any>(null);
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const { data: products, error } = await supabase
-    .from('products')
-    .select('id, name, brand, price, currency, image_url, source_name, category_id')
-    .or(`name.ilike.%${query}%,brand.ilike.%${query}%,model.ilike.%${query}%`)
-    .eq('is_active', true)
-    .order('price', { ascending: true })
-    .limit(40);
+  const handleSearch = useCallback(async (q: string) => {
+    setQuery(q);
+    setComparison(null);
+    setSelected([]);
+    if (q.length < 2) { setResults([]); return; }
+    setSearching(true);
+    try {
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, name, brand, price, avg_price, currency, image_url, source_name, source_url, sources, specifications, category_id')
+        .or(`name.ilike.%${q}%,brand.ilike.%${q}%,model.ilike.%${q}%`)
+        .eq('is_active', true)
+        .order('price', { ascending: true })
+        .limit(40);
 
-  if (error || !products) return [];
+      if (!products) { setResults([]); return; }
 
-  // category_id → slug için categories çek
-  const catIds = [...new Set(products.map((p: any) => p.category_id))];
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('id, slug')
-    .in('id', catIds);
+      const catIds = [...new Set(products.map((p: any) => p.category_id))];
+      const { data: categories } = await supabase
+        .from('categories')
+        .select('id, slug')
+        .in('id', catIds);
 
-  const idToSlug: Record<string, string> = {};
-  (categories ?? []).forEach((c: any) => {
-    idToSlug[c.id] = DB_SLUG_TO_URL[c.slug] ?? c.slug;
-  });
+      const idToSlug: Record<string, string> = {};
+      (categories ?? []).forEach((c: any) => {
+        idToSlug[c.id] = DB_SLUG_TO_URL[c.slug] ?? c.slug;
+      });
 
-  return products.map((p: any) => ({
-    ...p,
-    categorySlug: idToSlug[p.category_id] ?? 'all',
-  }));
-}
+      setResults(products.map((p: any) => ({ ...p, categorySlug: idToSlug[p.category_id] ?? 'all' })));
+    } finally {
+      setSearching(false);
+    }
+  }, []);
 
-// ─── Sayfa (Server Component) ─────────────────────────────────────────────────
-export default async function AllPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ search?: string }>;
-}) {
-  const { search } = await searchParams;
-  const query = search?.trim() ?? '';
-  const results = query ? await searchProducts(query) : [];
+  const toggleSelect = useCallback((product: Product) => {
+    setComparison(null);
+    setSelected(prev => {
+      const already = prev.find(p => p.id === product.id);
+      if (already) return prev.filter(p => p.id !== product.id);
+      if (prev.length >= 2) return [prev[1], product];
+      return [...prev, product];
+    });
+  }, []);
+
+  const handleCompare = useCallback(() => {
+    if (selected.length !== 2) return;
+    // İki farklı kategoriden ürün seçildiyse ilk ürünün slug'ını kullan
+    const slug = selected[0].categorySlug ?? 'laptop';
+    const result = compareProducts(selected[0] as any, selected[1] as any, slug);
+    setComparison(result);
+    setTimeout(() => {
+      document.getElementById('comparison-result')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  }, [selected]);
+
+  const handleRestart = () => {
+    setComparison(null);
+    setSelected([]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const isSelected = (p: Product) => !!selected.find(s => s.id === p.id);
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+
       {/* Nav */}
-      <nav className="border-b border-[#C9A227]/15 px-6 py-4 sticky top-0 z-50 bg-black/90 backdrop-blur">
-        <Link
-          href="/"
-          className="text-xl font-black tracking-tighter"
-        >
-          RATIO<span style={{ color: '#C9A227' }}>.RUN</span>
-        </Link>
+      <nav style={{ borderBottom: `1px solid ${GOLD}35`, padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)', zIndex: 50 }}>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <img src="/logo.png" alt="Ratio.Run" style={{ height: 36, width: 'auto' }} />
+          <span style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>
+            ratio<span style={{ color: GOLD_BRIGHT }}>.run</span>
+          </span>
+        </a>
+        {selected.length > 0 && !comparison && (
+          <span style={{ fontSize: 13, color: '#9ca3af' }}>{selected.length}/2 seçildi</span>
+        )}
+        {comparison && (
+          <button onClick={handleRestart} style={{ padding: '8px 18px', borderRadius: 10, fontWeight: 600, fontSize: 13, background: 'transparent', color: '#9ca3af', border: '1px solid #374151', cursor: 'pointer' }}>
+            ← Geri Dön
+          </button>
+        )}
       </nav>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Arama kutusu */}
-        <form action="/compare/all" method="GET" className="mb-8">
-          <div className="relative max-w-2xl">
-            <input
-              name="search"
-              type="text"
-              defaultValue={query}
-              placeholder="Marka veya model ara... (örn: Samsung S25, Asus Vivobook)"
-              autoFocus
-              className="w-full bg-[#0D0D0D] border text-white px-5 py-4 pr-28 rounded-2xl text-sm outline-none transition-all"
-              style={{ borderColor: query ? '#C9A22760' : '#1a1a1a' }}
-            />
-            <button
-              type="submit"
-              className="absolute right-2 top-2 bottom-2 px-5 rounded-xl font-bold text-black text-sm"
-              style={{ background: 'linear-gradient(135deg, #C9A227, #D4AF37)' }}
-            >
-              Ara
-            </button>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 16px' }}>
+
+        {comparison ? (
+          <div id="comparison-result">
+            <ComparisonView comparison={comparison} categorySlug={selected[0]?.categorySlug ?? 'laptop'} />
           </div>
-        </form>
-
-        {/* Sonuçlar */}
-        {query ? (
+        ) : (
           <>
-            <p className="text-sm text-gray-600 mb-6 font-mono">
-              "{query}" için <span className="text-white">{results.length}</span> ürün bulundu
-            </p>
-
-            {results.length === 0 ? (
-              <div className="text-center py-20 text-gray-700">
-                <p className="text-lg mb-2">Sonuç bulunamadı</p>
-                <p className="text-sm">Farklı bir marka veya model adı dene</p>
+            {/* Arama kutusu */}
+            <div style={{ marginBottom: 32, maxWidth: 600 }}>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  value={query}
+                  onChange={e => handleSearch(e.target.value)}
+                  placeholder="Marka veya model ara... (örn: Samsung S25, Asus Vivobook)"
+                  autoFocus
+                  style={{
+                    width: '100%', background: '#111827', border: `1px solid ${GOLD}50`,
+                    color: '#fff', padding: '14px 20px', borderRadius: 14,
+                    fontSize: 14, outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+                {searching && (
+                  <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', width: 18, height: 18, border: '2px solid #374151', borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                )}
               </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                {results.map((product: any) => (
-                  // Link: /compare/[category]?productA=[id]
-                  // CategoryClient bu param'ı görünce ürünü otomatik seçer
-                  <Link
-                    key={product.id}
-                    href={`/compare/${product.categorySlug}?productA=${product.id}`}
-                    className="group bg-[#0D0D0D] rounded-xl overflow-hidden transition-all hover:scale-[1.02]"
-                    style={{ border: '1px solid #1a1a1a' }}
-                  >
-                    {/* Görsel */}
-                    <div className="aspect-square bg-black flex items-center justify-center overflow-hidden p-3">
-                      {product.image_url ? (
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <span className="text-3xl opacity-10">📦</span>
-                      )}
-                    </div>
+              {query && !searching && (
+                <p style={{ color: '#6b7280', fontSize: 13, marginTop: 8, fontFamily: 'monospace' }}>
+                  "{query}" için <span style={{ color: '#fff' }}>{results.length}</span> ürün bulundu
+                </p>
+              )}
+            </div>
 
-                    {/* İçerik */}
-                    <div className="p-3">
-                      {/* Kategori etiketi */}
-                      <span
-                        className="text-xs font-mono uppercase tracking-wider"
-                        style={{ color: '#C9A22770' }}
-                      >
-                        {product.categorySlug}
-                      </span>
-
-                      {/* İsim */}
-                      <p className="text-white text-xs font-medium leading-tight line-clamp-2 mt-1 mb-2">
-                        {product.name}
-                      </p>
-
-                      {/* Fiyat */}
-                      <p className="font-bold text-sm" style={{ color: '#C9A227' }}>
-                        {product.price
-                          ? new Intl.NumberFormat('tr-TR', {
-                              style: 'currency',
-                              currency: product.currency === 'TRY' ? 'TRY' : 'USD',
-                              maximumFractionDigits: 2,
-                            }).format(product.price)
-                          : '—'
-                        }
-                      </p>
-
-                      {/* CTA */}
-                      <div
-                        className="mt-2 w-full text-center py-1.5 rounded-lg text-xs font-bold transition-all"
-                        style={{ background: '#C9A22715', color: '#C9A227', border: '1px solid #C9A22730' }}
-                      >
-                        Karşılaştırmaya Ekle →
-                      </div>
-                    </div>
-                  </Link>
+            {/* Seçili ürünler bar */}
+            {selected.length > 0 && (
+              <div style={{ marginBottom: 20, padding: '14px 18px', borderRadius: 14, background: 'rgba(201,162,39,0.08)', border: `1px solid ${GOLD}40`, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 13, color: GOLD_BRIGHT, fontWeight: 600 }}>Seçilenler:</span>
+                {selected.map(p => (
+                  <span key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1f2937', borderRadius: 8, padding: '5px 10px', fontSize: 12 }}>
+                    {p.name?.split(' ').slice(0, 4).join(' ')}
+                    <button onClick={() => toggleSelect(p)} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: 0, fontSize: 14 }}>✕</button>
+                  </span>
                 ))}
+                {selected.length === 2 && (
+                  <button onClick={handleCompare} style={{ marginLeft: 'auto', padding: '8px 20px', borderRadius: 9, fontWeight: 700, fontSize: 13, background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`, color: '#000', border: 'none', cursor: 'pointer' }}>
+                    Karşılaştır →
+                  </button>
+                )}
               </div>
             )}
+
+            {/* Sonuçlar grid */}
+            {results.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(185px, 1fr))', gap: 12 }}>
+                {results.map(product => {
+                  const price = product.avg_price || product.price;
+                  const sel = isSelected(product);
+                  return (
+                    <div
+                      key={product.id}
+                      onClick={() => toggleSelect(product)}
+                      style={{
+                        display: 'flex', flexDirection: 'column',
+                        background: sel ? 'rgba(201,162,39,0.12)' : 'rgba(17,24,39,0.6)',
+                        border: sel ? `2px solid ${GOLD}` : '1px solid #1F2937',
+                        borderRadius: 16, overflow: 'hidden', cursor: 'pointer',
+                        transition: 'border-color 0.15s, transform 0.15s',
+                        transform: sel ? 'translateY(-3px)' : 'none',
+                        position: 'relative',
+                      }}
+                      onMouseEnter={e => { if (!sel) (e.currentTarget as HTMLDivElement).style.borderColor = `${GOLD}60`; }}
+                      onMouseLeave={e => { if (!sel) (e.currentTarget as HTMLDivElement).style.borderColor = '#1F2937'; }}
+                    >
+                      {sel && (
+                        <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 10, background: GOLD, color: '#000', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
+                          ✓ SEÇİLDİ
+                        </div>
+                      )}
+
+                      {/* Görsel — sabit yükseklik */}
+                      <div style={{ background: '#0d0d0d', width: '100%', height: 160, position: 'relative', flexShrink: 0 }}>
+                        {product.image_url ? (
+                          <img src={product.image_url} alt={product.name} loading="lazy" referrerPolicy="no-referrer"
+                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
+                        ) : (
+                          <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, opacity: 0.08 }}>📦</span>
+                        )}
+                      </div>
+
+                      <div style={{ padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {/* Kategori etiketi */}
+                        <span style={{ fontSize: 10, color: `${GOLD}90`, fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: 1 }}>
+                          {product.categorySlug}
+                        </span>
+                        <p style={{ fontSize: 12, fontWeight: 600, color: '#e5e7eb', lineHeight: 1.4, margin: 0 }}>
+                          {product.name?.split(' ').slice(0, 6).join(' ')}
+                        </p>
+                        <div style={{ marginTop: 'auto', paddingTop: 6, borderTop: '1px solid #1f2937' }}>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0 }}>
+                            {price
+                              ? `₺${price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
+                              : <span style={{ color: '#6b7280', fontSize: 11 }}>Fiyat güncelleniyor</span>}
+                          </p>
+                          <div style={{ marginTop: 6, padding: '5px 10px', background: `${GOLD}15`, borderRadius: 6, border: `1px solid ${GOLD}30`, textAlign: 'center', fontSize: 11, color: GOLD_BRIGHT, fontWeight: 600 }}>
+                            + Karşılaştırmaya Ekle
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : !query ? (
+              /* Boş durum */
+              <div style={{ textAlign: 'center', paddingTop: 80 }}>
+                <p style={{ color: '#4b5563', fontSize: 13, marginBottom: 32, fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: 2 }}>
+                  Kategori seç veya model ara
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 10 }}>
+                  {[
+                    { slug: 'telefon', label: 'Akıllı Telefon', icon: '📱' },
+                    { slug: 'laptop',  label: 'Laptop',         icon: '💻' },
+                    { slug: 'tablet',  label: 'Tablet',         icon: '📲' },
+                    { slug: 'saat',    label: 'Akıllı Saat',   icon: '⌚' },
+                    { slug: 'kulaklik',label: 'Kulaklık',       icon: '🎧' },
+                    { slug: 'robot-supurge', label: 'Robot Süpürge', icon: '🤖' },
+                    { slug: 'tv',      label: 'TV',             icon: '📺' },
+                    { slug: 'araba',   label: 'Otomobil',       icon: '🚗' },
+                  ].map(cat => (
+                    <a key={cat.slug} href={`/compare/${cat.slug}`}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12, fontSize: 13, fontWeight: 500, textDecoration: 'none', background: '#0D0D0D', border: '1px solid #1a1a1a', color: '#888' }}>
+                      {cat.icon} {cat.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </>
-        ) : (
-          // Boş durum — kategori linkleri göster
-          <div className="text-center py-20">
-            <p className="text-gray-600 text-sm mb-8 font-mono uppercase tracking-widest">
-              Kategori seç veya model ara
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {[
-                { slug: 'telefon', label: 'Akıllı Telefon', icon: '📱' },
-                { slug: 'laptop',  label: 'Laptop',          icon: '💻' },
-                { slug: 'tablet',  label: 'Tablet',           icon: '📲' },
-                { slug: 'saat',    label: 'Akıllı Saat',     icon: '⌚' },
-                { slug: 'kulaklik',label: 'Kulaklık',        icon: '🎧' },
-                { slug: 'robot-supurge', label: 'Robot Süpürge', icon: '🤖' },
-                { slug: 'tv',      label: 'TV',               icon: '📺' },
-                { slug: 'araba',   label: 'Otomobil',         icon: '🚗' },
-              ].map((cat) => (
-                <Link
-                  key={cat.slug}
-                  href={`/compare/${cat.slug}`}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
-                  style={{
-                    background: '#0D0D0D',
-                    border: '1px solid #1a1a1a',
-                    color: '#888',
-                  }}
-                >
-                  <span>{cat.icon}</span>
-                  {cat.label}
-                </Link>
-              ))}
-            </div>
-          </div>
         )}
       </div>
+
+      {/* Fixed bottom karşılaştır butonu */}
+      {selected.length === 2 && !comparison && (
+        <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 99 }}>
+          <button onClick={handleCompare} style={{
+            padding: '14px 36px', borderRadius: 16, fontWeight: 800, fontSize: 16,
+            background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`,
+            color: '#000', border: 'none', cursor: 'pointer',
+            boxShadow: `0 8px 32px ${GOLD}60`,
+            display: 'flex', alignItems: 'center', gap: 10, whiteSpace: 'nowrap',
+          }}>
+            ⚡ Karşılaştır <span style={{ fontSize: 13, opacity: 0.75, fontWeight: 600 }}>(2 ürün seçildi)</span>
+          </button>
+        </div>
+      )}
+
+      <style>{`@keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }`}</style>
     </main>
   );
 }
