@@ -1,7 +1,8 @@
 // app/compare/all/page.tsx
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { compareProducts } from '@/lib/ratio-engine';
 import { ComparisonView } from '@/components/comparison/ComparisonView';
@@ -37,11 +38,17 @@ interface Product {
 }
 
 export default function AllPage() {
+  const searchParams = useSearchParams();
   const [query, setQuery]         = useState('');
   const [results, setResults]     = useState<Product[]>([]);
   const [searching, setSearching] = useState(false);
   const [selected, setSelected]   = useState<Product[]>([]);
   const [comparison, setComparison] = useState<any>(null);
+
+  useEffect(() => {
+    const q = searchParams.get('search');
+    if (q && q.length >= 2) handleSearch(q);
+  }, []); // eslint-disable-line
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
