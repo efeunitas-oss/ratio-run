@@ -67,11 +67,9 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
             {/* VS Rozeti */}
             <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 20 }}>
               <div className="relative">
-                <div className="absolute inset-0 animate-ping">
-                  <div className="h-full w-full rounded-full bg-gradient-to-r from-[#C9A227] to-[#D4AF37] opacity-30" />
-                </div>
+
                 <div className="relative backdrop-blur-xl bg-gray-900/80 border-2 border-gray-700 rounded-full w-16 h-16 flex items-center justify-center shadow-2xl">
-                  <span style={{ fontSize: 14, fontWeight: 900, color: "#D4AF37" }}>
+                  <span style={{ fontSize: 10, fontWeight: 900, color: "#D4AF37" }}>
                     VS
                   </span>
                 </div>
@@ -106,7 +104,7 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
         {/* Karar Analizi */}
         <div style={{ marginBottom: 24 }}>
           <div className="backdrop-blur-xl bg-gradient-to-br from-gray-900/60 to-gray-900/40 border border-gray-800/50 rounded-2xl p-4 shadow-2xl">
-            <div className="flex items-start gap-4">
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
               <div className="flex-shrink-0">
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <svg className="w-8 h-8 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,7 +115,7 @@ export function ComparisonView({ comparison, categorySlug }: ComparisonViewProps
 
               <div className="flex-1">
                 <h2 style={{ fontSize: 16, fontWeight: 800, color: "#f3f4f6", margin: "0 0 6px" }}>Karar Analizi</h2>
-                <p className="text-gray-300 text-sm leading-relaxed mb-3">
+                <p style={{ color: "#d1d5db", fontSize: 13, lineHeight: 1.5, marginBottom: 10 }}>
                   {comparison.recommendation}
                 </p>
 

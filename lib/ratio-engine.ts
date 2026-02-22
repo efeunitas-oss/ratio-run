@@ -163,7 +163,7 @@ export function compareProducts(
   if (winner === 'tie') {
     recommendation = 'Bu iki ürün neredeyse eşit performans/fiyat oranına sahip.';
   } else if (isCrushingVictory) {
-    recommendation = `🏆 EZİCİ ÜSTÜNLÜK! ${winnerProduct.name ?? 'Kazanan'} rakibine göre %${advantagePercentage.toFixed(1)} daha iyi. Ratio: ${winnerRatio.normalized_score.toFixed(1)}/100`;
+    recommendation = `EZİCİ ÜSTÜNLÜK: ${winnerProduct.name ?? 'Kazanan'} rakibine göre %${advantagePercentage.toFixed(1)} daha iyi. Ratio: ${winnerRatio.normalized_score.toFixed(1)}/100`;
   } else {
     recommendation = `${winnerProduct.name ?? 'Bu ürün'}, ${loserProduct.name ?? 'rakibine'} göre %${advantagePercentage.toFixed(1)} daha iyi bir denge sunuyor.`;
   }
