@@ -18,7 +18,7 @@ export default function HomeClient({ categories, counts }: Props) {
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const term = searchTerm.trim();
-    if (term) router.push(`/compare/all?search=${encodeURIComponent(term)}`);
+    if (term) router.push('/compare/all');
   };
 
   return (
