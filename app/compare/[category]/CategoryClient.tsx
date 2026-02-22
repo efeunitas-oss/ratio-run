@@ -139,6 +139,10 @@ export default function CategoryClient({ category, initialProducts, categorySlug
 
   return (
     <main style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <style>{`
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+        @media (max-width: 480px) { .product-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+      `}</style>
 
       {/* Nav */}
       <nav style={{ borderBottom: `1px solid ${GOLD}35`, padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)', zIndex: 50 }}>
@@ -215,7 +219,7 @@ export default function CategoryClient({ category, initialProducts, categorySlug
             )}
 
             {/* Ürün Grid — görseller aynı hizada */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(185px, 1fr))', gap: 12 }}>
+            <div className='product-grid'>
               {filtered.map(product => {
                 const price = product.avg_price || product.price;
 
@@ -249,7 +253,7 @@ export default function CategoryClient({ category, initialProducts, categorySlug
                     )}
 
                     {/* Görsel — sabit yükseklik, hepsi aynı hizada */}
-                    <div style={{ background: '#0d0d0d', width: '100%', height: 160, position: 'relative', flexShrink: 0 }}>
+                    <div style={{ background: '#0d0d0d', width: '100%', height: 140, position: 'relative', flexShrink: 0 }}>
                       {product.image_url ? (
                         <img
                           src={product.image_url}
@@ -263,8 +267,8 @@ export default function CategoryClient({ category, initialProducts, categorySlug
                       )}
                     </div>
 
-                    <div style={{ padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
-                      <p style={{ fontSize: 12, fontWeight: 600, color: '#e5e7eb', lineHeight: 1.4, margin: 0 }}>
+                    <div style={{ padding: '8px 10px', flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: '#e5e7eb', lineHeight: 1.3, margin: 0 }}>
                         {formatName(product.name, product.brand)}
                       </p>
                       {stars > 0 && (
@@ -273,7 +277,7 @@ export default function CategoryClient({ category, initialProducts, categorySlug
                         </span>
                       )}
                       <div style={{ marginTop: 'auto', paddingTop: 6, borderTop: '1px solid #1f2937' }}>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', margin: 0 }}>
                           {price
                             ? `₺${price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
                             : <span style={{ color: '#6b7280', fontSize: 11 }}>Fiyat güncelleniyor</span>}
