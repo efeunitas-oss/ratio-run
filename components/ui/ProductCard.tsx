@@ -119,22 +119,21 @@ export function ProductCard({
           </div>
         )}
 
-        {/* Fiyat + Ratio */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 'auto' }}>
+        {/* Fiyat */}
+        <div style={{ marginTop: 'auto' }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>
+            {currencySymbol}{(product.price ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+          </div>
+        </div>
+        {/* Ratio Skoru */}
+        {ratioScore && (
           <div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#fff' }}>
-              {currencySymbol}{(product.price ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+            <div style={{ fontSize: 10, color: '#6b7280' }}>Ratio Skoru</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: GOLD_BRIGHT }}>
+              {ratioScore.normalized_score.toFixed(1)}
             </div>
           </div>
-          {ratioScore && (
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 2 }}>Ratio Skoru</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: GOLD_BRIGHT }}>
-                {ratioScore.normalized_score.toFixed(1)}
-              </div>
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Değer rozeti */}
         {valueBadge && (
