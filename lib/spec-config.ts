@@ -83,11 +83,11 @@ export const SPEC_CONFIGS: Record<string, SpecConfig> = {
     category: 'laptop',
     display_name: 'Laptop',
     columns: [
-      { key: 'processor_gen',     label: 'İşlemci',             format: 'text',   parse_from_title: /(i[3579][-\s]?\d{4,5}|ryzen\s*[3579]|celeron\s*n?\d+|core\s*ultra|m[123]\s*(pro|max|ultra)?|snapdragon\s*x)/i, priority: 'high'   },
-      { key: 'ram_size',          label: 'RAM',     unit: 'GB', format: 'number', parse_from_title: /(\d+)\s*gb(?:\s+(?:ram|lpddr|ddr|memory))?/i, priority: 'high'   },
-      { key: 'storage',           label: 'Depolama',unit: 'GB', format: 'number', parse_from_title: /(\d+)\s*(tb|gb)\s*(?:ssd|nvme|emmc|hdd)?/i,   priority: 'high'   },
-      { key: 'screen_size',       label: 'Ekran',  unit: 'inç',format: 'number', parse_from_title: /(\d+\.?\d*)\s*(?:inç|inch|")/i,  priority: 'medium' },
-      { key: 'display_brightness',label: 'Parlaklık',unit:'nits',format: 'number', parse_from_title: /(\d{3,4})\s*nits?/i,             priority: 'medium' },
+      { key: 'processor_gen',     label: 'İşlemci',             format: 'text',   parse_from_title: /(i\d|ryzen\s*\d+|m\d)/i,         priority: 'high'   },
+      { key: 'ram_size',          label: 'RAM',     unit: 'GB', format: 'number', parse_from_title: /(\d+)\s*gb\s+(?:ram|lpddr|ddr|memory)/i,      priority: 'high'   },
+      { key: 'display_brightness',label: 'Parlaklık',unit:'nits',format: 'number', parse_from_title: /(\d+)\s*nits?/i,                  priority: 'high'   },
+      { key: 'storage',           label: 'Depolama',unit: 'GB', format: 'number', parse_from_title: /(\d+)\s*(?:tb|gb)?\s*(?:ssd|nvme|emmc|hdd)/i,  priority: 'high'   },
+      { key: 'screen_size',       label: 'Ekran',  unit: 'inch',format: 'number', parse_from_title: /(\d+\.?\d*)\s*(inch|")/i,         priority: 'medium' },
     ],
     weights: {
       performance:  0.40,
@@ -111,7 +111,7 @@ export const SPEC_CONFIGS: Record<string, SpecConfig> = {
     display_name: 'Akıllı Telefon',
     columns: [
       { key: 'chipset',        label: 'İşlemci',               format: 'text',   parse_from_title: /(snapdragon\s*\d+|a\d+\s*bionic|exynos\s*\d+|tensor\s*g\d+)/i, priority: 'high'   },
-      { key: 'ram',            label: 'RAM',       unit: 'GB', format: 'number', parse_from_title: /(\d+)\s*gb(?:\s+(?:ram|lpddr|ddr))?/i,                                           priority: 'high'   },
+      { key: 'ram',            label: 'RAM',       unit: 'GB', format: 'number', parse_from_title: /(\d+)\s*gb\s*ram/i,                                           priority: 'high'   },
       { key: 'display_refresh',label: 'Ekran Hz',  unit: 'Hz', format: 'number', parse_from_title: /(\d+)\s*hz/i,                                                  priority: 'high'   },
       { key: 'camera_mp',      label: 'Kamera',    unit: 'MP', format: 'number', parse_from_title: /(\d+)\s*mp/i,                                                  priority: 'medium' },
       { key: 'battery',        label: 'Batarya', unit: 'mAh', format: 'number', parse_from_title: /(\d+)\s*mah/i,                                                 priority: 'high'   },

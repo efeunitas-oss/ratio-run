@@ -18,26 +18,21 @@ const supabaseKey =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyeXB1bGZ4YmNraGVya21yamdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNTczMDcsImV4cCI6MjA4NjczMzMwN30.gEYVh5tjSrO3sgc5rsnYgVrIy6YdK3I5qU5S6FwkX-I';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
-
 // ─── Veri Temizleyici ─────────────────────────────────────────────────────────
-// Trendyol ve Amazon'dan gelen bozuk specification değerlerini düzeltir
+// Trendyol/Amazon'dan gelen bozuk değerleri düzeltir
 function sanitizeProduct(product: Product): Product {
   if (!product.specifications) return product;
-  const s = { ...product.specifications } as any;
+  const s = { ...product.specifications } as Record<string, any>;
 
-  // screen_inch: 600008 gibi saçma değerleri temizle (max 100 inch olabilir)
+  // screen_inch: 600008 gibi saçma değer → null (max gerçekçi 100 inç)
   if (s.screen_inch != null && s.screen_inch > 100) s.screen_inch = null;
 
-  // storage_gb: TB cinsinden gelmişse GB'ye çevir (2 TB = 2048 GB)
-  // Eğer storage_gb <= 4 ise büyük ihtimalle TB olarak gelmiş
+  // storage_gb: 2 gelmiş ama TB ise 2048 GB olmalı
   if (s.storage_gb != null && s.storage_gb > 0 && s.storage_gb <= 4) {
     s.storage_gb = s.storage_gb * 1024;
   }
 
-  // ram_gb: benzer durum — 0.5 GB olmaz, büyük ihtimalle GB cinsinden gelmiş
-  if (s.ram_gb != null && s.ram_gb < 1) s.ram_gb = null;
-
-  // spec_labels içindeki null değerleri temizle
+  // spec_labels: null string değerleri temizle
   if (s.spec_labels && typeof s.spec_labels === 'object') {
     const cleaned: Record<string, string> = {};
     for (const [k, v] of Object.entries(s.spec_labels)) {
