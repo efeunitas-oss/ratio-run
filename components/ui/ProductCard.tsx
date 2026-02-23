@@ -31,7 +31,7 @@ export function ProductCard({
   const specs = product.specifications ?? {};
   const rating: number = typeof specs.stars === 'number' ? specs.stars : 0;
   const reviewsCount: number = typeof specs.reviewsCount === 'number' ? specs.reviewsCount : 0;
-  const currencySymbol = product.currency === 'USD' ? '$' : '₺';
+  const currencySymbol = '₺'; // Tüm fiyatlar TL — Amazon TR ve Trendyol
   const valueBadge = ratioScore ? getValueBadge(ratioScore.normalized_score) : null;
 
   const pAny = product as any;

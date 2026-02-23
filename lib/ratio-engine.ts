@@ -150,6 +150,8 @@ export function compareProducts(
     advantagePercentage = 0.1;
   }
 
+  // Üst sınır: maksimum %99 — veri eksikliğinden kaynaklanan %843 gibi saçma rakamları önler
+  advantagePercentage = Math.min(advantagePercentage, 99);
   const isCrushingVictory = advantagePercentage > 15;
   const winnerProduct = winner === 'a' ? productA : productB;
   const loserProduct  = winner === 'a' ? productB : productA;
