@@ -19,6 +19,38 @@ const supabaseKey =
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
+// ─── Veri Temizleyici ─────────────────────────────────────────────────────────
+// Trendyol ve Amazon'dan gelen bozuk specification değerlerini düzeltir
+function sanitizeProduct(product: Product): Product {
+  if (!product.specifications) return product;
+  const s = { ...product.specifications } as any;
+
+  // screen_inch: 600008 gibi saçma değerleri temizle (max 100 inch olabilir)
+  if (s.screen_inch != null && s.screen_inch > 100) s.screen_inch = null;
+
+  // storage_gb: TB cinsinden gelmişse GB'ye çevir (2 TB = 2048 GB)
+  // Eğer storage_gb <= 4 ise büyük ihtimalle TB olarak gelmiş
+  if (s.storage_gb != null && s.storage_gb > 0 && s.storage_gb <= 4) {
+    s.storage_gb = s.storage_gb * 1024;
+  }
+
+  // ram_gb: benzer durum — 0.5 GB olmaz, büyük ihtimalle GB cinsinden gelmiş
+  if (s.ram_gb != null && s.ram_gb < 1) s.ram_gb = null;
+
+  // spec_labels içindeki null değerleri temizle
+  if (s.spec_labels && typeof s.spec_labels === 'object') {
+    const cleaned: Record<string, string> = {};
+    for (const [k, v] of Object.entries(s.spec_labels)) {
+      if (v != null && v !== 'null' && v !== '') cleaned[k] = String(v);
+    }
+    s.spec_labels = cleaned;
+  }
+
+  return { ...product, specifications: s };
+}
+
+
+
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ── Slug Alias Haritası ───────────────────────────────────────────────────────
@@ -57,7 +89,7 @@ export async function getProductById(
 
     const { data, error } = await builder.single();
     if (error) { console.error('[queries] getProductById:', error.message); return null; }
-    return data as Product;
+    return sanitizeProduct(data as Product);
   } catch (err) { console.error('[queries] getProductById exception:', err); return null; }
 }
 
@@ -100,7 +132,7 @@ export async function getProductsByCategory(
       .range(offset, offset + limit - 1);
 
     if (error) { console.error('[queries] getProductsByCategory:', error.message); return []; }
-    return (data as Product[]) ?? [];
+    return ((data as Product[]) ?? []).map(sanitizeProduct);
   } catch (err) { console.error('[queries] getProductsByCategory exception:', err); return []; }
 }
 
@@ -172,7 +204,7 @@ export async function searchProducts(query: string, categoryId?: string): Promis
 
     const { data, error } = await builder;
     if (error) { console.error('[queries] searchProducts:', error.message); return []; }
-    return (data as Product[]) ?? [];
+    return ((data as Product[]) ?? []).map(sanitizeProduct);
   } catch (err) { console.error('[queries] searchProducts exception:', err); return []; }
 }
 

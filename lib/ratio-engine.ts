@@ -140,7 +140,7 @@ export function compareProducts(
   let winner: 'a' | 'b' | 'tie';
   let advantagePercentage = 0;
 
-  if (diff < 0) { // tie yok, her zaman kazanan çıkar
+  if (diff < 2) {
     winner = 'tie';
   } else if (ratioA.normalized_score > ratioB.normalized_score) {
     winner = 'a';
@@ -163,7 +163,7 @@ export function compareProducts(
   if (winner === 'tie') {
     recommendation = 'Bu iki ürün neredeyse eşit performans/fiyat oranına sahip.';
   } else if (isCrushingVictory) {
-    recommendation = `EZİCİ ÜSTÜNLÜK: ${winnerProduct.name ?? 'Kazanan'} rakibine göre %${advantagePercentage.toFixed(1)} daha iyi. Ratio: ${winnerRatio.normalized_score.toFixed(1)}/100`;
+    recommendation = `🏆 EZİCİ ÜSTÜNLÜK! ${winnerProduct.name ?? 'Kazanan'} rakibine göre %${advantagePercentage.toFixed(1)} daha iyi. Ratio: ${winnerRatio.normalized_score.toFixed(1)}/100`;
   } else {
     recommendation = `${winnerProduct.name ?? 'Bu ürün'}, ${loserProduct.name ?? 'rakibine'} göre %${advantagePercentage.toFixed(1)} daha iyi bir denge sunuyor.`;
   }
@@ -218,7 +218,33 @@ export function getSpecValue(
   categorySlug: string
 ): string | number | null {
   const specs = product.specifications ?? {};
+
+  // 1. Doğrudan specifications key'i
   if (specs[specKey] != null) return specs[specKey] as string | number;
+
+  // 2. spec_labels içine bak (Trendyol/Amazon scraper buraya yazar)
+  const labels = specs.spec_labels as Record<string, string> | undefined;
+  if (labels) {
+    const labelMap: Record<string, string[]> = {
+      ram_size:  ['RAM', 'Ram', 'Bellek'],
+      storage:   ['SSD', 'HDD', 'Depolama', 'Dahili Depolama'],
+      screen_size: ['Ekran', 'Ekran Boyutu'],
+      display_brightness: ['Parlaklık', 'Brightness'],
+      battery:   ['Batarya', 'Pil', 'Battery'],
+      ram:       ['RAM', 'Ram'],
+      camera_mp: ['Kamera', 'Arka Kamera'],
+    };
+    const keys = labelMap[specKey] ?? [];
+    for (const k of keys) {
+      if (labels[k] != null && labels[k] !== '' && labels[k] !== 'null') {
+        const num = parseFloat(labels[k]);
+        if (!isNaN(num)) return num;
+        return labels[k];
+      }
+    }
+  }
+
+  // 3. Ürün adından regex ile parse et
   const parsed = parseSpecsFromTitle(product.name, categorySlug);
   return (parsed[specKey] as string | number) ?? null;
 }
