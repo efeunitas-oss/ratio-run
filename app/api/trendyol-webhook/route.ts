@@ -40,14 +40,25 @@ const CATEGORY_RULES: Record<string, { required: RegExp[]; forbidden: RegExp[] }
   telefon: {
     required: [],
     forbidden: [
-      /kulaklık|kulaklik|earpod|airpod|headphone|headset|\bbuds\b|gaming mikro|oyuncu kulak/i,
-      /akıllı saat|bileklik|smart band|smartband/i,
-      /araç tutucu|masaüstü tutucu/i,
-      /kılıf|kilif|cam koruyucu|ekran koruyucu/i,
-      /selfie çubuğu|tripod/i,
-      /robot\s*süpürge|robot\s*supurge/i,
-      /büyütme ekran/i,
-      /powerbank|power bank/i,
+      // Kulaklık
+      /kulaklık|kulaklik|earpod|airpod|headphone|headset|\bbuds\b|gaming mikro/i,
+      // Saat ve bileklik
+      /akıllı saat|smart\s*watch|smartwatch|watch\s*(ultra|pro|plus|fit|se|gt)|band\s*\d/i,
+      /bileklik|fitness\s*band/i,
+      // Çocuk takip saatleri
+      /sim\s*kart.*saat|çocuk.*saat|cocuk.*saat|takip.*saat|saat.*takip/i,
+      // Robot ve aksesuarları
+      /roborock|\brobot\b|mop\s*bezi|toz\s*torba|yan\s*fırça|ana\s*fırça|hepa\s*filtre/i,
+      // TV ve aksesuarları
+      /televizyon|\btv\b|kumanda|monitör|\bmonitor\b/i,
+      // Tablet
+      /\btablet\b|\btab\s+[a-z0-9]/i,
+      // Cam silme / temizlik cihazları
+      /cam\s*silme|pencere\s*temizle|püskürtme|püskürtmeli/i,
+      // Stant ve aksesuar
+      /\bstant\b|\bstand\b|araç\s*tutucu|masaüstü\s*tutucu/i,
+      /kılıf|kilif|cam\s*koruyucu|ekran\s*koruyucu/i,
+      /powerbank|power\s*bank|hoparlör/i,
     ],
   },
   laptop: {
