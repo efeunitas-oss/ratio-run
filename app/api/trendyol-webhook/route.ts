@@ -35,85 +35,79 @@ interface TrendyolProduct {
 // KATEGORİ VALİDATÖRÜ — Yanlış ürünlerin DB'ye girmesini önler
 // ============================================================================
 const CATEGORY_RULES: Record<string, { required: RegExp[]; forbidden: RegExp[] }> = {
+  // NOT: required listesi kasıtlı boş — Trendyol task'ı zaten doğru kategori URL'inden çekiyor.
+  // Sadece forbidden ile aksesuar/yanlış ürünleri filtrele.
   telefon: {
-    required: [
-      /telefon|phone|smartphone|akıllı telefon|iphone|galaxy\s[as]|redmi|poco|pixel|realme|xiaomi|huawei|oppo|nokia\s\d|motorola\s|infinix|tecno|honor\s\d/i,
-    ],
+    required: [],
     forbidden: [
       /kulaklık|kulaklik|earpod|airpod|headphone|headset|\bbuds\b|gaming mikro|oyuncu kulak/i,
       /\bwatch\b|akıllı saat|bileklik|smart band|smartband|band\s*\d/i,
-      /\bstant\b|\bstand\b|tutucu|tutacağ|araç tutucu|masaüstü tutucu/i,
+      /\bstant\b|\bstand\b|araç tutucu|masaüstü tutucu/i,
       /kılıf|kilif|cam koruyucu|ekran koruyucu/i,
-      /selfie çubuğu|tripod|\blens\b/i,
+      /selfie çubuğu|tripod/i,
       /robot\s*süpürge|robot\s*supurge/i,
-      /büyütme ekran|buyutme/i,
-      /kitap|roman|dergi/i,
-      /powerbank|power bank|şarj cihazı/i,
+      /büyütme ekran/i,
+      /powerbank|power bank|şarj cihazı(?!\s*destekli)/i,
+      /\byedek\s*parça\b|aksesuar\s*seti/i,
     ],
   },
   laptop: {
-    required: [
-      /\blaptop\b|\bnotebook\b|macbook|chromebook/i,
-    ],
+    required: [],
     forbidden: [
-      /kılıf|kilif|çanta|canta|soğutucu|sogutuc|\bmouse\b|klavye|webcam/i,
+      /\bkılıf\b|kilif|soğutucu|sogutuc|\bmouse\b|webcam/i,
       /kulaklık|kulaklik|hoparlör/i,
       /kitap|roman|dergi/i,
-      /monitör|monitor(?!\s*seri)/i,
+      /\bmonitör\b|\bmonitor\b/i,
+      /klavye(?!\s*li\s*(?:laptop|notebook))/i,
+      /çanta(?!\s*lı)|canta(?!\s*li)/i,
     ],
   },
   tablet: {
-    required: [
-      /\btablet\b|\bipad\b|\btab\s*\w/i,
-    ],
+    required: [],
     forbidden: [
-      /kılıf|kilif|kalem(?!\s*li tablet)|klavye(?!\s*li tablet)|kablo/i,
+      /\bkılıf\b|kilif/i,
       /wacom|grafik tablet|çizim tablet|drawing pad|drawing tablet/i,
       /oyuncak|aktivite seti/i,
       /kitap|roman|köpüklü|temizleyici sıvı/i,
-      /i2c|raspberry|arduino|oled modül/i,
+      /i2c|raspberry|arduino/i,
+      /\bkalem\b(?!\s*li\s*tablet)/i,
     ],
   },
   'robot-supurge': {
-    required: [
-      /robot\s*(süpürge|supurge|vakum|vacuum|temizleyici)|süpürge\s*robot|vacuum\s*robot/i,
-    ],
+    required: [],
     forbidden: [
-      /yedek\s*(fırça|firca|bez|filtre|parça)|toz torb/i,
-      /cam\s*silme\s*robot|pencere\s*temizle|cam\s*&\s*pencere/i,
+      /yedek\s*(fırça|firca|bez|filtre|parça)|toz\s*torb/i,
+      /cam\s*silme\s*robot|pencere\s*temizle/i,
       /kapı\s*eşiği|kapi\s*esigi|\brampa\b/i,
-      /hepa\s*filtre|uyumlu\s*filtre|aksesuar\s*seti/i,
+      /hepa\s*filtre(?!\s*li)|uyumlu\s*filtre|aksesuar\s*seti/i,
     ],
   },
   kulaklik: {
-    required: [
-      /kulaklık|kulaklik|headphone|headset|earbud|earphone|airpod|earpod|\bbuds\b|\btws\b/i,
-    ],
+    required: [],
     forbidden: [
-      /yedek\s*(?:kulak\s*yast|sünger)|aksesuar\s*seti|temizleme\s*seti/i,
-      /kılıf|kilif/i,
+      /yedek\s*(kulak\s*yast|sünger|köpük)/i,
+      /temizleme\s*seti|aksesuar\s*seti/i,
+      /\bkılıf\b|kilif/i,
     ],
   },
   saat: {
-    required: [
-      /akıllı\s*saat|smart\s*watch|smartwatch|\bwatch\b|smart\s*band|fitness\s*band|akıllı\s*bileklik/i,
-    ],
+    required: [],
     forbidden: [
-      /kordon|kayış|kayis|cam\s*koruyucu|ekran\s*koruyucu|şarj\s*kablosu|dock\s*istasyon/i,
+      /\bkordon\b|\bkayış\b|kayis/i,
+      /cam\s*koruyucu|ekran\s*koruyucu/i,
+      /şarj\s*kablosu(?!\s*dahil)|dock\s*istasyon/i,
       /kitap|roman/i,
     ],
   },
   tv: {
-    required: [
-      /televizyon|\btv\b|oled\s*tv|qled\s*tv|neo\s*qled|\d+\s*inç\s*(led|oled|qled|ekran)|smart\s*tv/i,
-    ],
+    required: [],
     forbidden: [
       /ekran\s*koruyucu|tv\s*koruyucu/i,
       /north\s*bayou|duvar\s*askı|duvara\s*mont|tv\s*askı|lcd\s*tutucu/i,
       /\bmonitör\b|\bmonitor\b/i,
-      /karavan|tekne|\byat\b/i,
-      /hoparlör|soundbar|ses\s*sistemi/i,
-      /\banten\b|hdmi\s*(?:kablo|adaptör)/i,
+      /karavan|\btekne\b|\byat\b/i,
+      /\bhoparlör\b|soundbar/i,
+      /\banten\b/i,
       /kitap|roman|dergi/i,
     ],
   },
