@@ -272,7 +272,10 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
             <div
               key={side}
               className="p-4 lg:p-6 relative"
-              style={isWinner ? { background: '#C9A22706' } : {}}
+              style={{
+                ...(isWinner ? { background: '#C9A22706' } : {}),
+                display: 'flex', flexDirection: 'column',
+              }}
             >
               {/* Kazanan rozeti */}
               {isWinner && winner !== 'tie' && (
@@ -341,22 +344,29 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
                 {badge.label}
               </div>
 
-              {/* Satın al butonu */}
-              {url && (
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer sponsored"
-                  className="block w-full text-center py-2.5 rounded-lg text-xs font-bold transition-all"
-                  style={
-                    isWinner
-                      ? { background: '#C9A227', color: '#000' }
-                      : { background: '#ffffff08', color: '#C9A227', border: '1px solid #C9A22730' }
-                  }
-                >
-                  {isWinner ? '🛒 En İyi Fiyata Al →' : 'Fiyata Bak →'}
-                </a>
-              )}
+              {/* Satın al butonu — her zaman render edilir, hizayı korur */}
+              <div style={{ marginTop: 'auto' }}>
+                {url ? (
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    style={{
+                      display: 'block', width: '100%', textAlign: 'center',
+                      padding: '10px 0', borderRadius: 10, fontSize: 13,
+                      fontWeight: 700, textDecoration: 'none',
+                      ...(isWinner
+                        ? { background: '#C9A227', color: '#000' }
+                        : { background: 'transparent', color: '#C9A227', border: '1px solid #C9A22740' }
+                      )
+                    }}
+                  >
+                    {isWinner ? '🛒 En İyi Fiyata Al →' : 'Fiyata Bak →'}
+                  </a>
+                ) : (
+                  <div style={{ height: 40 }} />
+                )}
+              </div>
             </div>
           );
         })}
@@ -389,7 +399,7 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
             Detaylı Karşılaştırma
           </p>
           {/* A/B başlıkları */}
-          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', gap: 8, marginBottom: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 12, marginBottom: 8 }}>
             <div />
             <div style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {productA.name?.split(' ').slice(0, 3).join(' ')}
@@ -406,8 +416,8 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
               const aWins = a > b;
               const bWins = b > a;
               return (
-                <div key={key} style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', gap: 8, alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, color: '#6b7280', textTransform: 'capitalize' }}>
+                <div key={key} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 12, alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: '#9ca3af', textTransform: 'capitalize' }}>
                     {key.replace(/_/g, ' ')}
                   </span>
                   <div style={{ height: 8, borderRadius: 4, overflow: 'hidden', background: '#1a1a1a' }}>
