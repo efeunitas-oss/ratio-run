@@ -19,6 +19,7 @@ import { Product } from '@/lib/types';
 import { compareProducts, calculateRatioScore } from '@/lib/ratio-engine';
 import { getSpecConfig } from '@/lib/spec-config';
 import Image from 'next/image';
+import { TechSpecsTable } from '@/components/ui/TechSpecsTable';
 
 // ─── Tipler ──────────────────────────────────────────────────────────────────
 interface CategoryClientProps {
@@ -367,6 +368,18 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
         <p className="text-sm text-gray-400 leading-relaxed">{result.recommendation}</p>
       </div>
 
+      {/* Teknik Özellikler Tablosu */}
+      <div className="px-5 pb-5 pt-4 border-t" style={{ borderColor: '#1a1a1a' }}>
+        <p className="text-xs text-gray-700 font-mono uppercase tracking-widest mb-4">
+          Teknik Özellikler
+        </p>
+        <TechSpecsTable
+          productA={productA}
+          productB={productB}
+          categorySlug={categorySlug}
+        />
+      </div>
+
       {/* Breakdown satırları */}
       {Object.keys(result.ratio_a.breakdown.individual_scores).length > 0 && (
         <div className="px-5 pb-5">
@@ -481,15 +494,7 @@ export default function CategoryClient({
       setSelectedA(product);
     } else if (!selectedB && product.id !== selectedA.id) {
       setSelectedB(product);
-      // Önce comparing spinner göster, sonra ağır hesaplamayı defer et
-      setComparing(true);
-      setTimeout(() => {
-        setShowComparison(true);
-        setComparing(false);
-        setTimeout(() => {
-          comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 50);
-      }, 0);
+      // setShowComparison burada ÇAĞRILMIYOR — sadece buton ile açılır
     }
   }, [selectedA, selectedB]);
 
@@ -655,10 +660,17 @@ export default function CategoryClient({
         >
           <button
             onClick={() => {
-              setShowComparison(true);
-              setTimeout(() => {
-                comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }, 50);
+              setComparing(true);
+              // requestAnimationFrame ile bir frame bekle — spinner render edilsin
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  setShowComparison(true);
+                  setComparing(false);
+                  setTimeout(() => {
+                    comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 80);
+                });
+              });
             }}
             className="w-full py-3.5 rounded-xl font-bold text-black text-sm"
             style={{ background: 'linear-gradient(135deg, #C9A227, #D4AF37)' }}
