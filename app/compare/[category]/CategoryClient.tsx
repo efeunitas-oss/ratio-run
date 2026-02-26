@@ -102,6 +102,8 @@ function ProductCard({
         boxShadow: isSelected ? '0 0 20px rgba(201,162,39,0.15)' : undefined,
         outline: isSelected ? '2px solid #C9A22760' : undefined,
         outlineOffset: isSelected ? '2px' : undefined,
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {/* Seçim rozeti — sol üst */}
@@ -132,8 +134,8 @@ function ProductCard({
         )}
       </div>
 
-      {/* İçerik */}
-      <div className="p-3">
+      {/* İçerik — flex column, buton alta sabitlenir */}
+      <div style={{ padding: 12, display: 'flex', flexDirection: 'column', flex: 1 }}>
         {/* İsim */}
         <p className="text-white text-sm font-medium leading-tight line-clamp-2 mb-2">
           {product.name}
@@ -168,20 +170,28 @@ function ProductCard({
           )}
         </div>
 
-        {/* Karşılaştırma butonu */}
+        {/* Karşılaştırma butonu — her zaman alta */}
         <button
           onClick={(e) => { e.stopPropagation(); handleClick(); }}
-          className="mt-3 w-full py-2 rounded-lg text-xs font-bold transition-all"
-          style={isSelected
-            ? { background: '#C9A22720', color: '#C9A227', border: '1px solid #C9A22740' }
-            : { background: '#ffffff08', color: '#ffffff60', border: '1px solid #ffffff10' }
-          }
+          style={{
+            marginTop: 'auto',
+            paddingTop: 12,
+            width: '100%',
+            padding: '8px 0',
+            borderRadius: 8,
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: disabled && !isSelected ? 'default' : 'pointer',
+            border: isSelected ? '1px solid #C9A22740' : '1px solid #ffffff10',
+            background: isSelected ? '#C9A22720' : '#ffffff08',
+            color: isSelected ? '#C9A227' : '#ffffff60',
+          }}
           disabled={disabled && !isSelected}
         >
           {isSelected
             ? `✓ Seçildi (${selectionOrder})`
             : disabled
-            ? <span style={{visibility:'hidden'}}>placeholder</span>
+            ? <span style={{visibility:'hidden'}}>—</span>
             : '+ Karşılaştırmaya Ekle'
           }
         </button>
@@ -525,6 +535,20 @@ export default function CategoryClient({
 
       {/* ── Başlık satırı ────────────────────────────────────────────────── */}
       <div className="mb-6">
+        {/* Geri dön */}
+        <a
+          href="/"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            fontSize: 13, color: '#6b7280', textDecoration: 'none',
+            marginBottom: 12,
+            transition: 'color 0.15s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#C9A227')}
+          onMouseLeave={e => (e.currentTarget.style.color = '#6b7280')}
+        >
+          ← Ana Sayfa
+        </a>
         <h1 className="text-2xl font-black text-white mb-1">{categoryName}</h1>
         <p className="text-sm text-gray-600">
           {products.length} ürün · 2 ürün seç, karşılaştır
