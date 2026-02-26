@@ -114,13 +114,7 @@ function ProductCard({
         </div>
       )}
 
-      {/* Ratio skoru — sağ üst */}
-      <div
-        className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded-full text-xs font-bold font-mono"
-        style={{ background: badge.bg, color: badge.text, border: `1px solid ${badge.text}30` }}
-      >
-        {ratioScore.toFixed(0)}/100
-      </div>
+
 
       {/* Görsel */}
       <div className="aspect-square bg-black flex items-center justify-center overflow-hidden p-4">
@@ -162,18 +156,24 @@ function ProductCard({
           </div>
         )}
 
-        {/* Fiyat satırı */}
-        <div className="flex items-end justify-between">
-          <span className="text-base font-bold" style={{ color: '#C9A227' }}>
-            {fmtPrice(product.price, product.currency)}
-          </span>
-
-          {/* Kaynak etiketi */}
-          {product.source_name && (
-            <span className="text-xs text-gray-600 font-mono truncate ml-2 max-w-[80px]">
-              {product.source_name}
+        {/* Fiyat + Ratio Skoru */}
+        <div className="flex items-end justify-between mt-1">
+          <div>
+            <span className="text-base font-bold" style={{ color: '#C9A227' }}>
+              {fmtPrice(product.price, product.currency)}
             </span>
-          )}
+            {product.source_name && (
+              <span className="text-xs text-gray-600 font-mono block mt-0.5">
+                {product.source_name}
+              </span>
+            )}
+          </div>
+          <div className="text-right flex-shrink-0 ml-2">
+            <div className="text-xs text-gray-700 leading-none">Ratio</div>
+            <div className="text-sm font-black font-mono" style={{ color: badge.text }}>
+              {ratioScore.toFixed(0)}
+            </div>
+          </div>
         </div>
 
         {/* Karşılaştırma butonu */}
@@ -187,9 +187,9 @@ function ProductCard({
           disabled={disabled && !isSelected}
         >
           {isSelected
-            ? `✓ Karşılaştırmaya Eklendi (${selectionOrder}. ürün)`
+            ? `✓ Seçildi (${selectionOrder})`
             : disabled
-            ? '—'
+            ? <span style={{visibility:'hidden'}}>placeholder</span>
             : '+ Karşılaştırmaya Ekle'
           }
         </button>
@@ -652,11 +652,11 @@ export default function CategoryClient({
         </div>
       )}
 
-      {/* ── Mobil: Sticky Alt Çubuk (2 ürün seçilince) ───────────────────── */}
-      {twoSelected && (
+      {/* ── Sticky Alt Çubuk (2 ürün seçilince) — tüm ekranlarda ─────────── */}
+      {twoSelected && !showComparison && (
         <div
-          className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3 lg:hidden"
-          style={{ background: '#090909', borderTop: '1px solid #C9A22730' }}
+          className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3"
+          style={{ background: 'rgba(9,9,9,0.97)', borderTop: '1px solid #C9A22740', backdropFilter: 'blur(12px)' }}
         >
           <button
             onClick={() => {
@@ -681,7 +681,7 @@ export default function CategoryClient({
       )}
 
       {/* Mobil alt çubuk için bottom padding */}
-      {twoSelected && <div className="h-20 lg:hidden" />}
+      {twoSelected && !showComparison && <div className="h-20" />}
     </div>
   );
 }
