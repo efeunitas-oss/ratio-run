@@ -79,6 +79,9 @@ export const metadata: Metadata = {
       "tr-TR": BASE_URL,
     },
   },
+  verification: {
+    google: "PSVOCXM3bEPThbeJsKAaUHJJBMlovu-IJW_-USYByGo",
+  },
 };
 
 export default function RootLayout({
