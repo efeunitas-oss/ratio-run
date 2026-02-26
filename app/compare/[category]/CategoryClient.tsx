@@ -116,8 +116,8 @@ function ProductCard({
 
 
 
-      {/* Görsel */}
-      <div className="aspect-square bg-black flex items-center justify-center overflow-hidden p-4">
+      {/* Görsel — sabit yükseklik */}
+      <div style={{ height: 160, background: '#0d0d0d', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 8 }}>
         {product.image_url ? (
           <img
             src={product.image_url}
@@ -652,16 +652,15 @@ export default function CategoryClient({
         </div>
       )}
 
-      {/* ── Sticky Alt Çubuk (2 ürün seçilince) — tüm ekranlarda ─────────── */}
+      {/* ── Sticky Alt Çubuk (2 ürün seçilince) — ortada pill ──────────── */}
       {twoSelected && !showComparison && (
         <div
-          className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3"
-          style={{ background: 'rgba(9,9,9,0.97)', borderTop: '1px solid #C9A22740', backdropFilter: 'blur(12px)' }}
+          className="fixed z-50"
+          style={{ bottom: 28, left: '50%', transform: 'translateX(-50%)' }}
         >
           <button
             onClick={() => {
               setComparing(true);
-              // requestAnimationFrame ile bir frame bekle — spinner render edilsin
               requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                   setShowComparison(true);
@@ -672,16 +671,30 @@ export default function CategoryClient({
                 });
               });
             }}
-            className="w-full py-3.5 rounded-xl font-bold text-black text-sm"
-            style={{ background: 'linear-gradient(135deg, #C9A227, #D4AF37)' }}
+            style={{
+              padding: '14px 36px',
+              borderRadius: 16,
+              fontWeight: 800,
+              fontSize: 16,
+              background: 'linear-gradient(135deg, #D4AF37, #C9A227)',
+              color: '#000',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 8px 32px rgba(201,162,39,0.5)',
+              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+            }}
           >
             ⚡ Karşılaştır
+            <span style={{ fontSize: 13, opacity: 0.7, fontWeight: 600 }}>(2 ürün seçildi)</span>
           </button>
         </div>
       )}
 
       {/* Mobil alt çubuk için bottom padding */}
-      {twoSelected && !showComparison && <div className="h-20" />}
+      {twoSelected && !showComparison && <div style={{ height: 80 }} />}
     </div>
   );
 }
