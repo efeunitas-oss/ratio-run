@@ -156,24 +156,16 @@ function ProductCard({
           </div>
         )}
 
-        {/* Fiyat + Ratio Skoru */}
-        <div className="flex items-end justify-between mt-1">
-          <div>
-            <span className="text-base font-bold" style={{ color: '#C9A227' }}>
-              {fmtPrice(product.price, product.currency)}
+        {/* Fiyat + Kaynak */}
+        <div className="mt-1">
+          <span className="text-base font-bold" style={{ color: '#C9A227' }}>
+            {fmtPrice(product.price, product.currency)}
+          </span>
+          {product.source_name && (
+            <span className="text-xs text-gray-600 font-mono block mt-0.5">
+              {product.source_name}
             </span>
-            {product.source_name && (
-              <span className="text-xs text-gray-600 font-mono block mt-0.5">
-                {product.source_name}
-              </span>
-            )}
-          </div>
-          <div className="text-right flex-shrink-0 ml-2">
-            <div className="text-xs text-gray-700 leading-none">Ratio</div>
-            <div className="text-sm font-black font-mono" style={{ color: badge.text }}>
-              {ratioScore.toFixed(0)}
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Karşılaştırma butonu */}
@@ -282,18 +274,18 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
                 </div>
               )}
 
-              {/* Görsel */}
-              <div className="aspect-square bg-black rounded-lg flex items-center justify-center mb-3 overflow-hidden max-h-28">
+              {/* Görsel — sabit yükseklik */}
+              <div style={{ height: 180, background: '#0d0d0d', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, overflow: 'hidden' }}>
                 {product.image_url ? (
                   <img
                     src={product.image_url}
                     alt={product.name}
-                    className="w-full h-full object-contain p-2"
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 12 }}
                     loading="lazy"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <span className="text-2xl opacity-20">📦</span>
+                  <span style={{ fontSize: 32, opacity: 0.15 }}>📦</span>
                 )}
               </div>
 
@@ -382,39 +374,49 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
 
       {/* Breakdown satırları */}
       {Object.keys(result.ratio_a.breakdown.individual_scores).length > 0 && (
-        <div className="px-5 pb-5">
-          <p className="text-xs text-gray-700 font-mono uppercase tracking-widest mb-3 pt-4">
+        <div style={{ padding: '0 20px 20px', borderTop: '1px solid #1a1a1a' }}>
+          <p style={{ fontSize: 11, color: '#4b5563', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12, paddingTop: 16 }}>
             Detaylı Karşılaştırma
           </p>
-          <div className="space-y-2.5">
+          {/* A/B başlıkları */}
+          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', gap: 8, marginBottom: 8 }}>
+            <div />
+            <div style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {productA.name?.split(' ').slice(0, 3).join(' ')}
+            </div>
+            <div style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {productB.name?.split(' ').slice(0, 3).join(' ')}
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {Object.keys(result.ratio_a.breakdown.individual_scores).map((key) => {
               const a = result.ratio_a.breakdown.individual_scores[key] ?? 0;
               const b = result.ratio_b.breakdown.individual_scores[key] ?? 0;
               const maxVal = Math.max(a, b, 1);
+              const aWins = a > b;
+              const bWins = b > a;
               return (
-                <div key={key}>
-                  <div className="flex justify-between text-xs text-gray-600 mb-1">
-                    <span className="capitalize">{key.replace(/_/g, ' ')}</span>
+                <div key={key} style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', gap: 8, alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: '#6b7280', textTransform: 'capitalize' }}>
+                    {key.replace(/_/g, ' ')}
+                  </span>
+                  <div style={{ height: 8, borderRadius: 4, overflow: 'hidden', background: '#1a1a1a' }}>
+                    <div style={{
+                      height: '100%',
+                      borderRadius: 4,
+                      width: `${(a / maxVal) * 100}%`,
+                      background: aWins ? '#D4AF37' : '#374151',
+                      transition: 'width 0.4s ease',
+                    }} />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#1a1a1a' }}>
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${(a / maxVal) * 100}%`,
-                          background: result.winner === 'a' && a >= b ? '#D4AF37' : '#3a3a3a',
-                        }}
-                      />
-                    </div>
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#1a1a1a' }}>
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${(b / maxVal) * 100}%`,
-                          background: result.winner === 'b' && b >= a ? '#D4AF37' : '#3a3a3a',
-                        }}
-                      />
-                    </div>
+                  <div style={{ height: 8, borderRadius: 4, overflow: 'hidden', background: '#1a1a1a' }}>
+                    <div style={{
+                      height: '100%',
+                      borderRadius: 4,
+                      width: `${(b / maxVal) * 100}%`,
+                      background: bWins ? '#D4AF37' : '#374151',
+                      transition: 'width 0.4s ease',
+                    }} />
                   </div>
                 </div>
               );
