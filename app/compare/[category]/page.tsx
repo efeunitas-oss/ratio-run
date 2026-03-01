@@ -215,8 +215,9 @@ export default async function CategoryPage({ params }: Props) {
   return (
     <CategoryClient
       category={cat}
-      initialProducts={products || []}
+      initialProducts={(products || []) as any[]}
       categorySlug={slug}
+      categoryUrl={category}
     />
   );
 }

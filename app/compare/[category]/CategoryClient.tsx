@@ -13,20 +13,20 @@
 //   • Renk sistemi: gold only (#C9A227 / #D4AF37)
 // ============================================================================
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Product } from '@/lib/types';
-import { compareProducts, calculateRatioScore } from '@/lib/ratio-engine';
+import { compareProducts } from '@/lib/ratio-engine';
 import { getSpecConfig } from '@/lib/spec-config';
 import Image from 'next/image';
-import { TechSpecsTable } from '@/components/ui/TechSpecsTable';
 
 // ─── Tipler ──────────────────────────────────────────────────────────────────
 interface CategoryClientProps {
-  // page.tsx'in farklı versiyonlarıyla uyumlu — any[] ile tip çakışması önlenir
-  products?: any[];
-  initialProducts?: any[];
+  products?: Product[];
+  initialProducts?: Product[];
   categorySlug?: string;
+  categoryUrl?: string;  // URL'deki segment (örn: "robot-supurge")
   slug?: string;
   categoryName?: string;
   category?: { id: string; name: string; slug: string };
@@ -55,16 +55,18 @@ interface ProductCardProps {
   product: Product;
   ratioScore: number;
   categorySlug: string;
-  selectionOrder: 1 | 2 | null; // seçili değilse null
+  categoryUrl: string; // URL'deki kategori slug'ı (örn: "laptop", "robot-supurge")
+  selectionOrder: 1 | 2 | null;
   onSelect: (product: Product) => void;
   onDeselect: (product: Product) => void;
-  disabled: boolean; // 2 ürün seçiliyken diğer kartlar pasif
+  disabled: boolean;
 }
 
 function ProductCard({
   product,
   ratioScore,
   categorySlug,
+  categoryUrl,
   selectionOrder,
   onSelect,
   onDeselect,
@@ -84,26 +86,19 @@ function ProductCard({
     }
   };
 
+  const detailUrl = `/compare/${categoryUrl}/${product.id}`;
+
   return (
     <div
-      onClick={handleClick}
       className={`
         relative rounded-xl overflow-hidden transition-all duration-200 select-none
-        ${isSelected
-          ? 'ring-2 scale-[1.01]'
-          : disabled
-          ? 'opacity-40 cursor-not-allowed'
-          : 'cursor-pointer hover:scale-[1.01]'
-        }
+        ${isSelected ? 'ring-2 scale-[1.01]' : disabled ? 'opacity-40' : ''}
       `}
       style={{
         background: '#0D0D0D',
         border: isSelected ? '1px solid #C9A227' : '1px solid #1a1a1a',
         boxShadow: isSelected ? '0 0 20px rgba(201,162,39,0.15)' : undefined,
-        outline: isSelected ? '2px solid #C9A22760' : undefined,
-        outlineOffset: isSelected ? '2px' : undefined,
-        display: 'flex',
-        flexDirection: 'column',
+        display: 'flex', flexDirection: 'column',
       }}
     >
       {/* Seçim rozeti — sol üst */}
@@ -116,30 +111,41 @@ function ProductCard({
         </div>
       )}
 
-
-
-      {/* Görsel — sabit yükseklik */}
-      <div style={{ height: 160, background: '#0d0d0d', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 8 }}>
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-          />
-        ) : (
-          <span className="text-4xl opacity-10">📦</span>
-        )}
+      {/* Ratio skoru — sağ üst */}
+      <div
+        className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded-full text-xs font-bold font-mono"
+        style={{ background: badge.bg, color: badge.text, border: `1px solid ${badge.text}30` }}
+      >
+        {ratioScore.toFixed(0)}/100
       </div>
 
-      {/* İçerik — flex column, buton alta sabitlenir */}
-      <div style={{ padding: 12, display: 'flex', flexDirection: 'column', flex: 1 }}>
-        {/* İsim */}
-        <p className="text-white text-sm font-medium leading-tight line-clamp-2 mb-2">
-          {product.name}
-        </p>
+      {/* Görsel + İsim — tıklanınca detay sayfasına gider */}
+      <Link href={detailUrl} style={{ textDecoration: 'none', display: 'block' }}>
+        <div style={{ height: 160, background: '#0d0d0d', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 8 }}>
+          {product.image_url ? (
+            <img
+              src={product.image_url}
+              alt={product.name}
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          ) : (
+            <span style={{ fontSize: 40, opacity: 0.1 }}>📦</span>
+          )}
+        </div>
+      </Link>
+
+      {/* İçerik */}
+      <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+        {/* İsim — tıklanınca detay sayfasına gider */}
+        <Link href={detailUrl} style={{ textDecoration: 'none' }}>
+          <p className="text-white text-sm font-medium leading-tight line-clamp-2 mb-2"
+            style={{ margin: '0 0 8px' }}>
+            {product.name}
+          </p>
+        </Link>
 
         {/* Rating */}
         {rating > 0 && (
@@ -158,30 +164,28 @@ function ProductCard({
           </div>
         )}
 
-        {/* Fiyat + Kaynak */}
-        <div className="mt-1">
+        {/* Fiyat satırı */}
+        <div className="flex items-end justify-between">
           <span className="text-base font-bold" style={{ color: '#C9A227' }}>
             {fmtPrice(product.price, product.currency)}
           </span>
+
+          {/* Kaynak etiketi */}
           {product.source_name && (
-            <span className="text-xs text-gray-600 font-mono block mt-0.5">
+            <span className="text-xs text-gray-600 font-mono truncate ml-2 max-w-[80px]">
               {product.source_name}
             </span>
           )}
         </div>
 
-        {/* Karşılaştırma butonu — her zaman alta */}
+        {/* Karşılaştırma butonu */}
         <button
           onClick={(e) => { e.stopPropagation(); handleClick(); }}
           style={{
             marginTop: 'auto',
-            paddingTop: 12,
-            width: '100%',
-            padding: '8px 0',
-            borderRadius: 8,
-            fontSize: 12,
-            fontWeight: 700,
-            cursor: disabled && !isSelected ? 'default' : 'pointer',
+            width: '100%', padding: '8px 0', borderRadius: 8,
+            fontSize: 12, fontWeight: 700,
+            cursor: (disabled && !isSelected) ? 'default' : 'pointer',
             border: isSelected ? '1px solid #C9A22740' : '1px solid #ffffff10',
             background: isSelected ? '#C9A22720' : '#ffffff08',
             color: isSelected ? '#C9A227' : '#ffffff60',
@@ -191,7 +195,7 @@ function ProductCard({
           {isSelected
             ? `✓ Seçildi (${selectionOrder})`
             : disabled
-            ? <span style={{visibility:'hidden'}}>—</span>
+            ? <span style={{ visibility: 'hidden' }}>—</span>
             : '+ Karşılaştırmaya Ekle'
           }
         </button>
@@ -272,10 +276,7 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
             <div
               key={side}
               className="p-4 lg:p-6 relative"
-              style={{
-                ...(isWinner ? { background: '#C9A22706' } : {}),
-                display: 'flex', flexDirection: 'column',
-              }}
+              style={isWinner ? { background: '#C9A22706' } : {}}
             >
               {/* Kazanan rozeti */}
               {isWinner && winner !== 'tie' && (
@@ -287,18 +288,18 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
                 </div>
               )}
 
-              {/* Görsel — sabit yükseklik */}
-              <div style={{ height: 180, background: '#0d0d0d', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, overflow: 'hidden' }}>
+              {/* Görsel */}
+              <div className="aspect-square bg-black rounded-lg flex items-center justify-center mb-3 overflow-hidden max-h-28">
                 {product.image_url ? (
                   <img
                     src={product.image_url}
                     alt={product.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 12 }}
+                    className="w-full h-full object-contain p-2"
                     loading="lazy"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <span style={{ fontSize: 32, opacity: 0.15 }}>📦</span>
+                  <span className="text-2xl opacity-20">📦</span>
                 )}
               </div>
 
@@ -344,29 +345,22 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
                 {badge.label}
               </div>
 
-              {/* Satın al butonu — her zaman render edilir, hizayı korur */}
-              <div style={{ marginTop: 'auto' }}>
-                {url ? (
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer sponsored"
-                    style={{
-                      display: 'block', width: '100%', textAlign: 'center',
-                      padding: '10px 0', borderRadius: 10, fontSize: 13,
-                      fontWeight: 700, textDecoration: 'none',
-                      ...(isWinner
-                        ? { background: '#C9A227', color: '#000' }
-                        : { background: 'transparent', color: '#C9A227', border: '1px solid #C9A22740' }
-                      )
-                    }}
-                  >
-                    {isWinner ? '🛒 En İyi Fiyata Al →' : 'Fiyata Bak →'}
-                  </a>
-                ) : (
-                  <div style={{ height: 40 }} />
-                )}
-              </div>
+              {/* Satın al butonu */}
+              {url && (
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  className="block w-full text-center py-2.5 rounded-lg text-xs font-bold transition-all"
+                  style={
+                    isWinner
+                      ? { background: '#C9A227', color: '#000' }
+                      : { background: '#ffffff08', color: '#C9A227', border: '1px solid #C9A22730' }
+                  }
+                >
+                  {isWinner ? '🛒 En İyi Fiyata Al →' : 'Fiyata Bak →'}
+                </a>
+              )}
             </div>
           );
         })}
@@ -380,63 +374,41 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
         <p className="text-sm text-gray-400 leading-relaxed">{result.recommendation}</p>
       </div>
 
-      {/* Teknik Özellikler Tablosu */}
-      <div className="px-5 pb-5 pt-4 border-t" style={{ borderColor: '#1a1a1a' }}>
-        <p className="text-xs text-gray-700 font-mono uppercase tracking-widest mb-4">
-          Teknik Özellikler
-        </p>
-        <TechSpecsTable
-          productA={productA}
-          productB={productB}
-          categorySlug={categorySlug}
-        />
-      </div>
-
       {/* Breakdown satırları */}
       {Object.keys(result.ratio_a.breakdown.individual_scores).length > 0 && (
-        <div style={{ padding: '0 20px 20px', borderTop: '1px solid #1a1a1a' }}>
-          <p style={{ fontSize: 11, color: '#4b5563', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12, paddingTop: 16 }}>
+        <div className="px-5 pb-5">
+          <p className="text-xs text-gray-700 font-mono uppercase tracking-widest mb-3 pt-4">
             Detaylı Karşılaştırma
           </p>
-          {/* A/B başlıkları */}
-          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 12, marginBottom: 8 }}>
-            <div />
-            <div style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {productA.name?.split(' ').slice(0, 3).join(' ')}
-            </div>
-            <div style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {productB.name?.split(' ').slice(0, 3).join(' ')}
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="space-y-2.5">
             {Object.keys(result.ratio_a.breakdown.individual_scores).map((key) => {
               const a = result.ratio_a.breakdown.individual_scores[key] ?? 0;
               const b = result.ratio_b.breakdown.individual_scores[key] ?? 0;
               const maxVal = Math.max(a, b, 1);
-              const aWins = a > b;
-              const bWins = b > a;
               return (
-                <div key={key} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 12, alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, color: '#9ca3af', textTransform: 'capitalize' }}>
-                    {key.replace(/_/g, ' ')}
-                  </span>
-                  <div style={{ height: 8, borderRadius: 4, overflow: 'hidden', background: '#1a1a1a' }}>
-                    <div style={{
-                      height: '100%',
-                      borderRadius: 4,
-                      width: `${(a / maxVal) * 100}%`,
-                      background: aWins ? '#D4AF37' : '#374151',
-                      transition: 'width 0.4s ease',
-                    }} />
+                <div key={key}>
+                  <div className="flex justify-between text-xs text-gray-600 mb-1">
+                    <span className="capitalize">{key.replace(/_/g, ' ')}</span>
                   </div>
-                  <div style={{ height: 8, borderRadius: 4, overflow: 'hidden', background: '#1a1a1a' }}>
-                    <div style={{
-                      height: '100%',
-                      borderRadius: 4,
-                      width: `${(b / maxVal) * 100}%`,
-                      background: bWins ? '#D4AF37' : '#374151',
-                      transition: 'width 0.4s ease',
-                    }} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#1a1a1a' }}>
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${(a / maxVal) * 100}%`,
+                          background: result.winner === 'a' && a >= b ? '#D4AF37' : '#3a3a3a',
+                        }}
+                      />
+                    </div>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#1a1a1a' }}>
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${(b / maxVal) * 100}%`,
+                          background: result.winner === 'b' && b >= a ? '#D4AF37' : '#3a3a3a',
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               );
@@ -453,6 +425,7 @@ export default function CategoryClient({
   products: productsProp,
   initialProducts,
   categorySlug: categorySlugProp,
+  categoryUrl: categoryUrlProp,
   slug,
   categoryName: categoryNameProp,
   category,
@@ -461,6 +434,7 @@ export default function CategoryClient({
   const products: Product[] = productsProp ?? initialProducts ?? [];
   const categorySlug: string = categorySlugProp ?? slug ?? category?.slug ?? '';
   const categoryName: string = categoryNameProp ?? category?.name ?? categorySlug;
+  const categoryUrl: string  = categoryUrlProp ?? categorySlugProp ?? slug ?? category?.slug ?? '';
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -474,9 +448,6 @@ export default function CategoryClient({
   // Karşılaştırma paneli açık mı
   const [showComparison, setShowComparison] = useState(false);
 
-  // Karşılaştırma hesaplanıyor mu
-  const [comparing, setComparing] = useState(false);
-
   // Karşılaştırma panelinin ref'i (scroll için)
   const comparisonRef = useRef<HTMLDivElement>(null);
 
@@ -489,15 +460,15 @@ export default function CategoryClient({
     }
   }, [searchParams, products]);
 
-  // Ratio skorları — useMemo ile memoize, sadece products değişince yeniden hesapla
-  const productsWithScore = useMemo(() => {
-    const config = getSpecConfig(categorySlug);
-    const maxPrice = Math.max(...products.map((p) => p.price ?? 0), 1);
-    return products.map((p) => ({
-      product: p,
-      score: calculateRatioScore(p, config.weights, maxPrice).normalized_score as number,
-    }));
-  }, [products, categorySlug]);
+  // Ratio skorları (tüm ürünler için hesapla)
+  const config = getSpecConfig(categorySlug);
+  const maxPrice = Math.max(...products.map((p) => p.price ?? 0), 1);
+  // Ürünleri önce ratio'ya göre sırala (default)
+  const { calculateRatioScore } = require('@/lib/ratio-engine');
+  const productsWithScore = products.map((p) => ({
+    product: p,
+    score: calculateRatioScore(p, config.weights, maxPrice).normalized_score as number,
+  }));
 
   // Arama filtresi
   const filtered = productsWithScore.filter(({ product }) => {
@@ -516,7 +487,11 @@ export default function CategoryClient({
       setSelectedA(product);
     } else if (!selectedB && product.id !== selectedA.id) {
       setSelectedB(product);
-      // setShowComparison burada ÇAĞRILMIYOR — sadece buton ile açılır
+      setShowComparison(true);
+      // Küçük delay ile panele scroll
+      setTimeout(() => {
+        comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
   }, [selectedA, selectedB]);
 
@@ -545,20 +520,6 @@ export default function CategoryClient({
 
       {/* ── Başlık satırı ────────────────────────────────────────────────── */}
       <div className="mb-6">
-        {/* Geri dön */}
-        <a
-          href="/"
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            fontSize: 13, color: '#6b7280', textDecoration: 'none',
-            marginBottom: 12,
-            transition: 'color 0.15s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#C9A227')}
-          onMouseLeave={e => (e.currentTarget.style.color = '#6b7280')}
-        >
-          ← Ana Sayfa
-        </a>
         <h1 className="text-2xl font-black text-white mb-1">{categoryName}</h1>
         <p className="text-sm text-gray-600">
           {products.length} ürün · 2 ürün seç, karşılaştır
@@ -596,22 +557,6 @@ export default function CategoryClient({
 
       {/* ── Karşılaştırma Paneli (iki ürün seçilince açılır) ─────────────── */}
       <div ref={comparisonRef}>
-        {comparing && (
-          <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            justifyContent: 'center', padding: '60px 0', gap: 16,
-          }}>
-            <div style={{
-              width: 40, height: 40,
-              border: '3px solid #1f2937',
-              borderTopColor: '#C9A227',
-              borderRadius: '50%',
-              animation: 'spin 0.7s linear infinite',
-            }} />
-            <p style={{ color: '#9ca3af', fontSize: 13 }}>Ratio Score hesaplanıyor...</p>
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          </div>
-        )}
         {showComparison && selectedA && selectedB && (
           <ComparisonPanel
             productA={selectedA}
@@ -678,6 +623,7 @@ export default function CategoryClient({
                 product={product}
                 ratioScore={score}
                 categorySlug={categorySlug}
+                categoryUrl={categoryUrl}
                 selectionOrder={order as 1 | 2 | null}
                 onSelect={handleSelect}
                 onDeselect={handleDeselect}
@@ -688,49 +634,29 @@ export default function CategoryClient({
         </div>
       )}
 
-      {/* ── Sticky Alt Çubuk (2 ürün seçilince) — ortada pill ──────────── */}
-      {twoSelected && !showComparison && (
+      {/* ── Mobil: Sticky Alt Çubuk (2 ürün seçilince) ───────────────────── */}
+      {twoSelected && (
         <div
-          className="fixed z-50"
-          style={{ bottom: 28, left: '50%', transform: 'translateX(-50%)' }}
+          className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3 lg:hidden"
+          style={{ background: '#090909', borderTop: '1px solid #C9A22730' }}
         >
           <button
             onClick={() => {
-              setComparing(true);
-              requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                  setShowComparison(true);
-                  setComparing(false);
-                  setTimeout(() => {
-                    comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }, 80);
-                });
-              });
+              setShowComparison(true);
+              setTimeout(() => {
+                comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 50);
             }}
-            style={{
-              padding: '14px 36px',
-              borderRadius: 16,
-              fontWeight: 800,
-              fontSize: 16,
-              background: 'linear-gradient(135deg, #D4AF37, #C9A227)',
-              color: '#000',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 8px 32px rgba(201,162,39,0.5)',
-              whiteSpace: 'nowrap',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-            }}
+            className="w-full py-3.5 rounded-xl font-bold text-black text-sm"
+            style={{ background: 'linear-gradient(135deg, #C9A227, #D4AF37)' }}
           >
             ⚡ Karşılaştır
-            <span style={{ fontSize: 13, opacity: 0.7, fontWeight: 600 }}>(2 ürün seçildi)</span>
           </button>
         </div>
       )}
 
       {/* Mobil alt çubuk için bottom padding */}
-      {twoSelected && !showComparison && <div style={{ height: 80 }} />}
+      {twoSelected && <div className="h-20 lg:hidden" />}
     </div>
   );
 }
