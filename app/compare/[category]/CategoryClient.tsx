@@ -454,30 +454,32 @@ export default function CategoryClient({
         </div>
       )}
 
-      {/* Ürün Grid */}
-      {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 0', color: '#4b5563' }}>
-          <p style={{ fontSize: 16, margin: '0 0 8px' }}>"{searchQuery}" için sonuç bulunamadı</p>
-          <p style={{ fontSize: 13, margin: 0 }}>Farklı bir kelime dene</p>
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
-          {filtered.map(({ product, score }: any) => {
-            const order = selectedA?.id === product.id ? 1 : selectedB?.id === product.id ? 2 : null;
-            return (
-              <ProductCard
-                key={product.id}
-                product={product}
-                ratioScore={score}
-                categoryUrl={categoryUrl}
-                selectionOrder={order as 1 | 2 | null}
-                onSelect={handleSelect}
-                onDeselect={handleDeselect}
-                disabled={twoSelected && order === null}
-              />
-            );
-          })}
-        </div>
+      {/* Ürün Grid — karşılaştırma açıkken gizle */}
+      {!showComparison && (
+        filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '80px 0', color: '#4b5563' }}>
+            <p style={{ fontSize: 16, margin: '0 0 8px' }}>"{searchQuery}" için sonuç bulunamadı</p>
+            <p style={{ fontSize: 13, margin: 0 }}>Farklı bir kelime dene</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+            {filtered.map(({ product, score }: any) => {
+              const order = selectedA?.id === product.id ? 1 : selectedB?.id === product.id ? 2 : null;
+              return (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  ratioScore={score}
+                  categoryUrl={categoryUrl}
+                  selectionOrder={order as 1 | 2 | null}
+                  onSelect={handleSelect}
+                  onDeselect={handleDeselect}
+                  disabled={twoSelected && order === null}
+                />
+              );
+            })}
+          </div>
+        )
       )}
 
 
