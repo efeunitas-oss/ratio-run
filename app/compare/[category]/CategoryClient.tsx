@@ -375,10 +375,6 @@ export default function CategoryClient({
     else if (selectedB?.id === product.id) { setSelectedB(null); setShowComparison(false); }
   }, [selectedA, selectedB]);
 
-  const closeComparison = () => { setShowComparison(false); setSelectedA(null); setSelectedB(null); };
-  const twoSelected = !!selectedA && !!selectedB;
-  const selectionCount = (selectedA ? 1 : 0) + (selectedB ? 1 : 0);
-
   const handleCompare = () => {
     setComparing(true);
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -387,6 +383,12 @@ export default function CategoryClient({
       setTimeout(() => comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
     }));
   };
+
+  const closeComparison = () => { setShowComparison(false); setSelectedA(null); setSelectedB(null); };
+  const twoSelected = !!selectedA && !!selectedB;
+  const selectionCount = (selectedA ? 1 : 0) + (selectedB ? 1 : 0);
+
+
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 16px' }}>
@@ -478,9 +480,10 @@ export default function CategoryClient({
         </div>
       )}
 
-      {/* Karşılaştır butonu — ortada pill */}
-      {twoSelected && !showComparison && (
-        <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
+
+      {/* Karşılaştır butonu — 2 ürün seçilince ortada pill olarak çıkar */}
+      {twoSelected && !showComparison && !comparing && (
+        <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
           <button onClick={handleCompare} style={{
             padding: '14px 36px', borderRadius: 16,
             fontWeight: 800, fontSize: 16,
@@ -490,11 +493,12 @@ export default function CategoryClient({
             display: 'flex', alignItems: 'center', gap: 10, whiteSpace: 'nowrap',
           }}>
             ⚡ Karşılaştır
-            <span style={{ fontSize: 13, opacity: 0.7, fontWeight: 600 }}>(2 ürün)</span>
+            <span style={{ fontSize: 13, opacity: 0.7, fontWeight: 600 }}>(2 ürün seçildi)</span>
           </button>
         </div>
       )}
       {twoSelected && !showComparison && <div style={{ height: 80 }} />}
+
     </div>
   );
 }
