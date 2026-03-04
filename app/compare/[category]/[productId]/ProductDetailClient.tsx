@@ -4,7 +4,6 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { calculateRatioScore } from '@/lib/ratio-engine';
 import { getSpecConfig } from '@/lib/spec-config';
 
@@ -190,8 +189,6 @@ function SimilarCard({ product, categoryUrl, categorySlug }: { product: Product;
 export default function ProductDetailClient({
   product, category, categorySlug, categoryUrl, similarProducts,
 }: Props) {
-  const router = useRouter();
-
   const config = useMemo(() => getSpecConfig(categorySlug), [categorySlug]);
 
   const maxPrice = useMemo(() =>
@@ -227,39 +224,10 @@ export default function ProductDetailClient({
   // Fiyat
   const displayPrice = fmtPrice(product.avg_price ?? product.price);
 
-  // Schema.org JSON-LD
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.name,
-    brand: { '@type': 'Brand', name: product.brand ?? '' },
-    image: product.image_url ?? '',
-    description: `${product.name} için Ratio Score: ${score.toFixed(0)}/100. Türkiye'nin matematiksel ürün karşılaştırma platformu ratio.run.`,
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'TRY',
-      price: product.avg_price ?? product.price ?? 0,
-      availability: 'https://schema.org/InStock',
-      url: Array.isArray(product.sources) && product.sources.length > 0
-        ? product.sources[0].url
-        : product.source_url ?? '',
-    },
-    aggregateRating: product.specifications?.stars ? {
-      '@type': 'AggregateRating',
-      ratingValue: product.specifications.stars,
-      reviewCount: product.specifications.reviewsCount ?? 1,
-      bestRating: 5,
-    } : undefined,
-  };
+  // JSON-LD server page.tsx'de üretiliyor
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-
-      {/* JSON-LD */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
 
       {/* NAV */}
       <nav style={{
