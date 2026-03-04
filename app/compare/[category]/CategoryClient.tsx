@@ -25,6 +25,19 @@ interface CategoryClientProps {
 }
 
 // ─── Yardımcılar ─────────────────────────────────────────────────────────────
+// Amazon affiliate tag ekleyici
+function withAffiliateTag(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes('amazon.com.tr') || u.hostname.includes('amzn')) {
+      u.searchParams.set('tag', 'ratiorun-21');
+      return u.toString();
+    }
+  } catch {}
+  return url;
+}
+
 function fmtPrice(price: number | null, currency = 'TRY'): string {
   if (!price) return '—';
   return new Intl.NumberFormat('tr-TR', {
@@ -179,8 +192,10 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: {
   const winner = result.winner;
 
   function getUrl(p: any): string | null {
-    if (Array.isArray(p.sources) && p.sources.length > 0) return p.sources[0].url;
-    return p.source_url ?? null;
+    const raw = Array.isArray(p.sources) && p.sources.length > 0
+      ? p.sources[0].url
+      : p.source_url ?? null;
+    return withAffiliateTag(raw);
   }
 
   const sides = [

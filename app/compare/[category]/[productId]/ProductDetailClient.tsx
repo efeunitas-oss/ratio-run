@@ -39,6 +39,19 @@ interface Props {
   similarProducts: Product[];
 }
 
+// Amazon affiliate tag ekleyici
+function withAffiliateTag(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes('amazon.com.tr') || u.hostname.includes('amzn')) {
+      u.searchParams.set('tag', 'ratiorun-21');
+      return u.toString();
+    }
+  } catch {}
+  return url;
+}
+
 function fmtPrice(price: number | null): string {
   if (!price) return '—';
   return `₺${Math.round(price).toLocaleString('tr-TR')}`;
@@ -100,7 +113,7 @@ function SourceLink({ product }: { product: Product }) {
       {sources.map((s, i) => (
         <a
           key={i}
-          href={s.url}
+          href={withAffiliateTag(s.url) ?? s.url}
           target="_blank"
           rel="noopener noreferrer sponsored"
           style={{
