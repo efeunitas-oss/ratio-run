@@ -73,7 +73,7 @@ export default function HomeClient({ categories, counts, topProducts, totalProdu
 
   const tabs = [
     { id: 'all', label: 'TÜMÜ' },
-    ...categories.slice(0, 4).map(c => ({ id: c.link, label: c.label.slice(0, 5).toUpperCase() })),
+    ...categories.slice(0, 4).map(c => ({ id: c.link, label: c.label.toUpperCase() })),
   ];
 
   const filtered = (activeTab === 'all' ? topProducts : topProducts.filter(p => p.categorySlug === activeTab)).slice(0, 5);
