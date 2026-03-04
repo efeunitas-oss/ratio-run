@@ -43,6 +43,14 @@ function fmtPrice(p: number) {
 
 export default function HomeClient({ categories, counts, topProducts, totalProducts, lastUpdated }: Props) {
   const [time, setTime] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     const tick = () => setTime(new Date().toLocaleTimeString('tr-TR'));
@@ -55,29 +63,23 @@ export default function HomeClient({ categories, counts, topProducts, totalProdu
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap');
     * { box-sizing: border-box; }
     @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-    @keyframes blink  { 0%,100%{opacity:1} 50%{opacity:0.2} }
+    @keyframes blink  { 0%,100%{opacity:1} 50%{opacity:0.15} }
     @keyframes fadein { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
     .mono { font-family:'IBM Plex Mono',monospace; }
     .ticker-wrap { overflow:hidden; flex:1; min-width:0; }
     .ticker-track { display:inline-flex; align-items:center; animation:ticker 50s linear infinite; white-space:nowrap; }
     .ticker-track:hover { animation-play-state:paused; }
-    .panel { background:rgba(8,8,8,0.95); border:1px solid ${GOLD}28; border-radius:4px; overflow:hidden; }
-    .panel-hd { background:${GOLD}10; border-bottom:1px solid ${GOLD}20; padding:8px 14px; display:flex; align-items:center; justify-content:space-between; }
-    .cat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-    .cat-card { display:flex; flex-direction:column; align-items:center; gap:8px; padding:22px 10px; background:rgba(8,8,8,0.8); border:1px solid ${GOLD}18; border-radius:4px; text-decoration:none; transition:all 0.15s; }
+    .cat-card { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:22px 10px; background:rgba(8,8,8,0.8); border:1px solid ${GOLD}18; border-radius:4px; text-decoration:none; transition:all 0.15s; text-align:center; }
     .cat-card:hover { border-color:${GOLD}55; background:${GOLD}07; }
-    @media (max-width: 768px) {
-      .cat-grid { grid-template-columns:repeat(2,1fr) !important; }
-      .nav-extra { display:none !important; }
-      .best-grid { grid-template-columns:1fr !important; }
-    }
+    .goto-btn { display:block; padding:13px; background:linear-gradient(135deg,${GOLD},${GOLD_BRIGHT}); color:#000; font-weight:800; font-size:13px; font-family:'IBM Plex Mono',monospace; letter-spacing:1.5px; border-radius:3px; text-decoration:none; text-align:center; width:100%; }
+    .goto-btn:hover { opacity:0.9; }
   `;
 
   return (
     <main style={{ minHeight: '100vh', background: '#030303', color: '#fff' }}>
       <style>{css}</style>
 
-      {/* NAV */}
+      {/* ── NAV ── */}
       <nav style={{ borderBottom: `1px solid ${GOLD}28`, padding: '11px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'rgba(3,3,3,0.97)', backdropFilter: 'blur(16px)', zIndex: 50 }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
           <img src="/logo.png" alt="Ratio.Run" style={{ height: 34, width: 'auto' }} />
@@ -85,20 +87,24 @@ export default function HomeClient({ categories, counts, topProducts, totalProdu
             ratio<span style={{ color: GOLD_BRIGHT }}>.run</span>
           </span>
         </a>
-        <div className="nav-extra" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <span className="mono" style={{ fontSize: 10, color: GREEN, display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: GREEN, display: 'inline-block', animation: 'blink 2s infinite' }} />
-            AKTİF
+        {!isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <span className="mono" style={{ fontSize: 10, color: GREEN, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: GREEN, display: 'inline-block', animation: 'blink 2s infinite' }} />
+              AKTİF
+            </span>
+            <span className="mono" style={{ fontSize: 10, color: DIM }}>{time}</span>
+            <span className="mono" style={{ fontSize: 10, color: DIM }}>{totalProducts.toLocaleString('tr-TR')} ÜRÜN</span>
+          </div>
+        )}
+        {!isMobile && (
+          <span className="mono" style={{ fontSize: 10, color: GOLD, letterSpacing: 2 }}>
+            DON&apos;T BUY WITH EMOTIONS.
           </span>
-          <span className="mono" style={{ fontSize: 10, color: DIM }}>{time}</span>
-          <span className="mono" style={{ fontSize: 10, color: DIM }}>{totalProducts.toLocaleString('tr-TR')} ÜRÜN</span>
-        </div>
-        <span className="mono nav-extra" style={{ fontSize: 10, color: GOLD, letterSpacing: 2 }}>
-          DON&apos;T BUY WITH EMOTIONS.
-        </span>
+        )}
       </nav>
 
-      {/* TICKER */}
+      {/* ── TICKER ── */}
       <div style={{ height: 34, borderBottom: `1px solid ${GOLD}20`, background: '#000', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
         <div style={{ padding: '0 12px', borderRight: `1px solid ${GOLD}22`, flexShrink: 0 }}>
           <span className="mono" style={{ fontSize: 9, color: GOLD, letterSpacing: 2 }}>FEED</span>
@@ -120,48 +126,61 @@ export default function HomeClient({ categories, counts, topProducts, totalProdu
         </div>
       </div>
 
-      {/* MAIN */}
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 16px 0', animation: 'fadein 0.3s ease' }}>
+      {/* ── MAIN ── */}
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 16px 0', animation: 'fadein 0.3s ease' }}>
 
-        {/* GÜNÜN EN İYİSİ */}
+        {/* ── GÜNÜN KAZANANI ── */}
         {best && (
-          <div className="panel" style={{ marginBottom: 20 }}>
-            <div className="panel-hd">
-              <span className="mono" style={{ fontSize: 9, color: GOLD, letterSpacing: 2 }}>GÜNÜN EN İYİ RASYOSU</span>
-              <span className="mono" style={{ fontSize: 9, color: DIM }}>{best.category.toUpperCase()} · {lastUpdated}</span>
+          <div style={{ background: 'rgba(8,8,8,0.95)', border: `1px solid ${GOLD}28`, borderRadius: 4, overflow: 'hidden', marginBottom: 20 }}>
+
+            {/* Header */}
+            <div style={{ background: `${GOLD}10`, borderBottom: `1px solid ${GOLD}20`, padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span className="mono" style={{ fontSize: 9, color: GOLD, letterSpacing: 2 }}>🏆 GÜNÜN EN İYİ PUANI</span>
+              <span className="mono" style={{ fontSize: 9, color: DIM }}>{best.category.toUpperCase()}</span>
             </div>
-            <div className="best-grid" style={{ display: 'grid', gridTemplateColumns: '200px 1fr', alignItems: 'center' }}>
-              {/* Sol — Büyük skor */}
-              <div style={{ padding: '28px 20px', textAlign: 'center', borderRight: `1px solid ${GOLD}18` }}>
-                <div className="mono" style={{ fontSize: 88, fontWeight: 700, lineHeight: 1, color: GOLD_BRIGHT, letterSpacing: -4 }}>
+
+            {/* İçerik — tamamen ortalı, tek kolon */}
+            <div style={{ padding: isMobile ? '28px 20px' : '36px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 20 }}>
+
+              {/* Büyük skor */}
+              <div>
+                <div className="mono" style={{ fontSize: isMobile ? 96 : 112, fontWeight: 700, lineHeight: 1, color: GOLD_BRIGHT, letterSpacing: -4 }}>
                   <AnimatedScore target={Math.round(best.score)} delay={200} />
                 </div>
-                <div className="mono" style={{ fontSize: 9, color: DIM, marginTop: 4, letterSpacing: 1 }}>/ 100 RATIO SCORE</div>
-                <div style={{ height: 3, background: '#111', borderRadius: 2, overflow: 'hidden', margin: '12px 0 0' }}>
-                  <div style={{ height: '100%', width: `${best.score}%`, background: `linear-gradient(90deg, ${GOLD}, ${GOLD_BRIGHT})`, borderRadius: 2 }} />
+                <div className="mono" style={{ fontSize: 10, color: DIM, marginTop: 4, letterSpacing: 2 }}>/ 100 RATIO SCORE</div>
+              </div>
+
+              {/* Progress bar */}
+              <div style={{ width: '100%', maxWidth: 320, height: 4, background: '#111', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${best.score}%`, background: `linear-gradient(90deg, ${GOLD}, ${GOLD_BRIGHT})`, borderRadius: 2 }} />
+              </div>
+
+              {/* Ürün adı */}
+              <div>
+                <div style={{ fontSize: isMobile ? 17 : 22, fontWeight: 800, color: '#f3f4f6', lineHeight: 1.3 }}>
+                  {best.name}
+                </div>
+                <div className="mono" style={{ fontSize: 11, color: DIM, marginTop: 6 }}>{best.brand} · {best.category}</div>
+              </div>
+
+              {/* Fiyat + değişim */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32 }}>
+                <div>
+                  <div className="mono" style={{ fontSize: 9, color: DIM, letterSpacing: 1, marginBottom: 4 }}>GÜNCEL FİYAT</div>
+                  <div className="mono" style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: GOLD_BRIGHT }}>{fmtPrice(best.price)}</div>
+                </div>
+                <div style={{ width: 1, height: 40, background: `${GOLD}20` }} />
+                <div>
+                  <div className="mono" style={{ fontSize: 9, color: DIM, letterSpacing: 1, marginBottom: 4 }}>DEĞİŞİM</div>
+                  <div className="mono" style={{ fontSize: isMobile ? 16 : 18, fontWeight: 600, color: best.delta >= 0 ? GREEN : RED }}>
+                    {best.delta >= 0 ? '▲' : '▼'} {Math.abs(best.delta).toFixed(1)}
+                  </div>
                 </div>
               </div>
-              {/* Sağ — Ürün detayı */}
-              <div style={{ padding: '24px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: '#f3f4f6', lineHeight: 1.3, marginBottom: 6 }}>
-                    {best.name}
-                  </div>
-                  <div className="mono" style={{ fontSize: 11, color: DIM }}>{best.brand} · {best.category}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-                  <div>
-                    <div className="mono" style={{ fontSize: 9, color: DIM, letterSpacing: 1, marginBottom: 3 }}>GÜNCEL FİYAT</div>
-                    <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: GOLD_BRIGHT }}>{fmtPrice(best.price)}</div>
-                  </div>
-                  <div>
-                    <div className="mono" style={{ fontSize: 9, color: DIM, letterSpacing: 1, marginBottom: 3 }}>DEĞİŞİM</div>
-                    <div className="mono" style={{ fontSize: 16, fontWeight: 600, color: best.delta >= 0 ? GREEN : RED }}>
-                      {best.delta >= 0 ? '▲' : '▼'} {Math.abs(best.delta).toFixed(1)}
-                    </div>
-                  </div>
-                </div>
-                <Link href={`/compare/${best.categorySlug}/${best.id}`} style={{ display: 'inline-block', padding: '11px 28px', background: `linear-gradient(135deg, ${GOLD}, ${GOLD_BRIGHT})`, color: '#000', fontWeight: 800, fontSize: 13, fontFamily: "'IBM Plex Mono',monospace", letterSpacing: 1.5, borderRadius: 3, textDecoration: 'none', alignSelf: 'flex-start' }}>
+
+              {/* Buton */}
+              <div style={{ width: '100%', maxWidth: 320 }}>
+                <Link href={`/compare/${best.categorySlug}/${best.id}`} className="goto-btn">
                   ANALİZİ GÖR →
                 </Link>
               </div>
@@ -169,17 +188,17 @@ export default function HomeClient({ categories, counts, topProducts, totalProdu
           </div>
         )}
 
-        {/* KATEGORİLER */}
+        {/* ── KATEGORİLER ── */}
         <div style={{ marginBottom: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span className="mono" style={{ fontSize: 9, color: DIM, letterSpacing: 2 }}>KATEGORİ SEÇ</span>
-            <span className="mono" style={{ fontSize: 9, color: DIM }}>{totalProducts.toLocaleString('tr-TR')} ÜRÜN ANALİZ EDİLDİ</span>
+            <span className="mono" style={{ fontSize: 9, color: DIM }}>{totalProducts.toLocaleString('tr-TR')} ÜRÜN</span>
           </div>
-          <div className="cat-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 12 }}>
             {categories.map(cat => (
               <Link key={cat.id} href={`/compare/${cat.link}`} className="cat-card">
                 <span style={{ fontSize: 30 }}>{cat.icon}</span>
-                <div style={{ textAlign: 'center' }}>
+                <div>
                   <div style={{ fontWeight: 700, color: '#e5e7eb', fontSize: 14 }}>{cat.label}</div>
                   <div className="mono" style={{ color: GOLD_BRIGHT, fontSize: 10, marginTop: 3 }}>
                     {(counts[cat.id] ?? 0).toLocaleString('tr-TR')} model
@@ -190,10 +209,10 @@ export default function HomeClient({ categories, counts, topProducts, totalProdu
           </div>
         </div>
 
-        {/* FOOTER */}
-        <div style={{ borderTop: `1px solid ${GOLD}18`, margin: '20px 0 0', padding: '12px 0', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-          <span className="mono" style={{ fontSize: 9, color: DIM }}>© 2026 RATIO.RUN · TÜRKİYE&apos;NİN MATEMATİKSEL ÜRÜN KARŞILAŞTIRMA PLATFORMU</span>
-          <span className="mono" style={{ fontSize: 9, color: DIM }}>DON&apos;T BUY WITH EMOTIONS.</span>
+        {/* ── FOOTER ── */}
+        <div style={{ borderTop: `1px solid ${GOLD}18`, margin: '20px 0 0', padding: '12px 0', display: 'flex', justifyContent: isMobile ? 'center' : 'space-between', flexWrap: 'wrap', gap: 8, textAlign: 'center' }}>
+          <span className="mono" style={{ fontSize: 9, color: DIM }}>© 2026 RATIO.RUN</span>
+          {!isMobile && <span className="mono" style={{ fontSize: 9, color: DIM }}>DON&apos;T BUY WITH EMOTIONS.</span>}
         </div>
       </div>
     </main>
