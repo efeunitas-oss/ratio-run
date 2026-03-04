@@ -110,7 +110,7 @@ export default async function Home() {
           return null;
         }
       })
-      .filter((p): p is NonNullable<typeof p> => p !== null && p.score > 0)
+      .filter((p): p is NonNullable<typeof p> => p !== null && p.score >= 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
 
