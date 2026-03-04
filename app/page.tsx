@@ -1,162 +1,147 @@
-// app/page.tsx — SERVER COMPONENT, sıfır client JS
+// app/page.tsx
 import { createClient } from '@supabase/supabase-js';
-import Link from 'next/link';
+import HomeClient from './HomeClient';
 
 export const revalidate = 300;
 
-const GOLD        = '#C9A227';
-const GOLD_BRIGHT = '#D4AF37';
-
 const CATEGORIES = [
-  { id: 'laptop',        label: 'Laptop',       icon: '💻', link: 'laptop'        },
-  { id: 'telefon',       label: 'Telefon',       icon: '📱', link: 'telefon'       },
-  { id: 'tablet',        label: 'Tablet',        icon: '📲', link: 'tablet'        },
-  { id: 'saat',          label: 'Akıllı Saat',   icon: '⌚', link: 'saat'          },
-  { id: 'kulaklik',      label: 'Kulaklık',      icon: '🎧', link: 'kulaklik'      },
-  { id: 'robot-supurge', label: 'Robot Süpürge', icon: '🤖', link: 'robot-supurge' },
-  { id: 'tv',            label: 'Televizyon',    icon: '📺', link: 'tv'            },
-  { id: 'araba',         label: 'Otomobil',      icon: '🚗', link: 'araba'         },
+  { id: 'laptop',        label: 'Laptop',        icon: '💻', link: 'laptop'        },
+  { id: 'telefon',       label: 'Telefon',        icon: '📱', link: 'telefon'       },
+  { id: 'tablet',        label: 'Tablet',         icon: '📲', link: 'tablet'        },
+  { id: 'saat',          label: 'Akıllı Saat',    icon: '⌚', link: 'saat'          },
+  { id: 'kulaklik',      label: 'Kulaklık',       icon: '🎧', link: 'kulaklik'      },
+  { id: 'robot-supurge', label: 'Robot Süpürge',  icon: '🤖', link: 'robot-supurge' },
+  { id: 'tv',            label: 'Televizyon',     icon: '📺', link: 'tv'            },
+  { id: 'araba',         label: 'Otomobil',       icon: '🚗', link: 'araba'         },
 ];
 
-export default async function Home() {
-  const supabase = createClient(
+// Kategori slug → display bilgisi
+const SLUG_TO_CAT: Record<string, { label: string; link: string }> = {
+  laptop:        { label: 'Laptop',       link: 'laptop'        },
+  telefon:       { label: 'Telefon',      link: 'telefon'       },
+  tablet:        { label: 'Tablet',       link: 'tablet'        },
+  saat:          { label: 'Akıllı Saat',  link: 'saat'          },
+  kulaklik:      { label: 'Kulaklık',     link: 'kulaklik'      },
+  'robot-supurge': { label: 'Robot Süpürge', link: 'robot-supurge' },
+  televizyon:    { label: 'Televizyon',   link: 'tv'            },
+  tv:            { label: 'Televizyon',   link: 'tv'            },
+  otomobil:      { label: 'Otomobil',     link: 'araba'         },
+};
+
+function getSupabase() {
+  return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+}
 
-  const { data: catData } = await supabase.from('categories').select('id, slug');
+// Sabit seed ile deterministik "delta" — her ürünün görsel hareketliliği
+function seedDelta(id: string, score: number): number {
+  let hash = 0;
+  for (const c of id) hash = (hash * 31 + c.charCodeAt(0)) & 0xfffffff;
+  const raw = ((hash % 200) - 100) / 100; // -1 ile +1 arası
+  return parseFloat((raw * 4.5).toFixed(1));  // ±4.5 aralığı
+}
+
+export default async function Home() {
+  const supabase = getSupabase();
+
+  // ── Kategori sayıları ──────────────────────────────────────────────────────
+  const { data: catData } = await supabase.from('categories').select('id, slug, name');
   const counts: Record<string, number> = {};
+  const catIdToSlug: Record<string, string> = {};
 
   await Promise.all((catData ?? []).map(async (cat) => {
+    const slug = cat.slug?.toLowerCase() ?? '';
+    catIdToSlug[cat.id] = slug;
+
     const menuCat = CATEGORIES.find(c =>
-      c.id === cat.slug?.toLowerCase() ||
-      c.link === cat.slug?.toLowerCase() ||
-      (c.id === 'araba' && cat.slug === 'otomobil') ||
-      (c.id === 'tv' && cat.slug === 'televizyon') ||
-      cat.slug?.toLowerCase().includes(c.id)
+      c.id === slug ||
+      c.link === slug ||
+      (c.id === 'araba' && slug === 'otomobil') ||
+      (c.id === 'tv' && (slug === 'televizyon' || slug === 'tv')) ||
+      slug.includes(c.id)
     );
     if (!menuCat) return;
+
     const { count } = await supabase
       .from('products')
       .select('id', { count: 'exact', head: true })
       .eq('category_id', cat.id)
       .eq('is_active', true);
+
     if (count) counts[menuCat.id] = count;
   }));
 
+  const totalProducts = Object.values(counts).reduce((a, b) => a + b, 0);
+
+  // ── Her kategoriden top 3 ürün çek ────────────────────────────────────────
+  const allTopProducts: any[] = [];
+
+  await Promise.all((catData ?? []).map(async (cat) => {
+    const slug = cat.slug?.toLowerCase() ?? '';
+    const catInfo = SLUG_TO_CAT[slug];
+    if (!catInfo) return;
+
+    const { data: products } = await supabase
+      .from('products')
+      .select('id, name, brand, price, avg_price, specifications, category_id')
+      .eq('category_id', cat.id)
+      .eq('is_active', true)
+      .not('price', 'is', null)
+      .order('price', { ascending: false })
+      .limit(40);
+
+    if (!products || products.length === 0) return;
+
+    // Ratio score hesapla ve sırala
+    const prices = products.map((p: any) => p.avg_price ?? p.price ?? 0).filter(Boolean);
+    const maxPrice = prices.length > 0 ? Math.max(...prices) : 1;
+    const { getSpecConfig } = await import('../lib/spec-config');
+    const { calculateRatioScore } = await import('../lib/ratio-engine');
+    const config = getSpecConfig(slug);
+
+    const scored = products
+      .map((p: any) => {
+        try {
+          const result = calculateRatioScore(p as any, config.weights, maxPrice);
+          return { ...p, score: (result.normalized_score as number) ?? 0 };
+        } catch {
+          return null;
+        }
+      })
+      .filter((p): p is NonNullable<typeof p> => p !== null && p.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+
+    for (const p of scored) {
+      allTopProducts.push({
+        id:           p.id,
+        name:         p.name ?? 'Bilinmiyor',
+        brand:        p.brand ?? '',
+        score:        p.score,
+        price:        p.avg_price ?? p.price ?? 0,
+        category:     catInfo.label,
+        categorySlug: catInfo.link,
+        delta:        seedDelta(p.id, p.score),
+      });
+    }
+  }));
+
+  // Genel sıralama — skora göre
+  allTopProducts.sort((a, b) => b.score - a.score);
+  const topProducts = allTopProducts.slice(0, 20);
+
+  // Son güncelleme — şu an (SSR her 5 dk rebuild ediyor)
+  const lastUpdated = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
   return (
-    <main className="min-h-screen bg-black text-white" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-
-      {/* ── CSS ── */}
-      <style>{`
-        .cat-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 16px;
-        }
-        @media (max-width: 768px) {
-          .cat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-          .nav-slogan { display: none; }
-        }
-        .cat-card {
-          display: flex; flex-direction: column; align-items: center;
-          gap: 12px; padding: 28px 16px;
-          background: rgba(17,24,39,0.5);
-          border: 1px solid #1F2937;
-          border-radius: 20px;
-          text-decoration: none;
-          transition: border-color 0.15s;
-        }
-        .cat-card:hover { border-color: ${GOLD}99; }
-        .search-input {
-          width: 100%; box-sizing: border-box;
-          background: rgba(17,24,39,0.6);
-          border: 1px solid #374151;
-          color: #fff;
-          padding: 18px 120px 18px 24px;
-          border-radius: 16px;
-          font-size: 16px;
-          outline: none;
-        }
-        .search-input:focus { border-color: ${GOLD}; }
-      `}</style>
-
-      {/* ── Nav ── */}
-      <nav style={{
-        borderBottom: `1px solid ${GOLD}35`,
-        padding: '14px 24px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        position: 'sticky', top: 0,
-        background: 'rgba(0,0,0,0.85)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 50,
-      }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/logo.png" alt="Ratio.Run" style={{ height: 38, width: 'auto' }} />
-          <span style={{ fontSize: 21, fontWeight: 900, letterSpacing: '-0.5px', color: '#fff' }}>
-            ratio<span style={{ color: GOLD_BRIGHT }}>.run</span>
-          </span>
-        </a>
-        <span className="nav-slogan" style={{
-          fontSize: 12, fontFamily: 'monospace',
-          color: GOLD_BRIGHT, letterSpacing: '2px',
-          textTransform: 'uppercase',
-        }}>
-          DON&apos;T BUY WITH EMOTIONS.
-        </span>
-      </nav>
-
-      {/* ── Hero ── */}
-      <div style={{ maxWidth: 1152, margin: '0 auto', padding: '80px 20px 60px', textAlign: 'center' }}>
-
-        <h1 style={{ fontSize: 'clamp(36px, 7vw, 68px)', fontWeight: 700, lineHeight: 1.15, marginBottom: 32 }}>
-          Senin Yerine<br />
-          <span style={{
-            background: `linear-gradient(135deg, ${GOLD_BRIGHT} 0%, #EDD060 50%, ${GOLD} 100%)`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}>
-            Biz Hesapladık.
-          </span>
-        </h1>
-
-        {/* ── Arama ── */}
-        <form action="/compare/all" method="GET" style={{ maxWidth: 560, margin: '0 auto 56px', position: 'relative' }}>
-          <input
-            type="text"
-            name="search"
-            placeholder="Model veya marka ara..."
-            className="search-input"
-          />
-          <button type="submit" style={{
-            position: 'absolute', right: 8, top: 8, bottom: 8,
-            padding: '0 22px', borderRadius: 12,
-            fontWeight: 700, fontSize: 15,
-            background: `linear-gradient(135deg, ${GOLD_BRIGHT}, ${GOLD})`,
-            color: '#000', border: 'none', cursor: 'pointer',
-          }}>
-            Ara
-          </button>
-        </form>
-
-        {/* ── Kategori Grid ── */}
-        <div className="cat-grid">
-          {CATEGORIES.map((cat) => (
-            <Link key={cat.id} href={`/compare/${cat.link}`} className="cat-card">
-              <span style={{ fontSize: 38 }}>{cat.icon}</span>
-              <div>
-                <div style={{ fontWeight: 700, color: '#e5e7eb', fontSize: 15 }}>{cat.label}</div>
-                <div style={{ color: GOLD_BRIGHT, fontSize: 12, fontFamily: 'monospace', marginTop: 4 }}>
-                  {counts[cat.id] ?? 0} Model
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </main>
+    <HomeClient
+      categories={CATEGORIES}
+      counts={counts}
+      topProducts={topProducts}
+      totalProducts={totalProducts}
+      lastUpdated={lastUpdated}
+    />
   );
 }
