@@ -171,20 +171,19 @@ function buildJsonLd(product: any, category: string, productId: string) {
 
   // WebPage schema
   const webPageSchema = {
-    '@context':    'https://schema.org',
-    '@type':       'WebPage',
-    '@id':         pageUrl,
-    url:           pageUrl,
-    name:          `${name} Fiyat ve Özellikler`,
-    description:   productSchema.description,
-    inLanguage:    'tr-TR',
+    '@context':  'https://schema.org',
+    '@type':     'WebPage',
+    '@id':       pageUrl,
+    url:         pageUrl,
+    name:        `${name} Fiyat ve Özellikler`,
+    description: productSchema.description,
+    inLanguage:  'tr-TR',
     isPartOf: {
       '@type': 'WebSite',
       '@id':   BASE_URL,
       name:    'RATIO.RUN',
       url:     BASE_URL,
     },
-    breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
   };
 
   return [productSchema, breadcrumbSchema, webPageSchema];
