@@ -118,10 +118,18 @@ export default function HomeClient({ categories, counts, topProducts, totalProdu
     .row { display: grid; grid-template-columns: 26px 1fr 72px 58px 48px; gap: 6px; padding: 8px 14px; border-bottom: 1px solid ${GOLD}0e; text-decoration: none; align-items: center; transition: background 0.1s; }
     .row:hover { background: ${GOLD}07; }
     @media (max-width: 960px) {
-      .terminal-grid { grid-template-columns: 1fr; }
-      .cat-grid { grid-template-columns: repeat(2, 1fr); }
-      .right-panel { display: none; }
-      .nav-extra { display: none; }
+      .terminal-grid { grid-template-columns: 1fr !important; }
+      .cat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      .right-panel { display: none !important; }
+      .nav-extra { display: none !important; }
+      .row { grid-template-columns: 24px 1fr 60px 46px !important; }
+    }
+    @media (max-width: 480px) {
+      .row { grid-template-columns: 20px 1fr 54px 42px !important; font-size: 11px; }
+      .cat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+    }
+    @media (max-width: 960px) {
+      .hide-mobile { display: none !important; }
     }
   `;
 
@@ -243,7 +251,7 @@ export default function HomeClient({ categories, counts, topProducts, totalProdu
               ))}
             </div>
 
-            {filteredProducts.slice(0, 12).map((p, i) => {
+            {filteredProducts.slice(0, 5).map((p, i) => {
               const isFlicker = flickerSet.has(p.id);
               const up = p.delta >= 0;
               return (
