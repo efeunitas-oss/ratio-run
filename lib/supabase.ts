@@ -75,7 +75,8 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
     .select('*')
     .eq('category_id', category.id)
     .eq('is_active', true)
-    .order('price', { ascending: true });
+    .order('price', { ascending: true })
+    .limit(1000);
 
   if (error) { console.error('[supabase] Ürünler:', error.message); return []; }
   return (data as Product[]) ?? [];
