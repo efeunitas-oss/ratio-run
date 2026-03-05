@@ -1,38 +1,43 @@
 'use client';
 
 // ============================================================================
-// RATIO.RUN — CATEGORY CLIENT v3
+// RATIO.RUN — CATEGORY CLIENT v4
 // Dosya: app/compare/[category]/CategoryClient.tsx
-//
-// DEĞIŞIKLIKLER:
-//   • Fiyat/Puan/Ratio sıralama butonları → KALDIRILDI
-//   • Karşılaştırma sonucu artık sayfanın altına kaymıyor
-//     → İki ürün seçilince sayfa BAŞINA sticky bir sonuç paneli açılır
-//   • Global aramayla gelen ?productA= query param'ı otomatik seçer
-//   • Tamamen mobil uyumlu
-//   • Renk sistemi: gold only (#C9A227 / #D4AF37)
 // ============================================================================
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Product } from '@/lib/types';
-import { compareProducts } from '@/lib/ratio-engine';
+import { compareProducts, calculateRatioScore } from '@/lib/ratio-engine';
 import { getSpecConfig } from '@/lib/spec-config';
-import Image from 'next/image';
+import { TechSpecsTable } from '@/components/ui/TechSpecsTable';
 
 // ─── Tipler ──────────────────────────────────────────────────────────────────
 interface CategoryClientProps {
-  // page.tsx'in farklı versiyonlarıyla uyumlu
-  products?: Product[];
-  initialProducts?: Product[];
+  products?: any[];
+  initialProducts?: any[];
   categorySlug?: string;
+  categoryUrl?: string;
   slug?: string;
   categoryName?: string;
-  categoryUrl?: string;   // bazı page.tsx versiyonları geçirebilir
   category?: { id: string; name: string; slug: string };
 }
 
-// ─── Para birimi formatlayıcı ─────────────────────────────────────────────────
+// ─── Yardımcılar ─────────────────────────────────────────────────────────────
+// Amazon affiliate tag ekleyici
+function withAffiliateTag(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes('amazon.com.tr') || u.hostname.includes('amzn')) {
+      u.searchParams.set('tag', 'ratiorun-21');
+      return u.toString();
+    }
+  } catch {}
+  return url;
+}
+
 function fmtPrice(price: number | null, currency = 'TRY'): string {
   if (!price) return '—';
   return new Intl.NumberFormat('tr-TR', {
@@ -42,7 +47,6 @@ function fmtPrice(price: number | null, currency = 'TRY'): string {
   }).format(price);
 }
 
-// ─── Ratio rozetini belirle ───────────────────────────────────────────────────
 function getRatioBadge(score: number): { label: string; bg: string; text: string } {
   if (score >= 85) return { label: 'OLAĞANÜSTÜ', bg: '#C9A22720', text: '#D4AF37' };
   if (score >= 70) return { label: 'MÜKEMMEL',   bg: '#C9A22715', text: '#C9A227' };
@@ -50,359 +54,274 @@ function getRatioBadge(score: number): { label: string; bg: string; text: string
   return               { label: 'MAKUL',          bg: '#6B728015', text: '#6B7280' };
 }
 
-// ─── Tek Ürün Kartı ───────────────────────────────────────────────────────────
-interface ProductCardProps {
-  product: Product;
-  ratioScore: number;
-  categorySlug: string;
-  selectionOrder: 1 | 2 | null; // seçili değilse null
-  onSelect: (product: Product) => void;
-  onDeselect: (product: Product) => void;
-  disabled: boolean; // 2 ürün seçiliyken diğer kartlar pasif
-}
-
+// ─── Ürün Kartı ───────────────────────────────────────────────────────────────
 function ProductCard({
-  product,
-  ratioScore,
-  categorySlug,
-  selectionOrder,
-  onSelect,
-  onDeselect,
-  disabled,
-}: ProductCardProps) {
-  const specs = product.specifications ?? {};
-  const rating: number = typeof specs.stars === 'number' ? specs.stars : 0;
-  const badge = getRatioBadge(ratioScore);
-
+  product, ratioScore, categoryUrl, selectionOrder, onSelect, onDeselect, disabled,
+}: {
+  product: any;
+  ratioScore: number;
+  categoryUrl: string;
+  selectionOrder: 1 | 2 | null;
+  onSelect: (p: any) => void;
+  onDeselect: (p: any) => void;
+  disabled: boolean;
+}) {
+  const specs      = product.specifications ?? {};
+  const rating     = typeof specs.stars === 'number' ? specs.stars : 0;
   const isSelected = selectionOrder !== null;
 
-  const handleClick = () => {
-    if (isSelected) {
-      onDeselect(product);
-    } else if (!disabled) {
-      onSelect(product);
-    }
+  const handleCompareClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isSelected) onDeselect(product);
+    else if (!disabled) onSelect(product);
   };
 
+  const detailUrl = `/compare/${categoryUrl}/${product.id}`;
+
   return (
-    <div
-      onClick={handleClick}
-      className={`
-        relative rounded-xl overflow-hidden transition-all duration-200 select-none
-        ${isSelected
-          ? 'ring-2 scale-[1.01]'
-          : disabled
-          ? 'opacity-40 cursor-not-allowed'
-          : 'cursor-pointer hover:scale-[1.01]'
-        }
-      `}
-      style={{
-        background: '#0D0D0D',
-        border: isSelected ? '1px solid #C9A227' : '1px solid #1a1a1a',
-        boxShadow: isSelected ? '0 0 20px rgba(201,162,39,0.15)' : undefined,
-        outline: isSelected ? '2px solid #C9A22760' : undefined,
-        outlineOffset: isSelected ? '2px' : undefined,
-      }}
-    >
-      {/* Seçim rozeti — sol üst */}
+    <div style={{
+      position: 'relative', borderRadius: 14, overflow: 'hidden',
+      background: '#0D0D0D',
+      border: isSelected ? '1px solid #C9A227' : '1px solid #1a1a1a',
+      boxShadow: isSelected ? '0 0 20px rgba(201,162,39,0.15)' : undefined,
+      display: 'flex', flexDirection: 'column',
+      opacity: disabled && !isSelected ? 0.4 : 1,
+      transition: 'border-color 0.15s',
+    }}>
+      {/* Seçim rozeti */}
       {isSelected && (
-        <div
-          className="absolute top-2 left-2 z-20 w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-black"
-          style={{ background: '#C9A227' }}
-        >
+        <div style={{
+          position: 'absolute', top: 8, left: 8, zIndex: 20,
+          width: 26, height: 26, borderRadius: '50%',
+          background: '#C9A227', color: '#000',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 11, fontWeight: 900,
+        }}>
           {selectionOrder}
         </div>
       )}
 
-      {/* Ratio skoru — sağ üst */}
-      <div
-        className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded-full text-xs font-bold font-mono"
-        style={{ background: badge.bg, color: badge.text, border: `1px solid ${badge.text}30` }}
-      >
-        {ratioScore.toFixed(0)}/100
-      </div>
-
-      {/* Görsel */}
-      <div className="aspect-square bg-black flex items-center justify-center overflow-hidden p-4">
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-          />
-        ) : (
-          <span className="text-4xl opacity-10">📦</span>
-        )}
-      </div>
+      {/* Görsel — tıklanınca detaya gider */}
+      <Link href={detailUrl} style={{ display: 'block', textDecoration: 'none' }}>
+        <div style={{ height: 160, background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 8 }}>
+          {product.image_url ? (
+            <img
+              src={product.image_url}
+              alt={product.name}
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          ) : (
+            <span style={{ fontSize: 36, opacity: 0.1 }}>📦</span>
+          )}
+        </div>
+      </Link>
 
       {/* İçerik */}
-      <div className="p-3">
-        {/* İsim */}
-        <p className="text-white text-sm font-medium leading-tight line-clamp-2 mb-2">
-          {product.name}
-        </p>
+      <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+        {/* İsim — tıklanınca detaya gider */}
+        <Link href={detailUrl} style={{ textDecoration: 'none' }}>
+          <p style={{
+            color: '#fff', fontSize: 13, fontWeight: 600, lineHeight: 1.35,
+            margin: '0 0 8px',
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          }}>
+            {product.name}
+          </p>
+        </Link>
 
-        {/* Rating */}
+        {/* Yıldızlar */}
         {rating > 0 && (
-          <div className="flex items-center gap-1 mb-2">
-            {[1,2,3,4,5].map((i) => (
-              <svg
-                key={i}
-                className="w-3 h-3"
-                fill={i <= Math.round(rating) ? '#C9A227' : '#2a2a2a'}
-                viewBox="0 0 20 20"
-              >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 8 }}>
+            {[1,2,3,4,5].map(i => (
+              <svg key={i} width="11" height="11" viewBox="0 0 20 20" fill={i <= Math.round(rating) ? '#C9A227' : '#2a2a2a'}>
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
             ))}
-            <span className="text-xs text-gray-600 ml-1">{rating.toFixed(1)}</span>
+            <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 3 }}>{rating.toFixed(1)}</span>
           </div>
         )}
 
-        {/* Fiyat satırı */}
-        <div className="flex items-end justify-between">
-          <span className="text-base font-bold" style={{ color: '#C9A227' }}>
+        {/* Fiyat + kaynak */}
+        <div style={{ marginBottom: 8 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: '#C9A227' }}>
             {fmtPrice(product.price, product.currency)}
           </span>
-
-          {/* Kaynak etiketi */}
           {product.source_name && (
-            <span className="text-xs text-gray-600 font-mono truncate ml-2 max-w-[80px]">
+            <span style={{ display: 'block', fontSize: 11, color: '#4b5563', marginTop: 2 }}>
               {product.source_name}
             </span>
           )}
         </div>
 
-        {/* Karşılaştırma butonu */}
+        {/* Karşılaştırma butonu — her zaman altta */}
         <button
-          onClick={(e) => { e.stopPropagation(); handleClick(); }}
-          className="mt-3 w-full py-2 rounded-lg text-xs font-bold transition-all"
-          style={isSelected
-            ? { background: '#C9A22720', color: '#C9A227', border: '1px solid #C9A22740' }
-            : { background: '#ffffff08', color: '#ffffff60', border: '1px solid #ffffff10' }
-          }
+          onClick={handleCompareClick}
           disabled={disabled && !isSelected}
+          style={{
+            marginTop: 'auto',
+            width: '100%', padding: '8px 0', borderRadius: 8,
+            fontSize: 12, fontWeight: 700,
+            cursor: disabled && !isSelected ? 'default' : 'pointer',
+            border: isSelected ? '1px solid #C9A22740' : '1px solid #ffffff10',
+            background: isSelected ? '#C9A22720' : '#ffffff08',
+            color: isSelected ? '#C9A227' : '#ffffff60',
+          }}
         >
           {isSelected
-            ? `✓ Karşılaştırmaya Eklendi (${selectionOrder}. ürün)`
+            ? `✓ Seçildi (${selectionOrder})`
             : disabled
-            ? '—'
-            : '+ Karşılaştırmaya Ekle'
-          }
+            ? <span style={{ visibility: 'hidden' }}>—</span>
+            : '+ Karşılaştırmaya Ekle'}
         </button>
       </div>
     </div>
   );
 }
 
-// ─── Karşılaştırma Sonuç Paneli ───────────────────────────────────────────────
-interface ComparisonPanelProps {
-  productA: Product;
-  productB: Product;
-  categorySlug: string;
-  onClose: () => void;
-}
-
-function ComparisonPanel({ productA, productB, categorySlug, onClose }: ComparisonPanelProps) {
+// ─── Karşılaştırma Paneli ─────────────────────────────────────────────────────
+function ComparisonPanel({ productA, productB, categorySlug, onClose }: {
+  productA: any; productB: any; categorySlug: string; onClose: () => void;
+}) {
   const result = compareProducts(productA, productB, categorySlug);
   const scoreA = result.ratio_a.normalized_score;
   const scoreB = result.ratio_b.normalized_score;
   const winner = result.winner;
 
-  const badgeA = getRatioBadge(scoreA);
-  const badgeB = getRatioBadge(scoreB);
-
-  // Kaynak linkleri çözümleyici
-  function getSourceUrl(p: Product): string | null {
-    const specs = p.specifications ?? {} as any;
-    if (Array.isArray((p as any).sources) && (p as any).sources.length > 0) {
-      return (p as any).sources[0].url;
-    }
-    if (Array.isArray(specs.sources) && specs.sources.length > 0) {
-      return specs.sources[0].url;
-    }
-    return (p as any).source_url ?? null;
+  function getUrl(p: any): string | null {
+    const raw = Array.isArray(p.sources) && p.sources.length > 0
+      ? p.sources[0].url
+      : p.source_url ?? null;
+    return withAffiliateTag(raw);
   }
 
-  const urlA = getSourceUrl(productA);
-  const urlB = getSourceUrl(productB);
+  const sides = [
+    { product: productA, score: scoreA, side: 'a', url: getUrl(productA) },
+    { product: productB, score: scoreB, side: 'b', url: getUrl(productB) },
+  ];
 
   return (
-    <div
-      className="rounded-2xl overflow-hidden mb-8 border"
-      style={{ background: '#090909', borderColor: '#C9A22730' }}
-    >
-      {/* Panel başlık */}
-      <div
-        className="flex items-center justify-between px-5 py-4 border-b"
-        style={{ borderColor: '#C9A22720', background: '#C9A22708' }}
-      >
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-mono uppercase tracking-widest" style={{ color: '#C9A227' }}>
-            Ratio Analizi
-          </span>
-          <span
-            className="text-xs px-2 py-0.5 rounded-full font-mono"
-            style={{ background: '#C9A22715', color: '#C9A227' }}
-          >
-            CANLI
-          </span>
+    <div style={{ background: '#090909', border: '1px solid #C9A22730', borderRadius: 20, overflow: 'hidden', marginBottom: 32 }}>
+
+      {/* Başlık */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid #C9A22720', background: '#C9A22708' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 12, fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#C9A227' }}>Ratio Analizi</span>
+          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#C9A22715', color: '#C9A227', fontFamily: 'monospace' }}>CANLI</span>
         </div>
-        <button
-          onClick={onClose}
-          className="text-gray-600 hover:text-gray-400 transition-colors text-lg leading-none"
-        >
-          ✕
-        </button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
       </div>
 
       {/* İki ürün yan yana */}
-      <div className="grid grid-cols-2 divide-x" style={{ borderColor: '#1a1a1a' }}>
-        {[
-          { product: productA, score: scoreA, badge: badgeA, side: 'a' as const, url: urlA },
-          { product: productB, score: scoreB, badge: badgeB, side: 'b' as const, url: urlB },
-        ].map(({ product, score, badge, side, url }) => {
-          const isWinner = (winner as string) === (side as string);
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+        {sides.map(({ product, score, side, url }) => {
+          const isWinner = winner === side;
+          const badge = getRatioBadge(score);
           return (
-            <div
-              key={side}
-              className="p-4 lg:p-6 relative"
-              style={isWinner ? { background: '#C9A22706' } : {}}
-            >
-              {/* Kazanan rozeti */}
+            <div key={side} style={{
+              padding: '20px 24px', position: 'relative',
+              display: 'flex', flexDirection: 'column',
+              background: isWinner ? '#C9A22706' : 'transparent',
+              borderRight: side === 'a' ? '1px solid #1a1a1a' : undefined,
+            }}>
               {isWinner && winner !== 'tie' && (
-                <div
-                  className="absolute top-3 right-3 text-xs font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: '#C9A227', color: '#000' }}
-                >
+                <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#C9A227', color: '#000' }}>
                   KAZANAN
                 </div>
               )}
 
-              {/* Görsel */}
-              <div className="aspect-square bg-black rounded-lg flex items-center justify-center mb-3 overflow-hidden max-h-28">
+              {/* Görsel — sabit 180px */}
+              <div style={{ height: 180, background: '#0d0d0d', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, overflow: 'hidden' }}>
                 {product.image_url ? (
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-full object-contain p-2"
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
+                  <img src={product.image_url} alt={product.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 12 }}
+                    loading="lazy" referrerPolicy="no-referrer"
                   />
-                ) : (
-                  <span className="text-2xl opacity-20">📦</span>
-                )}
+                ) : <span style={{ fontSize: 32, opacity: 0.1 }}>📦</span>}
               </div>
 
-              {/* İsim */}
-              <p className="text-white text-sm font-semibold line-clamp-2 mb-1 leading-tight">
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#fff', lineHeight: 1.3, margin: '0 0 6px',
+                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                 {product.name}
               </p>
-
-              {/* Fiyat */}
-              <p className="text-base font-bold mb-3" style={{ color: '#C9A227' }}>
+              <p style={{ fontSize: 16, fontWeight: 700, color: '#C9A227', margin: '0 0 12px' }}>
                 {fmtPrice(product.price, product.currency)}
               </p>
 
-              {/* Ratio skoru */}
-              <div className="mb-3">
-                <div className="flex justify-between items-baseline mb-1">
-                  <span className="text-xs text-gray-600 font-mono">Ratio Skoru</span>
-                  <span
-                    className="text-2xl font-black"
-                    style={{ color: isWinner ? '#D4AF37' : '#6B7280' }}
-                  >
-                    {score.toFixed(1)}
-                  </span>
+              {/* Skor */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, color: '#6b7280', fontFamily: 'monospace' }}>Ratio Skoru</span>
+                  <span style={{ fontSize: 24, fontWeight: 900, color: isWinner ? '#D4AF37' : '#6b7280' }}>{score.toFixed(1)}</span>
                 </div>
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#1a1a1a' }}>
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{
-                      width: `${Math.min(score, 100)}%`,
-                      background: isWinner
-                        ? 'linear-gradient(90deg, #9B7E24, #D4AF37)'
-                        : '#2a2a2a',
-                    }}
-                  />
+                <div style={{ height: 6, background: '#1a1a1a', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', borderRadius: 3, width: `${Math.min(score, 100)}%`, background: isWinner ? 'linear-gradient(90deg,#9B7E24,#D4AF37)' : '#2a2a2a', transition: 'width 0.7s ease' }} />
                 </div>
               </div>
 
               {/* Rozet */}
-              <div
-                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold mb-4"
-                style={{ background: badge.bg, color: badge.text, border: `1px solid ${badge.text}20` }}
-              >
+              <div style={{ display: 'inline-flex', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: badge.bg, color: badge.text, border: `1px solid ${badge.text}20`, marginBottom: 16, alignSelf: 'flex-start' }}>
                 {badge.label}
               </div>
 
-              {/* Satın al butonu */}
-              {url && (
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer sponsored"
-                  className="block w-full text-center py-2.5 rounded-lg text-xs font-bold transition-all"
-                  style={
-                    isWinner
-                      ? { background: '#C9A227', color: '#000' }
-                      : { background: '#ffffff08', color: '#C9A227', border: '1px solid #C9A22730' }
-                  }
-                >
-                  {isWinner ? '🛒 En İyi Fiyata Al →' : 'Fiyata Bak →'}
-                </a>
-              )}
+              {/* Satın al butonu — her zaman render */}
+              <div style={{ marginTop: 'auto' }}>
+                {url ? (
+                  <a href={url} target="_blank" rel="noopener noreferrer sponsored"
+                    style={{
+                      display: 'block', textAlign: 'center', padding: '10px 0', borderRadius: 10,
+                      fontSize: 13, fontWeight: 700, textDecoration: 'none',
+                      ...(isWinner ? { background: '#C9A227', color: '#000' } : { background: 'transparent', color: '#C9A227', border: '1px solid #C9A22740' }),
+                    }}>
+                    {isWinner ? '🛒 En İyi Fiyata Al →' : 'Fiyata Bak →'}
+                  </a>
+                ) : <div style={{ height: 40 }} />}
+              </div>
             </div>
           );
         })}
       </div>
 
       {/* Öneri metni */}
-      <div
-        className="px-5 py-4 border-t"
-        style={{ borderColor: '#1a1a1a', background: '#0A0A0A' }}
-      >
-        <p className="text-sm text-gray-400 leading-relaxed">{result.recommendation}</p>
+      <div style={{ padding: '14px 20px', background: '#0a0a0a', borderTop: '1px solid #1a1a1a', borderBottom: '1px solid #1a1a1a' }}>
+        <p style={{ fontSize: 13, color: '#9ca3af', lineHeight: 1.6, margin: 0 }}>{result.recommendation}</p>
       </div>
 
-      {/* Breakdown satırları */}
+      {/* Teknik Özellikler */}
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid #1a1a1a' }}>
+        <p style={{ fontSize: 11, color: '#4b5563', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 12px' }}>Teknik Özellikler</p>
+        <TechSpecsTable productA={productA} productB={productB} categorySlug={categorySlug} />
+      </div>
+
+      {/* Detaylı Karşılaştırma Barları */}
       {Object.keys(result.ratio_a.breakdown.individual_scores).length > 0 && (
-        <div className="px-5 pb-5">
-          <p className="text-xs text-gray-700 font-mono uppercase tracking-widest mb-3 pt-4">
-            Detaylı Karşılaştırma
-          </p>
-          <div className="space-y-2.5">
-            {Object.keys(result.ratio_a.breakdown.individual_scores).map((key) => {
-              const a = result.ratio_a.breakdown.individual_scores[key] ?? 0;
-              const b = result.ratio_b.breakdown.individual_scores[key] ?? 0;
+        <div style={{ padding: '16px 20px 20px' }}>
+          <p style={{ fontSize: 11, color: '#4b5563', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 12px' }}>Detaylı Karşılaştırma</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 12, marginBottom: 8 }}>
+            <div />
+            <div style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {productA.name?.split(' ').slice(0, 3).join(' ')}
+            </div>
+            <div style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {productB.name?.split(' ').slice(0, 3).join(' ')}
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {Object.entries(result.ratio_a.breakdown.individual_scores).map(([key, valA]) => {
+              const a = valA as number ?? 0;
+              const b = result.ratio_b.breakdown.individual_scores[key] as number ?? 0;
               const maxVal = Math.max(a, b, 1);
               return (
-                <div key={key}>
-                  <div className="flex justify-between text-xs text-gray-600 mb-1">
-                    <span className="capitalize">{key.replace(/_/g, ' ')}</span>
+                <div key={key} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 12, alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: '#9ca3af', textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</span>
+                  <div style={{ height: 8, borderRadius: 4, overflow: 'hidden', background: '#1a1a1a' }}>
+                    <div style={{ height: '100%', borderRadius: 4, width: `${(a / maxVal) * 100}%`, background: a > b ? '#D4AF37' : '#374151', transition: 'width 0.4s ease' }} />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#1a1a1a' }}>
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${(a / maxVal) * 100}%`,
-                          background: result.winner === 'a' && a >= b ? '#D4AF37' : '#3a3a3a',
-                        }}
-                      />
-                    </div>
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#1a1a1a' }}>
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${(b / maxVal) * 100}%`,
-                          background: result.winner === 'b' && b >= a ? '#D4AF37' : '#3a3a3a',
-                        }}
-                      />
-                    </div>
+                  <div style={{ height: 8, borderRadius: 4, overflow: 'hidden', background: '#1a1a1a' }}>
+                    <div style={{ height: '100%', borderRadius: 4, width: `${(b / maxVal) * 100}%`, background: b > a ? '#D4AF37' : '#374151', transition: 'width 0.4s ease' }} />
                   </div>
                 </div>
               );
@@ -416,265 +335,187 @@ function ComparisonPanel({ productA, productB, categorySlug, onClose }: Comparis
 
 // ─── ANA BİLEŞEN ─────────────────────────────────────────────────────────────
 export default function CategoryClient({
-  products: productsProp,
-  initialProducts,
-  categorySlug: categorySlugProp,
-  slug,
-  categoryName: categoryNameProp,
-  category,
+  products: productsProp, initialProducts,
+  categorySlug: categorySlugProp, categoryUrl: categoryUrlProp,
+  slug, categoryName: categoryNameProp, category,
 }: CategoryClientProps) {
-  // Hangi prop formatı kullanılıyorsa normalize et
-  const products: Product[] = productsProp ?? initialProducts ?? [];
-  const categorySlug: string = categorySlugProp ?? slug ?? category?.slug ?? '';
-  const categoryName: string = categoryNameProp ?? category?.name ?? categorySlug;
+  const products     = productsProp ?? initialProducts ?? [];
+  const categorySlug = categorySlugProp ?? slug ?? category?.slug ?? '';
+  const categoryName = categoryNameProp ?? category?.name ?? categorySlug;
+  const categoryUrl  = categoryUrlProp ?? categorySlugProp ?? slug ?? category?.slug ?? '';
+
   const searchParams = useSearchParams();
-  const router = useRouter();
-
-  // Arama
-  const [searchQuery, setSearchQuery] = useState('');
-  const [visibleCount, setVisibleCount] = useState(24);
-
-  // Seçili ürünler (max 2)
-  const [selectedA, setSelectedA] = useState<Product | null>(null);
-  const [selectedB, setSelectedB] = useState<Product | null>(null);
-
-  // Karşılaştırma paneli açık mı
+  const [searchQuery,    setSearchQuery]    = useState('');
+  const [selectedA,      setSelectedA]      = useState<any | null>(null);
+  const [selectedB,      setSelectedB]      = useState<any | null>(null);
   const [showComparison, setShowComparison] = useState(false);
-
-  // Karşılaştırma panelinin ref'i (scroll için)
+  const [comparing,      setComparing]      = useState(false);
   const comparisonRef = useRef<HTMLDivElement>(null);
 
-  // Sayfa ilk yüklenince ?productA= varsa otomatik seç
   useEffect(() => {
     const pAid = searchParams.get('productA');
     if (pAid) {
-      const found = products.find((p) => p.id === pAid);
+      const found = products.find((p: any) => p.id === pAid);
       if (found) setSelectedA(found);
     }
   }, [searchParams, products]);
 
-  // Ratio skorları (tüm ürünler için hesapla)
-  const config = getSpecConfig(categorySlug);
-  const maxPrice = Math.max(...products.map((p) => p.price ?? 0), 1);
-  // Ürünleri önce ratio'ya göre sırala (default)
-  const { calculateRatioScore } = require('@/lib/ratio-engine');
-  const productsWithScore = products.map((p) => ({
-    product: p,
-    score: calculateRatioScore(p, config.weights, maxPrice).normalized_score as number,
-  }));
+  const config    = useMemo(() => getSpecConfig(categorySlug), [categorySlug]);
+  const maxPrice  = useMemo(() => Math.max(...products.map((p: any) => p.price ?? 0), 1), [products]);
 
-  // Arama filtresi
-  const filtered = productsWithScore.filter(({ product }) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      product.name?.toLowerCase().includes(q) ||
-      product.brand?.toLowerCase().includes(q) ||
-      product.model?.toLowerCase().includes(q)
-    );
-  });
+  const productsWithScore = useMemo(() =>
+    products.map((p: any) => ({
+      product: p,
+      score: calculateRatioScore(p, config.weights, maxPrice).normalized_score as number,
+    })),
+    [products, config, maxPrice]
+  );
 
-  // Ürün seçme/kaldırma
-  const handleSelect = useCallback((product: Product) => {
-    if (!selectedA) {
-      setSelectedA(product);
-    } else if (!selectedB && product.id !== selectedA.id) {
-      setSelectedB(product);
+  const filtered = useMemo(() =>
+    productsWithScore.filter(({ product }: any) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return product.name?.toLowerCase().includes(q) || product.brand?.toLowerCase().includes(q) || product.model?.toLowerCase().includes(q);
+    }),
+    [productsWithScore, searchQuery]
+  );
+
+  const handleSelect = useCallback((product: any) => {
+    if (!selectedA) setSelectedA(product);
+    else if (!selectedB && product.id !== selectedA.id) setSelectedB(product);
+  }, [selectedA, selectedB]);
+
+  const handleDeselect = useCallback((product: any) => {
+    if (selectedA?.id === product.id) { setSelectedA(selectedB); setSelectedB(null); setShowComparison(false); }
+    else if (selectedB?.id === product.id) { setSelectedB(null); setShowComparison(false); }
+  }, [selectedA, selectedB]);
+
+  const handleCompare = () => {
+    setComparing(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       setShowComparison(true);
-      // Küçük delay ile panele scroll
-      setTimeout(() => {
-        comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    }
-  }, [selectedA, selectedB]);
-
-  const handleDeselect = useCallback((product: Product) => {
-    if (selectedA?.id === product.id) {
-      setSelectedA(selectedB);
-      setSelectedB(null);
-      if (!selectedB) setShowComparison(false);
-    } else if (selectedB?.id === product.id) {
-      setSelectedB(null);
-      setShowComparison(false);
-    }
-  }, [selectedA, selectedB]);
-
-  const closeComparison = () => {
-    setShowComparison(false);
-    setSelectedA(null);
-    setSelectedB(null);
+      setComparing(false);
+      setTimeout(() => comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    }));
   };
 
+  const closeComparison = () => { setShowComparison(false); setSelectedA(null); setSelectedB(null); };
+  const twoSelected = !!selectedA && !!selectedB;
   const selectionCount = (selectedA ? 1 : 0) + (selectedB ? 1 : 0);
-  const twoSelected = selectionCount === 2;
+
+
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 16px' }}>
 
-      {/* ── Başlık satırı ────────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-black text-white mb-1">{categoryName}</h1>
-        <p className="text-sm text-gray-600">
-          {products.length} ürün · 2 ürün seç, karşılaştır
-        </p>
+      {/* Geri dön */}
+      <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#6b7280', textDecoration: 'none', marginBottom: 16 }}
+        onMouseEnter={e => (e.currentTarget.style.color = '#C9A227')}
+        onMouseLeave={e => (e.currentTarget.style.color = '#6b7280')}
+      >← Ana Sayfa</a>
+
+      {/* Başlık */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: '#fff', margin: '0 0 4px' }}>{categoryName}</h1>
+        <p style={{ fontSize: 13, color: '#4b5563', margin: 0 }}>{products.length} ürün · 2 ürün seç, karşılaştır</p>
       </div>
 
-      {/* ── Arama ────────────────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <div className="relative max-w-xl">
-          <input
-            type="text"
-            placeholder="Bu kategoride ara..."
-            value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setVisibleCount(24); }}
-            className="w-full bg-[#0D0D0D] border text-white px-4 py-3 rounded-xl text-sm outline-none transition-all pr-10"
-            style={{
-              borderColor: searchQuery ? '#C9A22760' : '#1a1a1a',
-            }}
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400"
-            >
-              ✕
-            </button>
-          )}
-        </div>
+      {/* Arama */}
+      <div style={{ marginBottom: 24, maxWidth: 480, position: 'relative' }}>
+        <input
+          type="text"
+          placeholder="Bu kategoride ara..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            background: '#0d0d0d', border: `1px solid ${searchQuery ? '#C9A22760' : '#1a1a1a'}`,
+            color: '#fff', padding: '11px 40px 11px 14px',
+            borderRadius: 12, fontSize: 14, outline: 'none',
+          }}
+        />
         {searchQuery && (
-          <p className="text-xs text-gray-600 mt-2 font-mono">
-            {filtered.length} sonuç bulundu
-          </p>
+          <button onClick={() => setSearchQuery('')}
+            style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: 14 }}>
+            ✕
+          </button>
         )}
       </div>
 
-      {/* ── Karşılaştırma Paneli (iki ürün seçilince açılır) ─────────────── */}
+      {/* Karşılaştırma Paneli */}
       <div ref={comparisonRef}>
         {showComparison && selectedA && selectedB && (
-          <ComparisonPanel
-            productA={selectedA}
-            productB={selectedB}
-            categorySlug={categorySlug}
-            onClose={closeComparison}
-          />
+          <ComparisonPanel productA={selectedA} productB={selectedB} categorySlug={categorySlug} onClose={closeComparison} />
         )}
       </div>
 
-      {/* ── Seçim Durumu Çubuğu ──────────────────────────────────────────── */}
+      {/* Seçim durumu */}
       {selectionCount > 0 && !showComparison && (
-        <div
-          className="rounded-xl px-4 py-3 mb-6 flex items-center justify-between"
-          style={{ background: '#C9A22710', border: '1px solid #C9A22730' }}
-        >
-          <div className="flex items-center gap-3 text-sm">
-            <span style={{ color: '#C9A227' }} className="font-bold">
-              {selectionCount}/2 ürün seçildi
-            </span>
-            <div className="flex gap-2">
-              {selectedA && (
-                <span className="text-gray-400 text-xs truncate max-w-[150px]">
-                  1. {selectedA.name}
-                </span>
-              )}
-              {selectedB && (
-                <>
-                  <span className="text-gray-600">vs</span>
-                  <span className="text-gray-400 text-xs truncate max-w-[150px]">
-                    2. {selectedB.name}
-                  </span>
-                </>
-              )}
-            </div>
+        <div style={{ borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#C9A22710', border: '1px solid #C9A22730' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13 }}>
+            <span style={{ color: '#C9A227', fontWeight: 700 }}>{selectionCount}/2 ürün seçildi</span>
+            {selectedA && <span style={{ color: '#9ca3af', fontSize: 12 }}>1. {selectedA.name?.split(' ').slice(0,3).join(' ')}</span>}
+            {selectedB && <><span style={{ color: '#4b5563' }}>vs</span><span style={{ color: '#9ca3af', fontSize: 12 }}>2. {selectedB.name?.split(' ').slice(0,3).join(' ')}</span></>}
           </div>
-          {!twoSelected && (
-            <span className="text-xs text-gray-600">
-              1 ürün daha seç
-            </span>
-          )}
+          {!twoSelected && <span style={{ fontSize: 12, color: '#4b5563' }}>1 ürün daha seç</span>}
         </div>
       )}
 
-      {/* ── Ürün Grid'i ──────────────────────────────────────────────────── */}
-      {filtered.length === 0 ? (
-        <div className="text-center py-20 text-gray-700">
-          <p className="text-lg mb-2">"{searchQuery}" için sonuç bulunamadı</p>
-          <p className="text-sm">Farklı bir kelime dene</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-          {filtered.slice(0, visibleCount).map(({ product, score }) => {
-            const order = selectedA?.id === product.id
-              ? 1
-              : selectedB?.id === product.id
-              ? 2
-              : null;
-            const isDisabled = twoSelected && order === null;
-
-            return (
-              <ProductCard
-                key={product.id}
-                product={product}
-                ratioScore={score}
-                categorySlug={categorySlug}
-                selectionOrder={order as 1 | 2 | null}
-                onSelect={handleSelect}
-                onDeselect={handleDeselect}
-                disabled={isDisabled}
-              />
-            );
-          })}
+      {/* Spinner */}
+      {comparing && (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid #1f2937', borderTopColor: '#C9A227', animation: 'spin 0.7s linear infinite' }} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       )}
 
-      {/* ── Daha Fazla Göster ──────────────────────────────────────────── */}
-      {filtered.length > visibleCount && (
-        <div className="flex justify-center mt-8 mb-4">
-          <button
-            onClick={() => setVisibleCount(v => v + 24)}
-            style={{
-              padding: '12px 36px',
-              background: 'transparent',
-              border: '1px solid #C9A22760',
-              color: '#D4AF37',
-              borderRadius: 8,
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 12,
-              fontWeight: 600,
-              letterSpacing: 2,
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={e => { (e.target as HTMLButtonElement).style.background = '#C9A22715'; }}
-            onMouseLeave={e => { (e.target as HTMLButtonElement).style.background = 'transparent'; }}
-          >
-            DAHA FAZLA GÖR ({filtered.length - visibleCount} ÜRÜN KALDI)
-          </button>
-        </div>
+      {/* Ürün Grid — karşılaştırma açıkken gizle */}
+      {!showComparison && (
+        filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '80px 0', color: '#4b5563' }}>
+            <p style={{ fontSize: 16, margin: '0 0 8px' }}>"{searchQuery}" için sonuç bulunamadı</p>
+            <p style={{ fontSize: 13, margin: 0 }}>Farklı bir kelime dene</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+            {filtered.map(({ product, score }: any) => {
+              const order = selectedA?.id === product.id ? 1 : selectedB?.id === product.id ? 2 : null;
+              return (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  ratioScore={score}
+                  categoryUrl={categoryUrl}
+                  selectionOrder={order as 1 | 2 | null}
+                  onSelect={handleSelect}
+                  onDeselect={handleDeselect}
+                  disabled={twoSelected && order === null}
+                />
+              );
+            })}
+          </div>
+        )
       )}
 
-      {/* ── Mobil: Sticky Alt Çubuk (2 ürün seçilince) ───────────────────── */}
-      {twoSelected && (
-        <div
-          className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3 lg:hidden"
-          style={{ background: '#090909', borderTop: '1px solid #C9A22730' }}
-        >
-          <button
-            onClick={() => {
-              setShowComparison(true);
-              setTimeout(() => {
-                comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }, 50);
-            }}
-            className="w-full py-3.5 rounded-xl font-bold text-black text-sm"
-            style={{ background: 'linear-gradient(135deg, #C9A227, #D4AF37)' }}
-          >
+
+      {/* Karşılaştır butonu — 2 ürün seçilince ortada pill olarak çıkar */}
+      {twoSelected && !showComparison && !comparing && (
+        <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
+          <button onClick={handleCompare} style={{
+            padding: '14px 36px', borderRadius: 16,
+            fontWeight: 800, fontSize: 16,
+            background: 'linear-gradient(135deg, #D4AF37, #C9A227)',
+            color: '#000', border: 'none', cursor: 'pointer',
+            boxShadow: '0 8px 32px rgba(201,162,39,0.45)',
+            display: 'flex', alignItems: 'center', gap: 10, whiteSpace: 'nowrap',
+          }}>
             ⚡ Karşılaştır
+            <span style={{ fontSize: 13, opacity: 0.7, fontWeight: 600 }}>(2 ürün seçildi)</span>
           </button>
         </div>
       )}
+      {twoSelected && !showComparison && <div style={{ height: 80 }} />}
 
-      {/* Mobil alt çubuk için bottom padding */}
-      {twoSelected && <div className="h-20 lg:hidden" />}
     </div>
   );
 }
