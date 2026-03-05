@@ -210,7 +210,7 @@ export default async function CategoryPage({ params }: Props) {
     .eq("category_id", cat.id)
     .eq("is_active", true)
     .order("price", { ascending: true, nullsFirst: false })
-    .limit(48);
+    .range(0, 999);
 
   return (
     <CategoryClient
