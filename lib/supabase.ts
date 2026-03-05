@@ -70,15 +70,26 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
     return [];
   }
 
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('category_id', category.id)
-    .eq('is_active', true)
-    .order('price', { ascending: true })
-    .limit(1000);
+  // Supabase PostgREST default row limit'i aşmak için range kullan
+  const BATCH = 1000;
+  let allProducts: any[] = [];
+  let from = 0;
+  while (true) {
+    const { data: batch, error: bErr } = await supabase
+      .from('products')
+      .select('*')
+      .eq('category_id', category.id)
+      .eq('is_active', true)
+      .order('price', { ascending: true })
+      .range(from, from + BATCH - 1);
+    if (bErr) { console.error('[supabase] Ürünler:', bErr.message); break; }
+    if (!batch || batch.length === 0) break;
+    allProducts = allProducts.concat(batch);
+    if (batch.length < BATCH) break;
+    from += BATCH;
+  }
+  const data = allProducts;
 
-  if (error) { console.error('[supabase] Ürünler:', error.message); return []; }
   return (data as Product[]) ?? [];
 }
 
