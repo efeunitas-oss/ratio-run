@@ -70,9 +70,8 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
     return [];
   }
 
-  // Supabase PostgREST default row limit'i aşmak için range kullan
   const BATCH = 1000;
-  let allProducts: any[] = [];
+  let allProducts: Product[] = [];
   let from = 0;
   while (true) {
     const { data: batch, error: bErr } = await supabase
@@ -82,15 +81,12 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
       .eq('is_active', true)
       .order('price', { ascending: true })
       .range(from, from + BATCH - 1);
-    if (bErr) { console.error('[supabase] Ürünler:', bErr.message); break; }
-    if (!batch || batch.length === 0) break;
-    allProducts = allProducts.concat(batch);
+    if (bErr || !batch || batch.length === 0) break;
+    allProducts = allProducts.concat(batch as Product[]);
     if (batch.length < BATCH) break;
     from += BATCH;
   }
-  const data = allProducts;
-
-  return (data as Product[]) ?? [];
+  return allProducts;
 }
 
 export async function getAllProducts(): Promise<Product[]> {
