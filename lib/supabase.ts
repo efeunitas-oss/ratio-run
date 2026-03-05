@@ -70,23 +70,22 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
     return [];
   }
 
-  const BATCH = 1000;
-  let allProducts: Product[] = [];
+  let all: Product[] = [];
   let from = 0;
   while (true) {
-    const { data: batch, error: bErr } = await supabase
+    const { data: batch } = await supabase
       .from('products')
       .select('*')
       .eq('category_id', category.id)
       .eq('is_active', true)
       .order('price', { ascending: true })
-      .range(from, from + BATCH - 1);
-    if (bErr || !batch || batch.length === 0) break;
-    allProducts = allProducts.concat(batch as Product[]);
-    if (batch.length < BATCH) break;
-    from += BATCH;
+      .range(from, from + 999);
+    if (!batch || batch.length === 0) break;
+    all = all.concat(batch as Product[]);
+    if (batch.length < 1000) break;
+    from += 1000;
   }
-  return allProducts;
+  return all;
 }
 
 export async function getAllProducts(): Promise<Product[]> {
