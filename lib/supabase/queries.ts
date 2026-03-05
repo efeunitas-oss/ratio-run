@@ -18,33 +18,6 @@ const supabaseKey =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyeXB1bGZ4YmNraGVya21yamdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNTczMDcsImV4cCI6MjA4NjczMzMwN30.gEYVh5tjSrO3sgc5rsnYgVrIy6YdK3I5qU5S6FwkX-I';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
-// ─── Veri Temizleyici ─────────────────────────────────────────────────────────
-// Trendyol/Amazon'dan gelen bozuk değerleri düzeltir
-function sanitizeProduct(product: Product): Product {
-  if (!product.specifications) return product;
-  const s = { ...product.specifications } as Record<string, any>;
-
-  // screen_inch: 600008 gibi saçma değer → null (max gerçekçi 100 inç)
-  if (s.screen_inch != null && s.screen_inch > 100) s.screen_inch = null;
-
-  // storage_gb: 2 gelmiş ama TB ise 2048 GB olmalı
-  if (s.storage_gb != null && s.storage_gb > 0 && s.storage_gb <= 4) {
-    s.storage_gb = s.storage_gb * 1024;
-  }
-
-  // spec_labels: null string değerleri temizle
-  if (s.spec_labels && typeof s.spec_labels === 'object') {
-    const cleaned: Record<string, string> = {};
-    for (const [k, v] of Object.entries(s.spec_labels)) {
-      if (v != null && v !== 'null' && v !== '') cleaned[k] = String(v);
-    }
-    s.spec_labels = cleaned;
-  }
-
-  return { ...product, specifications: s };
-}
-
-
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -84,7 +57,7 @@ export async function getProductById(
 
     const { data, error } = await builder.single();
     if (error) { console.error('[queries] getProductById:', error.message); return null; }
-    return sanitizeProduct(data as Product);
+    return data as Product;
   } catch (err) { console.error('[queries] getProductById exception:', err); return null; }
 }
 
@@ -113,7 +86,7 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
 // ── Get Products By Category ──────────────────────────────────────────────────
 export async function getProductsByCategory(
   categoryId: string,
-  limit = 20,
+  limit = 500,
   offset = 0
 ): Promise<Product[]> {
   if (!categoryId || !UUID_REGEX.test(categoryId)) return [];
@@ -127,7 +100,7 @@ export async function getProductsByCategory(
       .range(offset, offset + limit - 1);
 
     if (error) { console.error('[queries] getProductsByCategory:', error.message); return []; }
-    return ((data as Product[]) ?? []).map(sanitizeProduct);
+    return (data as Product[]) ?? [];
   } catch (err) { console.error('[queries] getProductsByCategory exception:', err); return []; }
 }
 
@@ -199,7 +172,7 @@ export async function searchProducts(query: string, categoryId?: string): Promis
 
     const { data, error } = await builder;
     if (error) { console.error('[queries] searchProducts:', error.message); return []; }
-    return ((data as Product[]) ?? []).map(sanitizeProduct);
+    return (data as Product[]) ?? [];
   } catch (err) { console.error('[queries] searchProducts exception:', err); return []; }
 }
 
