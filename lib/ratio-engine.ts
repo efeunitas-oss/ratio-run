@@ -1,37 +1,26 @@
 // ============================================================================
-// RATIO.RUN — DECISION ENGINE v4
-// Düzeltmeler:
-// - normalizeToHundred: DB'den gelen 0-10 skorlar artık 0-100'e çevriliyor
-// - Tie yok: her zaman net kazanan belirleniyor
-// - getSpecValue: spec_labels'dan da okuma
+// RATIO.RUN — DECISION ENGINE v5
+// Düzeltme: getSpecValue spec_labels'dan okuma düzeltildi
 // ============================================================================
 
 import { Product, RatioScore, RatioComparisonResult, ScoreWeights } from '@/lib/types';
 import { getSpecConfig } from '@/lib/spec-config';
 
-// ─── 0-10 skalasını 0-100'e normalize et ─────────────────────────────────────
-// Apify scraper performance_score, display_score vb. 0-10 olarak yazıyor.
-// 6 gelince 60 olması lazım — yoksa final ratio skoru 4.5 çıkıyor.
 function normalizeToHundred(val: number): number {
   if (val <= 0) return 0;
-  if (val <= 10) return val * 10;  // 0-10 → 0-100
-  return Math.min(val, 100);        // zaten 100 skalasındaysa dokunma
+  if (val <= 10) return val * 10;
+  return Math.min(val, 100);
 }
 
-// ─── specifications JSON'dan skor oku + normalize et ─────────────────────────
 function resolveScore(product: Product, key: string): number {
   const specs = product.specifications ?? {};
-
   const topLevel = (product as any)[key];
   if (topLevel != null && typeof topLevel === 'number') return normalizeToHundred(topLevel);
-
   const fromSpecs = specs[key];
   if (fromSpecs != null && typeof fromSpecs === 'number') return normalizeToHundred(fromSpecs);
-
   return 0;
 }
 
-// ─── Ana Hesaplama Fonksiyonu ──────────────────────────────────────────────────
 export function calculateRatioScore(
   product: Product,
   weights: ScoreWeights,
@@ -67,18 +56,14 @@ export function calculateRatioScore(
     if (weight == null) continue;
     const w = weight as number;
     const score = scoreMap[weightKey] ?? 0;
-
     if (score > 0) {
       weightedSum += w * score;
       totalWeight += w;
       individualScores[weightKey] = score;
-      explanations.push(
-        `${weightKeyToLabel(weightKey)}: ${score.toFixed(0)}/100 (ağırlık %${(w * 100).toFixed(0)})`
-      );
+      explanations.push(`${weightKeyToLabel(weightKey)}: ${score.toFixed(0)}/100 (ağırlık %${(w * 100).toFixed(0)})`);
     }
   }
 
-  // Hiç spesifik skor yoksa overall ile devam et
   if (totalWeight === 0 && scoreMap.overall > 0) {
     weightedSum = scoreMap.overall;
     totalWeight = 1;
@@ -86,21 +71,16 @@ export function calculateRatioScore(
     explanations.push(`Genel skor: ${scoreMap.overall.toFixed(0)}/100`);
   }
 
-  // Ağırlıklar tam 1.0 değilse normalize et
   if (totalWeight > 0 && Math.abs(totalWeight - 1.0) > 0.01) {
     weightedSum = weightedSum / totalWeight;
   }
 
-  // Fiyat faktörü — pahalı ürün ceza alır (max %30 ceza, eskisi %50'ydi)
   const safePrice = Math.max(product.price ?? 1, 1);
   const safeMax   = Math.max(maxPrice ?? safePrice, safePrice);
   const priceNormalized = Math.log10(safePrice + 1) / Math.log10(safeMax + 1);
-  const priceFactor = 1 - priceNormalized * 0.3;
-
-  const priceAdvantage = ((1 - priceNormalized) * 100).toFixed(0);
-  explanations.push(
-    `Fiyat avantajı: Kategorideki en yüksek fiyata göre %${priceAdvantage} tasarruf faktörü`
-  );
+  const priceFactor     = 1 - priceNormalized * 0.3;
+  const priceAdvantage  = ((1 - priceNormalized) * 100).toFixed(0);
+  explanations.push(`Fiyat avantajı: Kategorideki en yüksek fiyata göre %${priceAdvantage} tasarruf faktörü`);
 
   const rawScore        = weightedSum * priceFactor;
   const normalizedScore = Math.min(Math.max(rawScore, 0), 100);
@@ -117,7 +97,6 @@ export function calculateRatioScore(
   };
 }
 
-// ─── Karşılaştırma ─────────────────────────────────────────────────────────────
 export function compareProducts(
   productA: Product,
   productB: Product,
@@ -130,27 +109,20 @@ export function compareProducts(
 
   const diff = Math.abs(ratioA.normalized_score - ratioB.normalized_score);
 
-  // Tie yok — her zaman net kazanan
   let winner: 'a' | 'b' | 'tie';
   let advantagePercentage = 0;
 
   if (ratioA.normalized_score > ratioB.normalized_score) {
     winner = 'a';
-    advantagePercentage =
-      ((ratioA.normalized_score - ratioB.normalized_score) /
-        Math.max(ratioB.normalized_score, 1)) * 100;
+    advantagePercentage = ((ratioA.normalized_score - ratioB.normalized_score) / Math.max(ratioB.normalized_score, 1)) * 100;
   } else if (ratioB.normalized_score > ratioA.normalized_score) {
     winner = 'b';
-    advantagePercentage =
-      ((ratioB.normalized_score - ratioA.normalized_score) /
-        Math.max(ratioA.normalized_score, 1)) * 100;
+    advantagePercentage = ((ratioB.normalized_score - ratioA.normalized_score) / Math.max(ratioA.normalized_score, 1)) * 100;
   } else {
-    // Birebir eşit (nadir) — ucuz olan kazanır
     winner = (productA.price ?? 0) <= (productB.price ?? 0) ? 'a' : 'b';
     advantagePercentage = 0.1;
   }
 
-  // Üst sınır: maksimum %99 — veri eksikliğinden kaynaklanan %843 gibi saçma rakamları önler
   advantagePercentage = Math.min(advantagePercentage, 99);
   const isCrushingVictory = advantagePercentage > 15;
   const winnerProduct = winner === 'a' ? productA : productB;
@@ -178,7 +150,6 @@ export function compareProducts(
   };
 }
 
-// ─── Değer Rozeti ──────────────────────────────────────────────────────────────
 export function getValueBadge(score: number): {
   text: string;
   color: string;
@@ -191,7 +162,6 @@ export function getValueBadge(score: number): {
   return                   { text: 'ZAYIF DEĞER',       color: 'text-red-400',     bgColor: 'bg-red-500/20'     };
 }
 
-// ─── Spesifikasyon Ayrıştırıcı ────────────────────────────────────────────────
 export function parseSpecsFromTitle(
   title: string | undefined | null,
   categorySlug: string
@@ -211,8 +181,6 @@ export function parseSpecsFromTitle(
   return specs;
 }
 
-// ─── Spesifikasyon Değeri Oku ─────────────────────────────────────────────────
-// Öncelik: specifications[key] → spec_labels → regex
 export function getSpecValue(
   product: Product,
   specKey: string,
@@ -223,20 +191,25 @@ export function getSpecValue(
   // 1. Doğrudan field
   if (specs[specKey] != null) return specs[specKey] as string | number;
 
-  // 2. spec_labels (Trendyol/Amazon scraper buraya yazar)
+  // 2. spec_labels içinden eşleştir
   const labels = specs.spec_labels as Record<string, string> | undefined;
   if (labels) {
     const labelMap: Record<string, string[]> = {
-      ram_size:           ['RAM', 'Ram', 'Bellek'],
-      storage:            ['SSD', 'HDD', 'Depolama', 'Dahili Depolama', 'Kapasite'],
-      screen_size:        ['Ekran', 'Ekran Boyutu'],
-      display_brightness: ['Parlaklık', 'Brightness'],
-      battery:            ['Batarya', 'Pil', 'Battery'],
-      ram:                ['RAM', 'Ram'],
-      camera_mp:          ['Kamera', 'Arka Kamera', 'Ana Kamera'],
-      battery_life:       ['Batarya Ömrü', 'Kullanım Süresi'],
-      noise_cancellation: ['ANC', 'Gürültü Önleme'],
+      ram_gb:        ['RAM', 'Ram', 'Bellek'],
+      storage_gb:    ['Depolama', 'SSD', 'Dahili Depolama'],
+      screen_inch:   ['Ekran', 'Ekran Boyutu'],
+      camera_mp:     ['Kamera', 'Arka Kamera', 'Ana Kamera'],
+      battery_mah:   ['Batarya', 'Pil'],
+      refresh_hz:    ['Ekran Hz', 'Yenileme Hızı', 'Hz'],
+      ssd_gb:        ['SSD', 'Depolama'],
+      battery_hours: ['Pil Ömrü', 'Batarya Ömrü'],
+      has_anc:       ['ANC', 'Gürültü Önleme'],
+      battery_days:  ['Pil Ömrü'],
+      size_mm:       ['Kasa Boyutu'],
+      suction_pa:    ['Emme Gücü', 'Emiş Gücü'],
+      screen_size:   ['Ekran', 'Ekran Boyutu'],
     };
+
     const keys = labelMap[specKey] ?? [];
     for (const k of keys) {
       const v = labels[k];
@@ -248,12 +221,11 @@ export function getSpecValue(
     }
   }
 
-  // 3. Ürün adından regex
+  // 3. Ürün adından regex ile çıkar
   const parsed = parseSpecsFromTitle(product.name, categorySlug);
   return (parsed[specKey] as string | number) ?? null;
 }
 
-// ─── Weight key → okunabilir etiket ──────────────────────────────────────────
 function weightKeyToLabel(key: string): string {
   const labels: Record<string, string> = {
     performance:         'İşlemci / Performans',
