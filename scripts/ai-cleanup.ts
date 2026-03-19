@@ -1,260 +1,158 @@
 // ============================================================================
-// RATIO.RUN — AI Ürün Temizleyici
-// Çalıştır: npx tsx scripts/ai-cleanup.ts
+// RATIO.RUN — AI CLEANUP
+// Yanlış kategorideki ürünleri Haiku ile tespit edip is_active=false yapar.
+//
+// Kullanım:
+//   npx ts-node --skip-project scripts/ai-cleanup.ts --category telefon
+//   npx ts-node --skip-project scripts/ai-cleanup.ts  (tüm kategoriler)
 // ============================================================================
 
 import { createClient } from '@supabase/supabase-js';
+import Anthropic from '@anthropic-ai/sdk';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import * as readline from 'readline';
-
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabase  = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY!;
-
-// Geçerli kategoriler ve Türkçe açıklamaları
-const KATEGORILER = {
-  'telefon':       'Akıllı telefonlar ve cep telefonları',
-  'laptop':        'Dizüstü bilgisayarlar',
-  'tablet':        'Tablet bilgisayarlar',
-  'saat':          'Akıllı saatler ve smartwatch',
-  'kulaklik':      'Kulaklıklar (kablolu/kablosuz)',
-  'tv':            'Televizyonlar',
-  'robot-supurge': 'Robot süpürgeler',
-  'otomobil':      'Otomobiller ve arabalar',
+// Her kategori için hangi ürünler GEÇERLİ, hangileri DEĞİL
+const CATEGORY_RULES: Record<string, { valid: string; invalid: string }> = {
+  telefon:        { valid: 'Akıllı telefon, cep telefonu',                         invalid: 'Kılıf, aksesuar, şarj aleti, kablo, ekran koruyucu, tutucu, stand, tablet, dizüstü, robot süpürge, TV, kulaklık, saat, oyuncak, uzaktan kumanda, kapı rampası, el süpürgesi, filtre, torba' },
+  laptop:         { valid: 'Dizüstü bilgisayar, laptop, notebook',                 invalid: 'Kılıf, çanta, soğutucu, stand, klavye, mouse, ekran koruyucu, aksesuar, tablet, telefon, monitör' },
+  tablet:         { valid: 'Tablet bilgisayar',                                    invalid: 'Kılıf, ekran koruyucu, kalem aksesuar, stand, tutucu, telefon, laptop, oyuncak tablet, dijital çerçeve, mikroskop, güvenlik kamerası' },
+  saat:           { valid: 'Akıllı saat, smartwatch, fitness bilekliği',           invalid: 'Kol saati bandı, şarj aleti, ekran koruyucu, yüzük, çocuk oyuncağı, klasik kol saati' },
+  kulaklik:       { valid: 'Kulaklık (kablolu, kablosuz, bluetooth, in-ear, over-ear)', invalid: 'Kablo adaptörü, dönüştürücü, kulaklık kılıfı, mikrofon, hoparlör, ses kartı' },
+  'robot-supurge':{ valid: 'Robot süpürge (otonom, kendi kendine süpüren)',         invalid: 'Yedek parça, toz torbası, filtre, fırça, mop bezi, paspas, zemin mati, el süpürgesi, şarj istasyonu yedek parçası, aksesuarlar' },
+  tv:             { valid: 'Televizyon, smart TV, LED TV, OLED TV, QLED TV',        invalid: 'Uzaktan kumanda, TV askısı, stand, ekran koruyucu, HDMI kablo, TV kutusu, monitör, projeksiyon, ses sistemi' },
 };
 
-// Kullanıcıya sor
-async function sor(soru: string): Promise<string> {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise(resolve => rl.question(soru, ans => { rl.close(); resolve(ans.trim()); }));
-}
+const SLUG_MAP: Record<string, string> = {
+  smartphone: 'telefon', telefon: 'telefon',
+  laptop: 'laptop',
+  tablet: 'tablet',
+  smartwatch: 'saat', saat: 'saat',
+  headphones: 'kulaklik', kulaklik: 'kulaklik',
+  'robot-vacuum': 'robot-supurge', 'robot-supurge': 'robot-supurge',
+  television: 'tv', tv: 'tv',
+};
 
-// Claude'a sor — 20 ürünü tek seferde analiz et
-async function claudeAnaliz(urunler: any[]): Promise<any[]> {
-  const liste = urunler.map((u, i) =>
-    `${i + 1}. ID: ${u.id} | Mevcut: ${u.kategori_slug} | Ad: "${u.name}" | Marka: ${u.brand ?? '?'} | Fiyat: ${u.price ? u.price + '₺' : '?'}`
-  ).join('\n');
+async function checkBatch(
+  products: { id: string; name: string }[],
+  catKey: string
+): Promise<string[]> {
+  const rules = CATEGORY_RULES[catKey];
+  const list  = products.map((p, i) => `${i + 1}. ID:"${p.id}" | "${p.name}"`).join('\n');
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4096,
-      system: `Sen bir e-ticaret ürün editörüsün. Türkçe ürünleri analiz ediyorsun.
+  const prompt = `Aşağıdaki ürünleri incele. Her biri "${catKey}" kategorisinde mi, yoksa yanlış kategoride mi?
 
-Geçerli kategoriler: ${Object.entries(KATEGORILER).map(([k,v]) => `"${k}" (${v})`).join(', ')}
+GEÇERLİ ürünler: ${rules.valid}
+GEÇERSİZ ürünler (bunlar yanlış kategoride): ${rules.invalid}
 
-Her ürün için şunu belirle:
-1. DOGRU_KATEGORI: Doğru kategori slug'u (yukarıdakilerden biri)
-2. TEMIZ_AD: Düzeltilmiş ürün adı (marka + model + 1-2 özellik, max 80 karakter)
-3. ISLEM: "guncelle" (kategori veya ad yanlışsa), "sil" (çöp/alakasız ürünse), "tamam" (her şey doğruysa)
+Ürünler:
+${list}
 
-ÇÖP ÜRÜN örnekleri: kılıf, şarj kablosu, aksesuar, yedek parça, "test ürün", anlamsız isimler.
-YANLIŞ KATEGORİ örnekleri: akıllı saat → telefon kategorisinde, tablet → telefon kategorisinde.
+SADECE GEÇERSİZ olan ürünlerin ID'lerini JSON listesi olarak döndür.
+Eğer hepsi geçerliyse boş liste döndür.
+Format: {"invalid_ids": ["id1", "id2", ...]}`;
 
-Sadece JSON döndür:
-[{"id":"uuid","dogru_kategori":"slug","temiz_ad":"ad","islem":"tamam|guncelle|sil","sebep":"1 cümle"}]`,
-      messages: [{ role: 'user', content: `Bu ${urunler.length} ürünü analiz et:\n\n${liste}` }],
-    }),
+  const response = await anthropic.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 1024,
+    messages: [{ role: 'user', content: prompt }],
   });
 
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Claude API hatası: ${err.slice(0, 200)}`);
-  }
+  const text = (response.content[0] as { type: string; text: string }).text ?? '{}';
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return [];
 
-  const data = await response.json();
-  const raw = data.content?.[0]?.text ?? '[]';
-  const clean = raw.replace(/```json\n?|```\n?/g, '').trim();
-
-  try {
-    return JSON.parse(clean);
-  } catch {
-    console.error('JSON parse hatası, ham yanıt:', raw.slice(0, 300));
-    return [];
-  }
+  const parsed = JSON.parse(jsonMatch[0]);
+  return parsed.invalid_ids ?? [];
 }
 
-// ── Ana fonksiyon ─────────────────────────────────────────────────────────────
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
 async function main() {
-  console.log('\n🤖 RATIO.RUN — AI Ürün Temizleyici\n');
-  console.log('Bu script ürünlerinizi Claude AI ile analiz eder.');
-  console.log('Yanlış kategori → taşır | Çöp ürün → siler | Yanlış ad → düzeltir\n');
+  const args        = process.argv.slice(2);
+  const categoryArg = args.includes('--category') ? args[args.indexOf('--category') + 1] : null;
+  const dryRun      = args.includes('--dry-run');
+  const limitArg    = args.includes('--limit') ? parseInt(args[args.indexOf('--limit') + 1]) : 1000;
+  const batchSize   = 25;
 
-  // Kategori seçimi
-  console.log('Hangi kategoriyi temizleyelim?');
-  console.log('0. Tüm kategoriler');
-  Object.keys(KATEGORILER).forEach((k, i) => console.log(`${i + 1}. ${k}`));
-  const secim = await sor('\nSeçim (0-8): ');
-  const sluglar = Object.keys(KATEGORILER);
-  const secilenSlug = secim === '0' ? null : sluglar[parseInt(secim) - 1];
+  console.log('🧹 ratio.run AI Cleanup');
+  console.log(`   Kategori : ${categoryArg ?? 'TÜMÜ'}`);
+  console.log(`   Mod      : ${dryRun ? 'DRY-RUN (veritabanı değişmez)' : 'CANLI'}\n`);
 
-  // Kaç ürün işlensin?
-  const limitStr = await sor('Kaç ürün işlensin? (Öneri: 50, max 500): ');
-  const limit = Math.min(parseInt(limitStr) || 50, 500);
+  const catsToProcess = categoryArg
+    ? [SLUG_MAP[categoryArg] ?? categoryArg]
+    : Object.keys(CATEGORY_RULES);
 
-  // Kaç ürün var?
-  let query = supabase
-    .from('products')
-    .select('id, name, brand, price, category_id, categories!inner(slug, id)', { count: 'exact' })
-    .eq('is_active', true)
-    .limit(limit);
+  let totalDeactivated = 0, totalChecked = 0;
 
-  if (secilenSlug) {
-    const { data: cat } = await supabase.from('categories').select('id').eq('slug', secilenSlug).maybeSingle();
-    if (cat) query = query.eq('category_id', cat.id);
-  }
+  for (const catKey of catsToProcess) {
+    if (!CATEGORY_RULES[catKey]) continue;
 
-  const { data: urunler, count } = await query;
+    const slugsToTry = [catKey, ...Object.entries(SLUG_MAP).filter(([,v]) => v === catKey).map(([k]) => k)];
+    const { data: dbCats } = await supabase
+      .from('categories').select('id,name').in('slug', slugsToTry);
+    if (!dbCats?.length) { console.log(`⚠️  ${catKey}: DB'de yok`); continue; }
 
-  if (!urunler || urunler.length === 0) {
-    console.log('Ürün bulunamadı.');
-    return;
-  }
+    const catId = dbCats[0].id;
+    console.log(`📦 ${dbCats[0].name ?? catKey}`);
 
-  console.log(`\n${urunler.length} ürün bulundu. Analiz başlıyor...\n`);
+    const { data: products, error } = await supabase
+      .from('products')
+      .select('id, name')
+      .eq('category_id', catId)
+      .eq('is_active', true)
+      .limit(limitArg);
 
-  // Tüm kategorileri yükle (category_id → slug için)
-  const { data: tumKategoriler } = await supabase.from('categories').select('id, slug');
-  const catIdToSlug: Record<string, string> = {};
-  const catSlugToId: Record<string, string> = {};
-  tumKategoriler?.forEach((c: any) => {
-    catIdToSlug[c.id] = c.slug;
-    catSlugToId[c.slug] = c.id;
-  });
+    if (error || !products) { console.log(`   ❌ ${error?.message}`); continue; }
+    console.log(`   ${products.length} aktif ürün kontrol edilecek`);
 
-  const urunListesi = urunler.map((u: any) => ({
-    id: u.id,
-    name: u.name ?? '',
-    brand: u.brand ?? null,
-    price: u.price ?? null,
-    kategori_slug: (u.categories as any)?.slug ?? 'bilinmiyor',
-    kategori_id: u.category_id,
-  }));
+    let catDeactivated = 0;
 
-  // 20'li batch'ler halinde işle
-  const BATCH = 20;
-  const tumSonuclar: any[] = [];
+    for (let i = 0; i < products.length; i += batchSize) {
+      const batch = products.slice(i, i + batchSize);
+      process.stdout.write(`   [${i + 1}-${Math.min(i + batchSize, products.length)}/${products.length}] kontrol ediliyor...`);
 
-  for (let i = 0; i < urunListesi.length; i += BATCH) {
-    const batch = urunListesi.slice(i, i + BATCH);
-    const batchNo = Math.floor(i / BATCH) + 1;
-    const toplamBatch = Math.ceil(urunListesi.length / BATCH);
-    process.stdout.write(`Batch ${batchNo}/${toplamBatch} işleniyor...`);
+      try {
+        const invalidIds = await checkBatch(
+          batch.map(p => ({ id: p.id, name: p.name ?? '' })),
+          catKey
+        );
 
-    try {
-      const sonuclar = await claudeAnaliz(batch);
-      tumSonuclar.push(...sonuclar);
-      console.log(` ✓ (${sonuclar.length} sonuç)`);
-    } catch (err: any) {
-      console.log(` ✗ HATA: ${err.message}`);
+        if (invalidIds.length === 0) {
+          process.stdout.write(' ✅ Hepsi geçerli\n');
+        } else {
+          process.stdout.write(` ⚠️  ${invalidIds.length} geçersiz ürün bulundu\n`);
+
+          for (const id of invalidIds) {
+            const product = batch.find(p => p.id === id);
+            console.log(`      ❌ "${product?.name ?? id}"`);
+
+            if (!dryRun) {
+              await supabase.from('products').update({ is_active: false }).eq('id', id);
+            }
+            catDeactivated++;
+            totalDeactivated++;
+          }
+        }
+
+        totalChecked += batch.length;
+        await sleep(500);
+      } catch (err: any) {
+        process.stdout.write(` ❌ Hata: ${err.message}\n`);
+      }
     }
 
-    // Rate limit: her batch arası 600ms bekle
-    if (i + BATCH < urunListesi.length) {
-      await new Promise(r => setTimeout(r, 600));
-    }
+    console.log(`   → ${catDeactivated} ürün pasife alındı\n`);
   }
 
-  // Sonuçları grupla
-  const guncellenecek = tumSonuclar.filter(r => r.islem === 'guncelle');
-  const silinecek     = tumSonuclar.filter(r => r.islem === 'sil');
-  const tamam         = tumSonuclar.filter(r => r.islem === 'tamam');
-
-  console.log('\n─────────────────────────────────────────');
-  console.log(`📊 ANALİZ SONUCU (${tumSonuclar.length} ürün)`);
-  console.log(`  ✅ Sorunsuz: ${tamam.length}`);
-  console.log(`  ✏️  Güncellenecek: ${guncellenecek.length}`);
-  console.log(`  🗑️  Silinecek: ${silinecek.length}`);
-  console.log('─────────────────────────────────────────');
-
-  if (guncellenecek.length > 0) {
-    console.log('\n✏️  GÜNCELLENECEKLER (ilk 10):');
-    guncellenecek.slice(0, 10).forEach(r => {
-      const orijinal = urunListesi.find(u => u.id === r.id);
-      const katDegisim = orijinal?.kategori_slug !== r.dogru_kategori
-        ? ` [KATEGORİ: ${orijinal?.kategori_slug} → ${r.dogru_kategori}]`
-        : '';
-      console.log(`  • ${orijinal?.name?.slice(0, 50)} →${katDegisim}`);
-      console.log(`    Yeni ad: ${r.temiz_ad}`);
-      console.log(`    Sebep: ${r.sebep}`);
-    });
-    if (guncellenecek.length > 10) console.log(`  ... ve ${guncellenecek.length - 10} tane daha`);
-  }
-
-  if (silinecek.length > 0) {
-    console.log('\n🗑️  SİLİNECEKLER (ilk 10):');
-    silinecek.slice(0, 10).forEach(r => {
-      const orijinal = urunListesi.find(u => u.id === r.id);
-      console.log(`  • ${orijinal?.name?.slice(0, 60)} — ${r.sebep}`);
-    });
-    if (silinecek.length > 10) console.log(`  ... ve ${silinecek.length - 10} tane daha`);
-  }
-
-  if (guncellenecek.length === 0 && silinecek.length === 0) {
-    console.log('\n🎉 Tüm ürünler temiz, yapılacak bir şey yok!');
-    return;
-  }
-
-  // Onay al
-  const onay = await sor('\nBu değişiklikleri uygulayayım mı? (evet/hayır): ');
-  if (onay.toLowerCase() !== 'evet') {
-    console.log('\nİptal edildi. Hiçbir şey değiştirilmedi.');
-    return;
-  }
-
-  // Güncelle
-  let guncellendi = 0;
-  let silindi = 0;
-  const hatalar: string[] = [];
-
-  for (const r of guncellenecek) {
-    const orijinal = urunListesi.find(u => u.id === r.id);
-    if (!orijinal) continue;
-
-    const payload: Record<string, any> = {};
-    if (orijinal.kategori_slug !== r.dogru_kategori && catSlugToId[r.dogru_kategori]) {
-      payload.category_id = catSlugToId[r.dogru_kategori];
-    }
-    if (r.temiz_ad && r.temiz_ad !== orijinal.name) {
-      payload.name = r.temiz_ad;
-    }
-    if (Object.keys(payload).length === 0) continue;
-
-    const { error } = await supabase.from('products').update(payload).eq('id', r.id);
-    if (error) hatalar.push(`Güncelleme hatası ${r.id}: ${error.message}`);
-    else guncellendi++;
-  }
-
-  for (const r of silinecek) {
-    const { error } = await supabase.from('products').update({ is_active: false }).eq('id', r.id);
-    if (error) hatalar.push(`Silme hatası ${r.id}: ${error.message}`);
-    else silindi++;
-  }
-
-  console.log('\n─────────────────────────────────────────');
-  console.log('✅ TAMAMLANDI');
-  console.log(`  Güncellendi: ${guncellendi}`);
-  console.log(`  Silindi (pasif): ${silindi}`);
-  if (hatalar.length > 0) {
-    console.log(`  Hata: ${hatalar.length}`);
-    hatalar.forEach(h => console.log(`    ! ${h}`));
-  }
-  console.log('─────────────────────────────────────────\n');
+  console.log('─'.repeat(50));
+  console.log(`🔍 Kontrol edilen : ${totalChecked}`);
+  console.log(`❌ Pasife alınan  : ${totalDeactivated}`);
+  if (dryRun) console.log('⚠️  DRY-RUN: Hiçbir değişiklik yapılmadı');
 }
 
-main().catch(err => {
-  console.error('Beklenmeyen hata:', err);
-  process.exit(1);
-});
+main().catch(console.error);
