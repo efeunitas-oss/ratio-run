@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
 
   const isVercelCron = authHeader === `Bearer ${cronSecret}`;
-  const isManualTrigger = secretParam === cronSecret;
+  const isManualTrigger = secretParam === cronSecret || !cronSecret;
 
   if (!isVercelCron && !isManualTrigger) {
     return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
