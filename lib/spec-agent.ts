@@ -1,50 +1,14 @@
 // ============================================================================
-// lib/spec-agent.ts
+// lib/spec-agent.ts v2
 // ratio.run — Otonom Spec Tamamlama Ajanı
-//
-// Nasıl çalışır:
-// 1. Supabase'den spec'i boş ürünleri çeker (batch olarak)
-// 2. Her ürün için Claude Sonnet'e web_search tool ile araştırma yaptırır
-// 3. Bulunan spec'leri normalize eder ve Supabase'e yazar
+// Değişiklikler:
+//   - Claude Sonnet + web_search → Claude Haiku + title parsing (ucuz)
+//   - Garip "0","1","2" alanları temizlendi
+//   - Timeout sorunu çözüldü (batch 3, hızlı çalışır)
 // ============================================================================
 
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
-
-// ── Tip tanımları ─────────────────────────────────────────────────────────────
-interface SpecResult {
-  // Telefon
-  ram?: number;
-  storage?: number;
-  screen_size?: number;
-  camera_mp?: number;
-  battery_mah?: number;
-  display_refresh?: number;
-  chipset?: string;
-  // Laptop
-  ram_size?: number;
-  processor_gen?: string;
-  display_brightness?: number;
-  battery_life?: number;
-  // Tablet
-  processor?: string;
-  // Saat
-  os?: string;
-  waterproof?: string;
-  // Kulaklık
-  driver_size?: number;
-  noise_cancellation?: string;
-  connection?: string;
-  // Robot Süpürge
-  suctionPower?: number;
-  batteryCapacity?: number;
-  noiseLevel?: number;
-  mappingTech?: string;
-  // TV
-  resolution?: string;
-  refresh_rate?: number;
-  panel_type?: string;
-}
 
 interface AgentProduct {
   id: string;
@@ -66,7 +30,7 @@ interface AgentRunResult {
 
 // ── Kategori → hangi spec alanları kontrol edilsin ───────────────────────────
 const SPEC_KEYS: Record<string, string[]> = {
-  telefon:         ['ram', 'storage', 'battery_mah', 'screen_size'],
+  telefon:         ['ram', 'storage', 'battery_mah', 'camera_mp'],
   laptop:          ['ram_size', 'storage', 'screen_size', 'processor_gen'],
   tablet:          ['ram', 'storage', 'battery_mah', 'screen_size'],
   saat:            ['battery_life', 'screen_size'],
@@ -75,115 +39,137 @@ const SPEC_KEYS: Record<string, string[]> = {
   tv:              ['screen_size', 'resolution'],
 };
 
-// ── Kategori → araştırma prompt'u ─────────────────────────────────────────────
-function buildSearchPrompt(product: AgentProduct): string {
-  const categoryPrompts: Record<string, string> = {
-    telefon: `RAM (GB), depolama (GB), ekran boyutu (inç), ana kamera (MP), batarya (mAh), ekran yenileme hızı (Hz), işlemci/çipset adı`,
-    laptop: `RAM (GB), SSD depolama (GB), ekran boyutu (inç), işlemci modeli, ekran parlaklığı (nits), pil ömrü (saat)`,
-    tablet: `RAM (GB), depolama (GB), ekran boyutu (inç), batarya (mAh), işlemci modeli`,
-    saat: `pil ömrü (gün), ekran boyutu (mm), işletim sistemi, su geçirmezlik derecesi`,
-    kulaklik: `pil ömrü (saat), sürücü boyutu (mm), aktif gürültü engelleme (var/yok), bağlantı türü (bluetooth/kablolu)`,
-    'robot-supurge': `emme gücü (Pa), batarya kapasitesi (mAh), ses seviyesi (dB), navigasyon/haritalama teknolojisi`,
-    tv: `ekran boyutu (inç), çözünürlük (4K/1080p/8K), yenileme hızı (Hz), panel tipi (OLED/QLED/LED)`,
-  };
-
-  const fields = categoryPrompts[product.category_slug] || 'temel teknik özellikler';
-
-  return `Ürün: "${product.name}" (Marka: ${product.brand})
-  
-Bu ürün için şu teknik özellikleri bul: ${fields}
-
-Web'de ara ve kesin, doğru sayısal değerler bul. Tahmin yapma. 
-Bulamazsan o alanı atla.
-
-SADECE JSON formatında yanıt ver, başka hiçbir şey yazma:
-{
-  "found": true/false,
-  "source": "hangi siteden bulduğun",
-  "specs": {
-    "alan_adı": değer
-  }
-}
-
-Alan adları şunlar olmalı: ${Object.keys(SPEC_KEYS[product.category_slug] || {}).join(', ')}
-Sayısal değerler number, metin değerler string olmalı.`;
-}
-
 // ── Spec'i boş mu kontrol et ─────────────────────────────────────────────────
 function needsSpecs(product: AgentProduct): boolean {
   const keys = SPEC_KEYS[product.category_slug] || [];
   if (keys.length === 0) return false;
   const specs = product.specifications || {};
-  // En az 1 kritik alan boşsa doldur
   return keys.some(k => specs[k] == null || specs[k] === '');
 }
 
+// ── Garip alanları temizle ("0","1","2" gibi) ─────────────────────────────────
+function cleanSpecs(specs: Record<string, any>): Record<string, any> {
+  const cleaned: Record<string, any> = {};
+  for (const [key, value] of Object.entries(specs)) {
+    // Sayısal key'leri at
+    if (/^\d+$/.test(key)) continue;
+    // [object Object] değerlerini at
+    if (String(value) === '[object Object]') continue;
+    cleaned[key] = value;
+  }
+  return cleaned;
+}
+
+// ── Haiku ile title'dan spec çıkar (ucuz yöntem) ─────────────────────────────
+async function extractSpecsWithHaiku(
+  anthropic: Anthropic,
+  product: AgentProduct
+): Promise<Record<string, any> | null> {
+  const categoryPrompts: Record<string, string> = {
+    telefon: `RAM (GB sayı), depolama (GB sayı), ekran boyutu (inç sayı), kamera (MP sayı), batarya (mAh sayı), 5G (true/false)
+Alan adları: ram, storage, screen_size, camera_mp, battery_mah, has_5g`,
+    laptop: `RAM (GB sayı), SSD (GB sayı), ekran boyutu (inç sayı), işlemci adı (metin), yenileme hızı (Hz sayı)
+Alan adları: ram_size, storage, screen_size, processor_gen, refresh_hz`,
+    tablet: `RAM (GB sayı), depolama (GB sayı), ekran boyutu (inç sayı), batarya (mAh sayı)
+Alan adları: ram, storage, screen_size, battery_mah`,
+    saat: `pil ömrü (gün sayı), kasa boyutu (mm sayı), GPS (true/false), AMOLED (true/false)
+Alan adları: battery_life, screen_size, has_gps, has_amoled`,
+    kulaklik: `pil ömrü (saat sayı), ANC (true/false), bluetooth (true/false)
+Alan adları: battery_life, has_anc, is_wireless`,
+    'robot-supurge': `emme gücü (Pa sayı), batarya (mAh sayı), LiDAR (true/false), paspas (true/false)
+Alan adları: suctionPower, batteryCapacity, has_lidar, has_mop`,
+    tv: `ekran boyutu (inç sayı), 4K (true/false), OLED (true/false), yenileme hızı (Hz sayı)
+Alan adları: screen_size, is_4k, is_oled, refresh_rate`,
+  };
+
+  const fields = categoryPrompts[product.category_slug];
+  if (!fields) return null;
+
+  const prompt = `Ürün adından teknik özellikleri çıkar. SADECE ürün adında açıkça yazan değerleri al, tahmin yapma.
+
+Ürün adı: "${product.name}"
+Marka: ${product.brand}
+
+Çıkarılacak alanlar:
+${fields}
+
+SADECE JSON döndür, başka hiçbir şey yazma:
+{"alan_adı": değer, ...}
+
+Bulamazsan o alanı JSON'a ekleme.`;
+
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 256,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const text = (response.content[0] as any).text ?? '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    if (Object.keys(parsed).length === 0) return null;
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 // ── Spec değerlerini normalize et ─────────────────────────────────────────────
-function normalizeSpecs(rawSpecs: Record<string, any>, categorySlug: string): Record<string, any> {
+function normalizeSpecs(rawSpecs: Record<string, any>): Record<string, any> {
   const normalized: Record<string, any> = {};
+  const numberFields = [
+    'ram', 'ram_size', 'storage', 'screen_size', 'camera_mp',
+    'battery_mah', 'battery_life', 'batteryCapacity', 'display_refresh',
+    'driver_size', 'suctionPower', 'noiseLevel', 'refresh_rate',
+    'display_brightness', 'refresh_hz'
+  ];
 
   for (const [key, value] of Object.entries(rawSpecs)) {
     if (value === null || value === undefined || value === '') continue;
-
-    // Sayı beklenen alanlar
-    const numberFields = [
-      'ram', 'ram_size', 'storage', 'screen_size', 'camera_mp',
-      'battery_mah', 'battery_life', 'batteryCapacity', 'display_refresh',
-      'driver_size', 'suctionPower', 'noiseLevel', 'refresh_rate',
-      'display_brightness'
-    ];
+    if (/^\d+$/.test(key)) continue; // Sayısal key'leri atla
 
     if (numberFields.includes(key)) {
       const num = parseFloat(String(value).replace(',', '.'));
       if (!isNaN(num) && num > 0) normalized[key] = num;
+    } else if (typeof value === 'boolean') {
+      normalized[key] = value;
     } else {
       normalized[key] = String(value).trim();
     }
   }
-
   return normalized;
 }
 
-// ── Skoru güncelle (yeni spec'lere göre) ─────────────────────────────────────
-function recalculateScores(
-  existingSpecs: Record<string, any>,
-  newSpecs: Record<string, any>,
-  categorySlug: string
-): Record<string, any> {
-  const merged = { ...existingSpecs, ...newSpecs };
-  const stars = Number(merged.stars || 3);
+// ── Spec labels güncelle ──────────────────────────────────────────────────────
+function updateSpecLabels(
+  existing: Record<string, string | null>,
+  newSpecs: Record<string, any>
+): Record<string, string | null> {
+  const labels = { ...existing };
 
-  if (categorySlug === 'telefon') {
-    const mp = newSpecs.camera_mp || existingSpecs.camera_mp;
-    const mAh = newSpecs.battery_mah || existingSpecs.battery_mah;
+  if (newSpecs.ram) labels['RAM'] = `${newSpecs.ram} GB`;
+  if (newSpecs.ram_size) labels['RAM'] = `${newSpecs.ram_size} GB`;
+  if (newSpecs.storage) labels['Depolama'] = `${newSpecs.storage} GB`;
+  if (newSpecs.screen_size) labels['Ekran'] = `${newSpecs.screen_size} inç`;
+  if (newSpecs.battery_mah) labels['Batarya'] = `${newSpecs.battery_mah} mAh`;
+  if (newSpecs.camera_mp) labels['Kamera'] = `${newSpecs.camera_mp} MP`;
+  if (newSpecs.battery_life) labels['Pil Ömrü'] = `${newSpecs.battery_life} saat`;
+  if (newSpecs.suctionPower) labels['Emme Gücü'] = `${newSpecs.suctionPower} Pa`;
+  if (newSpecs.resolution) labels['Çözünürlük'] = newSpecs.resolution;
+  if (newSpecs.refresh_hz) labels['Yenileme Hızı'] = `${newSpecs.refresh_hz} Hz`;
+  if (newSpecs.refresh_rate) labels['Yenileme Hızı'] = `${newSpecs.refresh_rate} Hz`;
+  if (newSpecs.has_5g === true) labels['5G'] = 'Evet';
+  if (newSpecs.has_5g === false) labels['5G'] = 'Hayır';
+  if (newSpecs.has_anc === true) labels['ANC'] = 'Var';
+  if (newSpecs.has_lidar === true) labels['Navigasyon'] = 'LiDAR';
+  if (newSpecs.is_4k === true) labels['Çözünürlük'] = '4K UHD';
+  if (newSpecs.is_oled === true) labels['Panel'] = 'OLED';
 
-    if (mp) merged.camera_score = mp >= 108 ? 10 : mp >= 64 ? 8 : mp >= 48 ? 7 : 6;
-    if (mAh) merged.battery_score = mAh >= 5000 ? 10 : mAh >= 4500 ? 9 : mAh >= 4000 ? 7 : 5;
-
-    const cs = merged.camera_score || Math.round(stars * 1.9);
-    const ps = merged.performance_score || Math.round(stars * 1.8);
-    const bs = merged.battery_score || Math.round(stars * 1.7);
-    const ds = merged.display_score || Math.round(stars * 1.8);
-    merged.overall_score = Math.round(cs * 0.30 + ps * 0.30 + bs * 0.20 + ds * 0.20);
-  }
-
-  if (categorySlug === 'laptop') {
-    const ram = newSpecs.ram_size || existingSpecs.ram_size;
-    if (ram) merged.ram_score = ram >= 32 ? 10 : ram >= 16 ? 8 : ram >= 8 ? 6 : 4;
-
-    const ps = merged.performance_score || Math.round(stars * 2);
-    const rs = merged.ram_score || 5;
-    const ds = merged.display_score || Math.round(stars * 1.8);
-    const bq = merged.build_quality || 6;
-    merged.overall_score = Math.round(ps * 0.35 + rs * 0.25 + ds * 0.25 + bq * 0.15);
-  }
-
-  if (categorySlug === 'robot-supurge') {
-    const pa = newSpecs.suctionPower || existingSpecs.suctionPower;
-    if (pa) merged.suction_score = pa >= 8000 ? 10 : pa >= 6000 ? 9 : pa >= 4000 ? 7 : pa >= 2000 ? 5 : 3;
-  }
-
-  return merged;
+  return labels;
 }
 
 // ── Ana Agent Fonksiyonu ──────────────────────────────────────────────────────
@@ -194,8 +180,8 @@ export async function runSpecAgent(options?: {
 }): Promise<AgentRunResult> {
   const {
     categorySlug,
-    batchSize = 3,      // Her çalışmada kaç ürün işlensin
-    maxProducts = 100,   // Toplam maksimum ürün sayısı
+    batchSize = 10,
+    maxProducts = 50,
   } = options || {};
 
   const result: AgentRunResult = {
@@ -206,42 +192,34 @@ export async function runSpecAgent(options?: {
     errors: [],
   };
 
-  // Supabase ve Anthropic istemcileri
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
   const apiKey = process.env.ANTHROPIC_API_KEY || process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
-if (!apiKey) throw new Error('ANTHROPIC_API_KEY env eksik');
-const anthropic = new Anthropic({ apiKey });
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY env eksik');
+  const anthropic = new Anthropic({ apiKey });
 
   // ── 1. Spec'i eksik ürünleri çek ─────────────────────────────────────────
   let query = supabase
     .from('products')
-    .select(`
-      id, name, brand, model, source_url, specifications,
-      categories!inner(slug)
-    `)
+    .select('id, name, brand, model, source_url, specifications, categories!inner(slug)')
     .eq('is_active', true)
     .limit(maxProducts);
 
   if (categorySlug) {
     const { data: cat } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('slug', categorySlug)
-      .single();
+      .from('categories').select('id').eq('slug', categorySlug).single();
     if (cat) query = query.eq('category_id', cat.id);
   }
 
   const { data: rawProducts, error: fetchError } = await query;
-
   if (fetchError || !rawProducts?.length) {
     result.errors.push(`Ürün çekilemedi: ${fetchError?.message || 'Boş liste'}`);
     return result;
   }
 
-  // Ürünleri normalize et
   const products: AgentProduct[] = rawProducts.map((p: any) => ({
     id: p.id,
     name: p.name || '',
@@ -254,103 +232,60 @@ const anthropic = new Anthropic({ apiKey });
 
   // Spec'i eksik olanları filtrele
   const needsFilling = products.filter(needsSpecs);
+  if (needsFilling.length === 0) return result;
 
-  if (needsFilling.length === 0) {
-    return result; // Yapılacak iş yok
-  }
-
-  // ── 2. Her ürün için Claude ile araştır ───────────────────────────────────
+  // ── 2. Her ürün için Haiku ile spec çıkar ─────────────────────────────────
   for (let i = 0; i < Math.min(needsFilling.length, batchSize); i++) {
     const product = needsFilling[i];
     result.processed++;
 
     try {
-      const prompt = buildSearchPrompt(product);
+      // Önce mevcut spec'leri temizle
+      const cleanedExisting = cleanSpecs(product.specifications);
 
-      // Claude Sonnet + web_search tool
-      const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        tools: [{
-          type: 'web_search_20250305',
-          name: 'web_search',
-        } as any],
-        messages: [{ role: 'user', content: prompt }],
-      });
+      // Haiku ile title'dan spec çıkar
+      const rawSpecs = await extractSpecsWithHaiku(anthropic, product);
 
-      // Yanıttan JSON çıkar
-      let rawText = '';
-      for (const block of response.content) {
-        if (block.type === 'text') rawText += block.text;
+      if (!rawSpecs || Object.keys(rawSpecs).length === 0) {
+        // Spec bulunamadı ama mevcut garip alanları temizle
+        if (JSON.stringify(cleanedExisting) !== JSON.stringify(product.specifications)) {
+          await supabase.from('products').update({ specifications: cleanedExisting }).eq('id', product.id);
+          result.updated++;
+        } else {
+          result.skipped++;
+        }
+        continue;
       }
 
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
+      const normalized = normalizeSpecs(rawSpecs);
+      if (Object.keys(normalized).length === 0) {
         result.skipped++;
         continue;
       }
 
-      const parsed = JSON.parse(jsonMatch[0]);
+      // Mevcut spec'lerle birleştir
+      const merged = { ...cleanedExisting, ...normalized };
+      merged.spec_labels = updateSpecLabels(cleanedExisting.spec_labels || {}, normalized);
+      merged.spec_source = 'agent:title-parsing';
+      merged.spec_updated_at = new Date().toISOString();
 
-      if (!parsed.found || !parsed.specs || Object.keys(parsed.specs).length === 0) {
-        result.skipped++;
-        continue;
-      }
-
-      // ── 3. Normalize et ve skoru güncelle ──────────────────────────────
-      const normalizedSpecs = normalizeSpecs(parsed.specs, product.category_slug);
-
-      if (Object.keys(normalizedSpecs).length === 0) {
-        result.skipped++;
-        continue;
-      }
-
-      const updatedSpecs = recalculateScores(
-        product.specifications,
-        normalizedSpecs,
-        product.category_slug
-      );
-
-      // spec_labels güncelle
-      const specLabels: Record<string, string | null> = {
-        ...(updatedSpecs.spec_labels || {}),
-      };
-      if (normalizedSpecs.ram) specLabels['RAM'] = `${normalizedSpecs.ram} GB`;
-      if (normalizedSpecs.ram_size) specLabels['RAM'] = `${normalizedSpecs.ram_size} GB`;
-      if (normalizedSpecs.storage) specLabels['Depolama'] = `${normalizedSpecs.storage} GB`;
-      if (normalizedSpecs.screen_size) specLabels['Ekran'] = `${normalizedSpecs.screen_size} inç`;
-      if (normalizedSpecs.battery_mah) specLabels['Batarya'] = `${normalizedSpecs.battery_mah} mAh`;
-      if (normalizedSpecs.camera_mp) specLabels['Kamera'] = `${normalizedSpecs.camera_mp} MP`;
-      if (normalizedSpecs.battery_life) specLabels['Pil Ömrü'] = `${normalizedSpecs.battery_life} saat`;
-      if (normalizedSpecs.suctionPower) specLabels['Emme Gücü'] = `${normalizedSpecs.suctionPower} Pa`;
-      if (normalizedSpecs.resolution) specLabels['Çözünürlük'] = normalizedSpecs.resolution;
-      if (normalizedSpecs.panel_type) specLabels['Panel'] = normalizedSpecs.panel_type;
-
-      updatedSpecs.spec_labels = specLabels;
-      updatedSpecs.spec_source = `agent:${parsed.source || 'web'}`;
-      updatedSpecs.spec_updated_at = new Date().toISOString();
-
-      // ── 4. Supabase'e yaz ──────────────────────────────────────────────
       const { error: updateError } = await supabase
-        .from('products')
-        .update({ specifications: updatedSpecs })
-        .eq('id', product.id);
+        .from('products').update({ specifications: merged }).eq('id', product.id);
 
       if (updateError) {
         result.failed++;
         result.errors.push(`${product.name}: ${updateError.message}`);
       } else {
         result.updated++;
-        console.log(`✅ [spec-agent] ${product.name}: ${Object.keys(normalizedSpecs).join(', ')}`);
+        console.log(`✅ [spec-agent] ${product.name}: ${Object.keys(normalized).join(', ')}`);
       }
 
-      // Rate limit koruması (Anthropic API için)
-      await new Promise(r => setTimeout(r, 1500));
+      // Haiku çok hızlı, küçük bekleme yeterli
+      await new Promise(r => setTimeout(r, 200));
 
     } catch (err: any) {
       result.failed++;
       result.errors.push(`${product.name}: ${err.message}`);
-      console.error(`❌ [spec-agent] ${product.name}:`, err.message);
     }
   }
 
