@@ -211,7 +211,9 @@ export async function runSpecAgent(options?: {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+  const apiKey = process.env.ANTHROPIC_API_KEY || process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
+if (!apiKey) throw new Error('ANTHROPIC_API_KEY env eksik');
+const anthropic = new Anthropic({ apiKey });
 
   // ── 1. Spec'i eksik ürünleri çek ─────────────────────────────────────────
   let query = supabase
