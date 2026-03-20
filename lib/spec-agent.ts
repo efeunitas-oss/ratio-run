@@ -1,11 +1,6 @@
-// ============================================================================
-// lib/spec-agent.ts v3
-// ratio.run — Otonom Spec Tamamlama Ajanı
-// Değişiklikler v3:
-//   - Epey.com birincil kaynak olarak eklendi
-//   - Haiku → Epey URL üret → Epey'den çek → bulamazsa title parsing
-//   - Her ürün için kaynak spec_source'a yazılıyor (epey / title-parsing)
-// ============================================================================
+// lib/spec-agent.ts v4
+// ratio.run — web_search_20250305 tool ile gerçek web araması
+// Fallback: title parsing
 
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
@@ -25,97 +20,38 @@ interface AgentRunResult {
   updated: number;
   failed: number;
   skipped: number;
-  epey_hits: number;
+  web_hits: number;
   title_hits: number;
   errors: string[];
 }
 
-// ── Epey kategori slug'ları ───────────────────────────────────────────────────
-const EPEY_CATEGORY_SLUGS: Record<string, string> = {
-  telefon:          'akilli-telefonlar',
-  laptop:           'dizustu-bilgisayarlar',
-  tablet:           'tabletler',
-  saat:             'akilli-saatler',
-  kulaklik:         'kulakliklar',
-  'robot-supurge':  'robot-supurgeler',
-  tv:               'televizyonlar',
-};
-
-// ── Epey → DB field map ───────────────────────────────────────────────────────
-interface FieldDef { epeyLabel: string[]; ourKey: string; type: 'number' | 'text' }
-
-const EPEY_FIELD_MAP: Record<string, FieldDef[]> = {
-  telefon: [
-    { epeyLabel: ['RAM', 'Dahili RAM', 'Bellek'],               ourKey: 'ram',             type: 'number' },
-    { epeyLabel: ['Dahili Depolama', 'Depolama', 'Hafıza'],     ourKey: 'storage',         type: 'number' },
-    { epeyLabel: ['Ekran Boyutu', 'Ekran'],                     ourKey: 'screen_size',     type: 'number' },
-    { epeyLabel: ['Arka Kamera', 'Ana Kamera', 'Kamera'],       ourKey: 'camera_mp',       type: 'number' },
-    { epeyLabel: ['Batarya Kapasitesi', 'Pil', 'Batarya'],      ourKey: 'battery_mah',     type: 'number' },
-    { epeyLabel: ['Ekran Yenileme Hızı', 'Yenileme Hızı'],      ourKey: 'display_refresh', type: 'number' },
-    { epeyLabel: ['İşlemci', 'Yonga Seti', 'Chipset'],          ourKey: 'chipset',         type: 'text'   },
-  ],
-  laptop: [
-    { epeyLabel: ['RAM', 'Bellek'],                             ourKey: 'ram_size',           type: 'number' },
-    { epeyLabel: ['SSD', 'Depolama', 'Disk'],                   ourKey: 'storage',            type: 'number' },
-    { epeyLabel: ['Ekran Boyutu', 'Ekran'],                     ourKey: 'screen_size',        type: 'number' },
-    { epeyLabel: ['İşlemci', 'CPU'],                            ourKey: 'processor_gen',      type: 'text'   },
-    { epeyLabel: ['Ekran Parlaklığı', 'Parlaklık'],             ourKey: 'display_brightness', type: 'number' },
-    { epeyLabel: ['Pil Ömrü', 'Batarya Ömrü'],                  ourKey: 'battery_life',       type: 'number' },
-    { epeyLabel: ['Ekran Yenileme Hızı', 'Yenileme Hızı'],      ourKey: 'refresh_hz',         type: 'number' },
-  ],
-  tablet: [
-    { epeyLabel: ['RAM', 'Bellek'],                             ourKey: 'ram',         type: 'number' },
-    { epeyLabel: ['Dahili Depolama', 'Depolama'],               ourKey: 'storage',     type: 'number' },
-    { epeyLabel: ['Ekran Boyutu', 'Ekran'],                     ourKey: 'screen_size', type: 'number' },
-    { epeyLabel: ['Batarya Kapasitesi', 'Batarya'],             ourKey: 'battery_mah', type: 'number' },
-    { epeyLabel: ['İşlemci'],                                   ourKey: 'processor',   type: 'text'   },
-  ],
-  saat: [
-    { epeyLabel: ['Pil Ömrü', 'Batarya Ömrü'],                 ourKey: 'battery_life', type: 'number' },
-    { epeyLabel: ['Ekran Boyutu', 'Ekran'],                     ourKey: 'screen_size',  type: 'number' },
-    { epeyLabel: ['İşletim Sistemi', 'OS'],                     ourKey: 'os',           type: 'text'   },
-    { epeyLabel: ['Su Geçirmezlik', 'Su Direnci'],              ourKey: 'waterproof',   type: 'text'   },
-  ],
-  kulaklik: [
-    { epeyLabel: ['Pil Ömrü', 'Oynatma Süresi'],               ourKey: 'battery_life',       type: 'number' },
-    { epeyLabel: ['Sürücü Boyutu', 'Sürücü'],                  ourKey: 'driver_size',        type: 'number' },
-    { epeyLabel: ['Gürültü Engelleme', 'ANC'],                  ourKey: 'noise_cancellation', type: 'text'   },
-    { epeyLabel: ['Bağlantı', 'Bluetooth'],                     ourKey: 'connection',         type: 'text'   },
-  ],
-  'robot-supurge': [
-    { epeyLabel: ['Emme Gücü', 'Emiş Gücü'],                   ourKey: 'suctionPower',    type: 'number' },
-    { epeyLabel: ['Batarya Kapasitesi', 'Batarya'],             ourKey: 'batteryCapacity', type: 'number' },
-    { epeyLabel: ['Ses Seviyesi', 'Gürültü'],                   ourKey: 'noiseLevel',      type: 'number' },
-    { epeyLabel: ['Navigasyon', 'Haritalama', 'Eşleme'],        ourKey: 'mappingTech',     type: 'text'   },
-  ],
-  tv: [
-    { epeyLabel: ['Ekran Boyutu', 'Ekran'],                     ourKey: 'screen_size',  type: 'number' },
-    { epeyLabel: ['Çözünürlük', 'Ekran Çözünürlüğü'],           ourKey: 'resolution',   type: 'text'   },
-    { epeyLabel: ['Ekran Yenileme Hızı', 'Hz'],                 ourKey: 'refresh_rate', type: 'number' },
-    { epeyLabel: ['Panel Tipi', 'Panel'],                        ourKey: 'panel_type',   type: 'text'   },
-  ],
-};
-
-// ── Kategori → zorunlu spec alanları ─────────────────────────────────────────
 const REQUIRED_SPEC_KEYS: Record<string, string[]> = {
-  telefon:          ['ram', 'storage', 'battery_mah', 'camera_mp'],
-  laptop:           ['ram_size', 'storage', 'screen_size', 'processor_gen'],
-  tablet:           ['ram', 'storage', 'battery_mah', 'screen_size'],
-  saat:             ['battery_life', 'screen_size'],
-  kulaklik:         ['battery_life', 'connection'],
-  'robot-supurge':  ['suctionPower', 'batteryCapacity'],
-  tv:               ['screen_size', 'resolution'],
+  telefon:         ['ram', 'storage', 'battery_mah', 'camera_mp'],
+  laptop:          ['ram_size', 'storage', 'screen_size', 'processor_gen'],
+  tablet:          ['ram', 'storage', 'battery_mah', 'screen_size'],
+  saat:            ['battery_life', 'screen_size'],
+  kulaklik:        ['battery_life', 'connection'],
+  'robot-supurge': ['suctionPower', 'batteryCapacity'],
+  tv:              ['screen_size', 'resolution'],
 };
 
-// ── Spec eksik mi? ────────────────────────────────────────────────────────────
+const CATEGORY_SPEC_PROMPTS: Record<string, string> = {
+  telefon: `RAM (GB, sayi) -> "ram", Dahili depolama (GB, sayi) -> "storage", Batarya (mAh, sayi) -> "battery_mah", Ana kamera (MP, sayi) -> "camera_mp", Ekran (inc, sayi) -> "screen_size", Yenileme hizi (Hz, sayi) -> "display_refresh", Chipset (metin) -> "chipset", 5G (true/false) -> "has_5g"`,
+  laptop: `RAM (GB, sayi) -> "ram_size", SSD (GB, sayi) -> "storage", Ekran (inc, sayi) -> "screen_size", Islemci (metin) -> "processor_gen", Yenileme hizi (Hz, sayi) -> "refresh_hz", Pil omru (saat, sayi) -> "battery_life"`,
+  tablet: `RAM (GB, sayi) -> "ram", Depolama (GB, sayi) -> "storage", Ekran (inc, sayi) -> "screen_size", Batarya (mAh, sayi) -> "battery_mah", Islemci (metin) -> "processor"`,
+  saat: `Pil omru (gun, sayi) -> "battery_life", Kasa boyutu (mm, sayi) -> "screen_size", GPS (true/false) -> "has_gps", AMOLED (true/false) -> "has_amoled"`,
+  kulaklik: `Pil omru (saat, sayi) -> "battery_life", ANC (true/false) -> "has_anc", Baglanti (metin) -> "connection", Surucu boyutu (mm, sayi) -> "driver_size"`,
+  'robot-supurge': `Emme gucu (Pa, sayi) -> "suctionPower", Batarya (mAh, sayi) -> "batteryCapacity", Ses (dB, sayi) -> "noiseLevel", Navigasyon (metin) -> "mappingTech", Paspas (true/false) -> "has_mop", LiDAR (true/false) -> "has_lidar"`,
+  tv: `Ekran (inc, sayi) -> "screen_size", Cozunurluk (metin) -> "resolution", Panel (metin) -> "panel_type", Yenileme hizi (Hz, sayi) -> "refresh_rate", 4K (true/false) -> "is_4k", OLED (true/false) -> "is_oled"`,
+};
+
 function needsSpecs(product: AgentProduct): boolean {
   const keys = REQUIRED_SPEC_KEYS[product.category_slug] || [];
-  if (keys.length === 0) return false;
+  if (!keys.length) return false;
   const specs = product.specifications || {};
   return keys.some(k => specs[k] == null || specs[k] === '');
 }
 
-// ── Garip alanları temizle ────────────────────────────────────────────────────
 function cleanSpecs(specs: Record<string, any>): Record<string, any> {
   const cleaned: Record<string, any> = {};
   for (const [key, value] of Object.entries(specs)) {
@@ -126,125 +62,54 @@ function cleanSpecs(specs: Record<string, any>): Record<string, any> {
   return cleaned;
 }
 
-// ── Haiku ile Epey URL üret ───────────────────────────────────────────────────
-async function generateEpeyUrl(
+async function fetchSpecsWithWebSearch(
   anthropic: Anthropic,
   product: AgentProduct
-): Promise<string | null> {
-  const epeyCategory = EPEY_CATEGORY_SLUGS[product.category_slug];
-  if (!epeyCategory) return null;
+): Promise<Record<string, any> | null> {
+  const specPrompt = CATEGORY_SPEC_PROMPTS[product.category_slug];
+  if (!specPrompt) return null;
 
-  const prompt = `Ürün adından Epey.com URL slug'ı oluştur.
-Kural: marka + model, küçük harf, boşluk yerine tire, Türkçe karakter yok.
-Renk, GB, RAM, garantisi, ithalatçı gibi ekstralar dahil ETME.
+  const prompt = `"${product.name}" urunun teknik ozelliklerini web'de ara ve bul.
 
-Örnekler:
-- "Samsung Galaxy S25 256 GB Buz Mavisi" → "samsung-galaxy-s25"
-- "Apple iPhone 16 Plus 256GB" → "apple-iphone-16-plus"
-- "Xiaomi Redmi Note 15 Pro 8GB+256GB" → "xiaomi-redmi-note-15-pro"
-- "Sony WH-1000XM5 Kablosuz Kulaklık" → "sony-wh-1000xm5"
-- "LG OLED55C3 55 inç 4K TV" → "lg-oled55c3"
-- "Roborock S8 Pro Ultra Robot Süpürge" → "roborock-s8-pro-ultra"
+Bulmam gereken degerler: ${specPrompt}
 
-Ürün: "${product.name}"
+SADECE gercek, dogrulanmis degerleri kullan, tahmin yapma.
+Sonucu SADECE JSON olarak don, baska hicbir sey yazma:
+{"ram": 8, "storage": 256}
 
-SADECE slug döndür, başka hiçbir şey yazma. Örnek: samsung-galaxy-s25`;
+Bulamazsan o alani JSON'a ekleme.`;
 
   try {
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 64,
+      max_tokens: 1024,
+      tools: [{ type: 'web_search_20250305', name: 'web_search' } as any],
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const slug = ((response.content[0] as any).text ?? '').trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '')
-      .replace(/-+/g, '-');
+    const textBlocks = response.content
+      .filter((b: any) => b.type === 'text')
+      .map((b: any) => b.text)
+      .join('');
 
-    if (!slug) return null;
-    return `https://www.epey.com/${epeyCategory}/${slug}.html`;
-  } catch {
+    if (!textBlocks) return null;
+    const jsonMatch = textBlocks.match(/\{[\s\S]*?\}/);
+    if (!jsonMatch) return null;
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    return Object.keys(parsed).length > 0 ? parsed : null;
+  } catch (err: any) {
+    console.error(`[web-search] Hata: ${err.message}`);
     return null;
   }
 }
 
-// ── Epey sayfasından spec çek ─────────────────────────────────────────────────
-async function fetchEpeySpecs(
-  url: string,
-  categorySlug: string
-): Promise<Record<string, any> | null> {
-  const fields = EPEY_FIELD_MAP[categorySlug];
-  if (!fields) return null;
-
-  try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36',
-        'Accept-Language': 'tr-TR,tr;q=0.9',
-        'Accept': 'text/html,application/xhtml+xml',
-      },
-      signal: AbortSignal.timeout(8000),
-    });
-
-    if (!res.ok) return null;
-    const html = await res.text();
-
-    // Epey spec tablosu: <tr><td>RAM</td><td>8 GB</td></tr>
-    const rows: Array<{ label: string; value: string }> = [];
-    const rowMatches = html.matchAll(/<tr[^>]*>[\s\S]*?<\/tr>/gi);
-
-    for (const match of rowMatches) {
-      const cells = [...match[0].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)]
-        .map(m => m[1].replace(/<[^>]+>/g, '').trim());
-      if (cells.length >= 2) rows.push({ label: cells[0], value: cells[1] });
-    }
-
-    if (!rows.length) return null;
-
-    const result: Record<string, any> = {};
-    for (const fd of fields) {
-      for (const searchLabel of fd.epeyLabel) {
-        const found = rows.find(r =>
-          r.label.toLowerCase().includes(searchLabel.toLowerCase())
-        );
-        if (!found?.value) continue;
-
-        if (fd.type === 'number') {
-          const numMatch = found.value.match(/(\d+[.,]?\d*)/);
-          if (numMatch) {
-            const num = parseFloat(numMatch[1].replace(',', '.'));
-            if (!isNaN(num) && num > 0) { result[fd.ourKey] = num; break; }
-          }
-        } else {
-          if (found.value && found.value !== '-') { result[fd.ourKey] = found.value; break; }
-        }
-      }
-    }
-
-    return Object.keys(result).length > 0 ? result : null;
-  } catch {
-    return null;
-  }
-}
-
-// ── Fallback: Haiku ile title'dan spec çıkar ──────────────────────────────────
-async function extractSpecsFromTitle(
+async function fetchSpecsFromTitle(
   anthropic: Anthropic,
   product: AgentProduct
 ): Promise<Record<string, any> | null> {
-  const categoryPrompts: Record<string, string> = {
-    telefon:         `RAM (GB sayı), depolama (GB sayı), ekran (inç sayı), kamera (MP sayı), batarya (mAh sayı), 5G (true/false)\nAlan adları: ram, storage, screen_size, camera_mp, battery_mah, has_5g`,
-    laptop:          `RAM (GB sayı), SSD (GB sayı), ekran (inç sayı), işlemci adı (metin), yenileme hızı (Hz sayı)\nAlan adları: ram_size, storage, screen_size, processor_gen, refresh_hz`,
-    tablet:          `RAM (GB sayı), depolama (GB sayı), ekran (inç sayı), batarya (mAh sayı)\nAlan adları: ram, storage, screen_size, battery_mah`,
-    saat:            `pil ömrü (gün sayı), kasa boyutu (mm sayı), GPS (true/false)\nAlan adları: battery_life, screen_size, has_gps`,
-    kulaklik:        `pil ömrü (saat sayı), ANC (true/false), bluetooth (true/false)\nAlan adları: battery_life, has_anc, is_wireless`,
-    'robot-supurge': `emme gücü (Pa sayı), batarya (mAh sayı), LiDAR (true/false)\nAlan adları: suctionPower, batteryCapacity, has_lidar`,
-    tv:              `ekran (inç sayı), 4K (true/false), OLED (true/false), yenileme hızı (Hz sayı)\nAlan adları: screen_size, is_4k, is_oled, refresh_rate`,
-  };
-
-  const fields = categoryPrompts[product.category_slug];
-  if (!fields) return null;
+  const specPrompt = CATEGORY_SPEC_PROMPTS[product.category_slug];
+  if (!specPrompt) return null;
 
   try {
     const response = await anthropic.messages.create({
@@ -252,22 +117,19 @@ async function extractSpecsFromTitle(
       max_tokens: 256,
       messages: [{
         role: 'user',
-        content: `Ürün adından teknik özellikleri çıkar. SADECE adında yazan değerleri al, tahmin yapma.
+        content: `Urun adindan teknik ozellikleri cikar. SADECE adinda acikca yazan degerleri al, tahmin yapma.
 
-Ürün adı: "${product.name}"
+Urun adi: "${product.name}"
+Alanlar: ${specPrompt}
 
-Çıkarılacak alanlar:
-${fields}
-
-SADECE JSON döndür: {"alan": değer}
-Bulamazsan o alanı ekleme.`,
+SADECE JSON don: {"alan": deger}
+Bulamazsan o alani ekleme.`,
       }],
     });
 
     const text = (response.content[0] as any).text ?? '';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const jsonMatch = text.match(/\{[\s\S]*?\}/);
     if (!jsonMatch) return null;
-
     const parsed = JSON.parse(jsonMatch[0]);
     return Object.keys(parsed).length > 0 ? parsed : null;
   } catch {
@@ -275,47 +137,46 @@ Bulamazsan o alanı ekleme.`,
   }
 }
 
-// ── Spec label'larını güncelle ────────────────────────────────────────────────
 function buildSpecLabels(specs: Record<string, any>): Record<string, string | null> {
   const labels: Record<string, string | null> = {};
-  if (specs.ram)              labels['RAM']           = `${specs.ram} GB`;
-  if (specs.ram_size)         labels['RAM']           = `${specs.ram_size} GB`;
-  if (specs.storage)          labels['Depolama']      = `${specs.storage} GB`;
-  if (specs.screen_size)      labels['Ekran']         = `${specs.screen_size} inç`;
-  if (specs.battery_mah)      labels['Batarya']       = `${specs.battery_mah} mAh`;
-  if (specs.camera_mp)        labels['Kamera']        = `${specs.camera_mp} MP`;
-  if (specs.battery_life)     labels['Pil Ömrü']      = `${specs.battery_life} saat`;
-  if (specs.suctionPower)     labels['Emme Gücü']     = `${specs.suctionPower} Pa`;
-  if (specs.resolution)       labels['Çözünürlük']    = specs.resolution;
-  if (specs.refresh_hz)       labels['Yenileme']      = `${specs.refresh_hz} Hz`;
-  if (specs.refresh_rate)     labels['Yenileme']      = `${specs.refresh_rate} Hz`;
-  if (specs.display_refresh)  labels['Yenileme']      = `${specs.display_refresh} Hz`;
-  if (specs.processor_gen)    labels['İşlemci']       = specs.processor_gen;
-  if (specs.panel_type)       labels['Panel']         = specs.panel_type;
-  if (specs.mappingTech)      labels['Navigasyon']    = specs.mappingTech;
-  if (specs.has_5g === true)  labels['5G']            = 'Evet';
-  if (specs.has_5g === false) labels['5G']            = 'Hayır';
-  if (specs.has_anc === true) labels['ANC']           = 'Var';
-  if (specs.is_4k === true)   labels['Çözünürlük']    = '4K UHD';
-  if (specs.is_oled === true) labels['Panel']         = 'OLED';
+  if (specs.ram)                labels['RAM']        = `${specs.ram} GB`;
+  if (specs.ram_size)           labels['RAM']        = `${specs.ram_size} GB`;
+  if (specs.storage)            labels['Depolama']   = `${specs.storage} GB`;
+  if (specs.screen_size)        labels['Ekran']      = `${specs.screen_size} inc`;
+  if (specs.battery_mah)        labels['Batarya']    = `${specs.battery_mah} mAh`;
+  if (specs.camera_mp)          labels['Kamera']     = `${specs.camera_mp} MP`;
+  if (specs.battery_life)       labels['Pil Omru']   = `${specs.battery_life} saat`;
+  if (specs.suctionPower)       labels['Emme Gucu']  = `${specs.suctionPower} Pa`;
+  if (specs.batteryCapacity)    labels['Batarya']    = `${specs.batteryCapacity} mAh`;
+  if (specs.resolution)         labels['Cozunurluk'] = specs.resolution;
+  if (specs.refresh_rate)       labels['Yenileme']   = `${specs.refresh_rate} Hz`;
+  if (specs.refresh_hz)         labels['Yenileme']   = `${specs.refresh_hz} Hz`;
+  if (specs.display_refresh)    labels['Yenileme']   = `${specs.display_refresh} Hz`;
+  if (specs.processor_gen)      labels['Islemci']    = specs.processor_gen;
+  if (specs.chipset)            labels['Chipset']    = specs.chipset;
+  if (specs.panel_type)         labels['Panel']      = specs.panel_type;
+  if (specs.mappingTech)        labels['Navigasyon'] = specs.mappingTech;
+  if (specs.connection)         labels['Baglanti']   = specs.connection;
+  if (specs.has_5g === true)    labels['5G']         = 'Evet';
+  if (specs.has_5g === false)   labels['5G']         = 'Hayir';
+  if (specs.has_anc === true)   labels['ANC']        = 'Var';
+  if (specs.has_lidar === true) labels['Navigasyon'] = 'LiDAR';
+  if (specs.is_4k === true)     labels['Cozunurluk'] = '4K UHD';
+  if (specs.is_oled === true)   labels['Panel']      = 'OLED';
+  if (specs.has_mop === true)   labels['Paspas']     = 'Var';
   return labels;
 }
 
-// ── Ana Agent ─────────────────────────────────────────────────────────────────
 export async function runSpecAgent(options?: {
   categorySlug?: string;
   batchSize?: number;
   maxProducts?: number;
 }): Promise<AgentRunResult> {
-  const {
-    categorySlug,
-    batchSize   = 10,
-    maxProducts = 50,
-  } = options || {};
+  const { categorySlug, batchSize = 5, maxProducts = 50 } = options || {};
 
   const result: AgentRunResult = {
     processed: 0, updated: 0, failed: 0,
-    skipped: 0, epey_hits: 0, title_hits: 0, errors: [],
+    skipped: 0, web_hits: 0, title_hits: 0, errors: [],
   };
 
   const supabase = createClient(
@@ -327,7 +188,6 @@ export async function runSpecAgent(options?: {
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY eksik');
   const anthropic = new Anthropic({ apiKey });
 
-  // 1. Spec'i eksik ürünleri çek
   let query = supabase
     .from('products')
     .select('id, name, brand, model, source_url, specifications, categories!inner(slug)')
@@ -342,24 +202,19 @@ export async function runSpecAgent(options?: {
 
   const { data: rawProducts, error: fetchError } = await query;
   if (fetchError || !rawProducts?.length) {
-    result.errors.push(`Ürün çekilemedi: ${fetchError?.message || 'Boş liste'}`);
+    result.errors.push(`Urun cekilemedi: ${fetchError?.message || 'Bos liste'}`);
     return result;
   }
 
   const products: AgentProduct[] = rawProducts.map((p: any) => ({
-    id:            p.id,
-    name:          p.name || '',
-    brand:         p.brand || '',
-    model:         p.model || '',
-    category_slug: p.categories?.slug || '',
-    specifications: p.specifications || {},
-    source_url:    p.source_url || '',
+    id: p.id, name: p.name || '', brand: p.brand || '',
+    model: p.model || '', category_slug: p.categories?.slug || '',
+    specifications: p.specifications || {}, source_url: p.source_url || '',
   }));
 
   const needsFilling = products.filter(needsSpecs);
   if (needsFilling.length === 0) return result;
 
-  // 2. Her ürün için: Epey → fallback title parsing
   for (let i = 0; i < Math.min(needsFilling.length, batchSize); i++) {
     const product = needsFilling[i];
     result.processed++;
@@ -369,28 +224,25 @@ export async function runSpecAgent(options?: {
       let newSpecs: Record<string, any> | null = null;
       let source = 'title-parsing';
 
-      // ── Birincil: Epey ──────────────────────────────────────────────────
-      const epeyUrl = await generateEpeyUrl(anthropic, product);
-      if (epeyUrl) {
-        newSpecs = await fetchEpeySpecs(epeyUrl, product.category_slug);
-        if (newSpecs) {
-          source = 'epey';
-          result.epey_hits++;
-          console.log(`✅ [epey]  ${product.name.substring(0, 50)}: ${Object.keys(newSpecs).join(', ')}`);
-        }
+      // Birincil: Web Search
+      newSpecs = await fetchSpecsWithWebSearch(anthropic, product);
+      if (newSpecs && Object.keys(newSpecs).length > 0) {
+        source = 'web-search';
+        result.web_hits++;
+        console.log(`[web] ${product.name.substring(0, 50)}: ${Object.keys(newSpecs).join(', ')}`);
       }
 
-      // ── Fallback: Title parsing ──────────────────────────────────────────
-      if (!newSpecs) {
-        newSpecs = await extractSpecsFromTitle(anthropic, product);
-        if (newSpecs) {
+      // Fallback: Title Parsing
+      if (!newSpecs || Object.keys(newSpecs).length === 0) {
+        newSpecs = await fetchSpecsFromTitle(anthropic, product);
+        if (newSpecs && Object.keys(newSpecs).length > 0) {
+          source = 'title-parsing';
           result.title_hits++;
-          console.log(`🔤 [title] ${product.name.substring(0, 50)}: ${Object.keys(newSpecs).join(', ')}`);
+          console.log(`[title] ${product.name.substring(0, 50)}: ${Object.keys(newSpecs).join(', ')}`);
         }
       }
 
       if (!newSpecs || Object.keys(newSpecs).length === 0) {
-        // Sadece temizlik yap
         if (JSON.stringify(cleanedExisting) !== JSON.stringify(product.specifications)) {
           await supabase.from('products').update({ specifications: cleanedExisting }).eq('id', product.id);
           result.updated++;
@@ -401,10 +253,9 @@ export async function runSpecAgent(options?: {
       }
 
       const merged = {
-        ...cleanedExisting,
-        ...newSpecs,
-        spec_labels:     buildSpecLabels({ ...cleanedExisting, ...newSpecs }),
-        spec_source:     source,
+        ...cleanedExisting, ...newSpecs,
+        spec_labels: buildSpecLabels({ ...cleanedExisting, ...newSpecs }),
+        spec_source: source,
         spec_updated_at: new Date().toISOString(),
       };
 
@@ -418,8 +269,7 @@ export async function runSpecAgent(options?: {
         result.updated++;
       }
 
-      // Epey'e nazik davran
-      await new Promise(r => setTimeout(r, source === 'epey' ? 700 : 200));
+      await new Promise(r => setTimeout(r, source === 'web-search' ? 1000 : 300));
 
     } catch (err: any) {
       result.failed++;
