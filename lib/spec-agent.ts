@@ -194,8 +194,8 @@ export async function runSpecAgent(options?: {
 }): Promise<AgentRunResult> {
   const {
     categorySlug,
-    batchSize = 5,      // Her çalışmada kaç ürün işlensin
-    maxProducts = 20,   // Toplam maksimum ürün sayısı
+    batchSize = 20,      // Her çalışmada kaç ürün işlensin
+    maxProducts = 100,   // Toplam maksimum ürün sayısı
   } = options || {};
 
   const result: AgentRunResult = {

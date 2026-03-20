@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/spec-agent?secret=b8ef9e7845ff7055b0c74bc63a7b20ba800729f79f61642933eca751da64c173",
-      "schedule": "0 */6 * * *"
+      "schedule": "*/30 * * * *"
     }
   ]
 }
