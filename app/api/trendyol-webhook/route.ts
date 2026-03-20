@@ -1,7 +1,7 @@
 // app/api/trendyol-webhook/route.ts
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
-import { isValidForCategory } from '../../../lib/product-filter';
+import { isCategoryValid } from '@/lib/category-guard'; // ← YENİ
 
 interface TrendyolProduct {
   id?: string | number;
@@ -108,7 +108,6 @@ function cleanProductName(item: TrendyolProduct): string {
   return raw.split(',')[0].split('|')[0].trim().substring(0, 80);
 }
 
-// İsim normalizer — eşleştirme için
 function normalizeForMatch(name: string, brand: string): string {
   return `${brand} ${name}`
     .toLowerCase()
@@ -205,11 +204,32 @@ export async function POST(request: NextRequest) {
 
     if (rawProducts.length === 0) return NextResponse.json({ success: true, inserted: 0 });
 
+    // ── CATEGORY GUARD: Kategori kirliliği engelle ────────────────────────
+    const guardedProducts = rawProducts.filter(item => {
+      const title = item.name || item.title || '';
+      const result = isCategoryValid(title, categorySlug);
+      if (!result.valid) {
+        console.warn(`🚫 [Guard] ${categorySlug} | ${result.reason}`);
+      }
+      return result.valid;
+    });
+
+    const rejectedCount = rawProducts.length - guardedProducts.length;
+    console.log(`🛡️ Guard: ${rawProducts.length} geldi, ${rejectedCount} reddedildi, ${guardedProducts.length} geçti`);
+
+    if (guardedProducts.length === 0) {
+      return NextResponse.json({
+        success: true, inserted: 0, merged: 0, errors: 0,
+        category: categorySlug, total: rawProducts.length, rejected: rejectedCount,
+        message: 'Tüm ürünler kategori guard tarafından reddedildi — Apify aktörünü kontrol edin',
+      });
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     const { data: category } = await supabase
       .from('categories').select('id').eq('slug', categorySlug).single();
     if (!category) return NextResponse.json({ error: `Kategori bulunamadı: ${categorySlug}` }, { status: 500 });
 
-    // Mevcut ürünleri çek — eşleştirme için
     const { data: existingProducts } = await supabase
       .from('products')
       .select('id, name, brand, model, price, avg_price, sources')
@@ -219,7 +239,7 @@ export async function POST(request: NextRequest) {
     let merged   = 0;
     let errors   = 0;
 
-    for (const item of rawProducts) {
+    for (const item of guardedProducts) { // ← rawProducts yerine guardedProducts
       try {
         const name  = cleanProductName(item);
         const brand = getBrand(item, name);
@@ -231,23 +251,14 @@ export async function POST(request: NextRequest) {
 
         if (!name || !price) continue;
 
-        // Kategori filtresi — yanlış kategorideki ürünleri reddet
-        if (!isValidForCategory(name, categorySlug)) {
-          console.log(`🚫 Reddedildi [${categorySlug}]: ${name}`);
-          continue;
-        }
-
         const normalizedNew = normalizeForMatch(name, brand);
 
-        // Mevcut ürünlerle eşleştir
         const existing = existingProducts?.find(p => {
           const normalizedExisting = normalizeForMatch(p.name, p.brand);
-          // İlk 30 karakter eşleşiyorsa aynı ürün say
           return normalizedExisting.substring(0, 30) === normalizedNew.substring(0, 30);
         });
 
         if (existing) {
-          // Aynı ürün var — fiyat kaynağı ekle, ortalama güncelle
           const { data: priceRows } = await supabase
             .from('product_prices')
             .select('price')
@@ -276,7 +287,6 @@ export async function POST(request: NextRequest) {
 
           merged++;
         } else {
-          // Yeni ürün — ekle
           const trendyolId = `trendyol_${item.id || item.productId || item.contentId || Date.now()}`;
 
           const { data: newProduct, error: insertErr } = await supabase
@@ -324,10 +334,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`✅ ${inserted} yeni, ${merged} birleştirildi, ${errors} hata`);
+    console.log(`✅ ${inserted} yeni, ${merged} birleştirildi, ${errors} hata | 🚫 ${rejectedCount} guard tarafından reddedildi`);
 
     return NextResponse.json({
-      success: true, inserted, merged, errors,
+      success: true, inserted, merged, errors, rejected: rejectedCount,
       category: categorySlug, total: rawProducts.length, source: 'Trendyol',
     });
 
