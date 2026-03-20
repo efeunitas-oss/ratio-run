@@ -1,11 +1,3 @@
 {
-  "crons": [
-    { "path": "/api/spec-agent?secret=b8ef9e7845ff7055b0c74bc63a7b20ba800729f79f61642933eca751da64c173&category=telefon", "schedule": "* * * * *" },
-    { "path": "/api/spec-agent?secret=b8ef9e7845ff7055b0c74bc63a7b20ba800729f79f61642933eca751da64c173&category=laptop", "schedule": "* * * * *" },
-    { "path": "/api/spec-agent?secret=b8ef9e7845ff7055b0c74bc63a7b20ba800729f79f61642933eca751da64c173&category=tablet", "schedule": "* * * * *" },
-    { "path": "/api/spec-agent?secret=b8ef9e7845ff7055b0c74bc63a7b20ba800729f79f61642933eca751da64c173&category=saat", "schedule": "* * * * *" },
-    { "path": "/api/spec-agent?secret=b8ef9e7845ff7055b0c74bc63a7b20ba800729f79f61642933eca751da64c173&category=kulaklik", "schedule": "* * * * *" },
-    { "path": "/api/spec-agent?secret=b8ef9e7845ff7055b0c74bc63a7b20ba800729f79f61642933eca751da64c173&category=robot-supurge", "schedule": "* * * * *" },
-    { "path": "/api/spec-agent?secret=b8ef9e7845ff7055b0c74bc63a7b20ba800729f79f61642933eca751da64c173&category=tv", "schedule": "* * * * *" }
-  ]
+  "crons": []
 }
